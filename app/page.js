@@ -111,17 +111,12 @@ export default function Home() {
             <section className="py-8 bg-slate-900">
                 <div className="container mx-auto px-4 max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
                     <div className="text-slate-400 font-medium text-sm">
-                        Hệ thống lõi được cấu thành từ 3 thành phần chính:
+                        Budspot Project Report & Source Code:
                     </div>
                     <div className="flex flex-wrap justify-center md:justify-end gap-6 text-sm font-medium">
-                        <a target="_blank" href="https://github.com/..." className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                            <span className="h-2 w-2 bg-orange-500 rounded-full shadow-[0_0_8px_rgba(249,115,22,0.8)]"></span> Java Backend
-                        </a>
-                        <a target="_blank" href="https://github.com/..." className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                            <span className="h-2 w-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span> Node.js API
-                        </a>
-                        <a target="_blank" href="https://github.com/..." className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                            <span className="h-2 w-2 bg-blue-500 rounded-full shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span> Next.js UI
+                        {/* Thay dòng chữ BỎ_LINK_CỦA_BẠN_VÀO_ĐÂY bằng link GitHub thật */}
+                        <a target="_blank" href="https://github.com/Son13012995/PriceHawk_S4" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
+                            <span className="h-2 w-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]"></span> Xem trên GitHub
                         </a>
                     </div>
                 </div>
