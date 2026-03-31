@@ -4,107 +4,115 @@ import SearchCard from "../../components/SearchCard";
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+// Component con cho hiệu ứng loading đẹp hơn
+const SkeletonCard = () => (
+    <div className="bg-gray-200 animate-pulse rounded-xl h-80 w-full"></div>
+);
+
 export default function ProductsPage() {
-  const [products, setProducts] = useState([]);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+    const [products, setProducts] = useState([]);
+    const [totalProducts, setTotalProducts] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 12; // Tăng lên 12 để chia hết cho grid 2, 3, 4
 
-  useEffect(() => {
-    async function fetchProducts() {
-      setLoading(true);
-      setError(null);
+    useEffect(() => {
+        async function fetchProducts() {
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await axios.get(`/api/product`, {
+                    params: { page: currentPage, pageSize },
+                });
+                setProducts(res.data.data);
+                setTotalProducts(res.data.totalCount);
+            } catch (error) {
+                setError("Không thể tải sản phẩm. Vui lòng thử lại sau.");
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchProducts();
+        // Cuộn lên đầu trang khi đổi trang
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [currentPage]);
 
-      try {
-        const res = await axios.get(`/api/product`, {
-          params: { page: currentPage, pageSize },
-        });
+    const totalPages = Math.ceil(totalProducts / pageSize);
 
-        setProducts(res.data.data);
-        setTotalProducts(res.data.totalCount);
-      } catch (error) {
-        setError("Failed to fetch products. Please try again.");
-        console.error("Error fetching products:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
+    return (
+        <div className="max-w-7xl mx-auto px-4 py-8 min-h-screen bg-gray-50">
+            {/* Header Section */}
+            <div className="mb-10 text-center">
+                <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
+                    Khám Phá Sản Phẩm
+                </h1>
+                <div className="h-1 w-20 bg-blue-600 mx-auto rounded-full"></div>
+                {!loading && (
+                    <p className="text-gray-500 mt-4">
+                        Tìm thấy <span className="font-semibold text-blue-600">{totalProducts}</span> sản phẩm chất lượng
+                    </p>
+                )}
+            </div>
 
-    fetchProducts();
-  }, [currentPage]);
+            {/* Error State */}
+            {error && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+                    <p className="text-red-700">{error}</p>
+                </div>
+            )}
 
-  // Pagination handlers
-  const totalPages = Math.ceil(totalProducts / pageSize);
-  const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+            {/* Main Content */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {loading ? (
+                    // Hiển thị 8 skeleton cards khi đang load
+                    Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)
+                ) : products.length > 0 ? (
+                    products.map((product) => (
+                        <div key={product.id} className="transform hover:-translate-y-1 transition-transform duration-300">
+                            <SearchCard
+                                id={product.id}
+                                name={product.name}
+                                brand={product.brand}
+                                imageUrl={product.image_url}
+                            />
+                        </div>
+                    ))
+                ) : null}
+            </div>
 
-  return (
-    <div className="w-full">
-      <h1 className="flex justify-center items-center text-center p-3 pt-2 font-bold text-2xl">
-        {loading ? "Fetching products..." : "All Products"}
-      </h1>
+            {/* No Products Found */}
+            {!loading && products.length === 0 && !error && (
+                <div className="text-center py-20">
+                    <div className="text-6xl mb-4">📦</div>
+                    <h2 className="text-xl font-medium text-gray-600">Hiện chưa có sản phẩm nào.</h2>
+                </div>
+            )}
 
-      {/* Show Loader */}
-      {loading && (
-        <div className="flex justify-center items-center py-6">
-          <span className="animate-spin rounded-full h-10 w-10 border-t-2 border-blue-500"></span>
+            {/* Modern Pagination */}
+            {!loading && totalPages > 1 && (
+                <div className="mt-12 flex justify-center items-center gap-2">
+                    <button
+                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        ← Trang trước
+                    </button>
+
+                    <div className="px-4 py-2 bg-blue-50 text-blue-700 rounded-lg font-bold">
+                        {currentPage} / {totalPages}
+                    </div>
+
+                    <button
+                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        Trang sau →
+                    </button>
+                </div>
+            )}
         </div>
-      )}
-
-      {/* Show Error */}
-      {error && (
-        <div className="flex justify-center items-center text-red-500 py-4">
-          {error}
-        </div>
-      )}
-
-      {/* Show Products */}
-      {!loading && !error && products.length > 0 && (
-        <div>
-          <p className="text-center text-gray-600">
-            Showing {products.length} of {totalProducts} products
-          </p>
-          {products.map((product) => (
-            <SearchCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              brand={product.brand}
-              imageUrl={product.image_url}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* No Products Found */}
-      {!loading && !error && products.length === 0 && (
-        <div className="w-full flex justify-center items-center text-center py-8 font-bold">
-          No products available
-        </div>
-      )}
-
-      {/* Pagination Controls */}
-      {!loading && totalProducts > pageSize && (
-        <div className="flex justify-center items-center space-x-4 py-4">
-          <button
-            onClick={handlePrev}
-            disabled={currentPage === 1}
-            className={`px-4 py-2 rounded-lg ${currentPage === 1 ? "bg-gray-300" : "bg-blue-500 text-white"}`}
-          >
-            Previous
-          </button>
-          <span>Page {currentPage} of {totalPages}</span>
-          <button
-            onClick={handleNext}
-            disabled={currentPage === totalPages}
-            className={`px-4 py-2 rounded-lg ${currentPage === totalPages ? "bg-gray-300" : "bg-blue-500 text-white"}`}
-          >
-            Next
-          </button>
-        </div>
-      )}
-    </div>
-  );
+    );
 }
