@@ -116,15 +116,15 @@ REST API ROUTES
 
 These routes collectively provide a structured and reliable API for the price comparison website, ensuring accurate data retrieval and thoughtful error handling. There are as follows: 
 
-1. Search Route ("/api/search?q={searchTerm}&numitems=10&offset=20"): Using the GET method, this route facilitates a product search based on query parameters, including the search term, offset, and the number of items. It ensures data validity and sends a response with a JSON object containing the search item count and corresponding searched data. 
+1. Search Pagination Route ("/api/pagination?q={searchTerm}&page=1&pageSize=12"): Using the GET method, this route supports product search with pagination. It validates the input and returns total count, page metadata, and a paginated data list. 
 
-This screenshot below shows the result after using this route (where searchTerm= ‘apple,’ numitems=2 and offset=3). 
-
- 
+This screenshot below shows the result after using this route (where searchTerm= 'apple', page=1 and pageSize=12). 
 
  
 
-2. Product Details Route ("/api/product/:productID"): Using the GET method, it is specifically designed to fetch detailed information about a product identified by its unique ID. It queries the database using the provided product ID and responds with a JSON object containing product details. 
+ 
+
+2. Product Route ("/api/product?id={productID}" or "/api/product?page=1&pageSize=12"): Using the GET method, this route can fetch one product by ID or return a paginated product list. It responds with product data and total count for list queries. 
 
 The screenshot below shows the result after using this route (where productID is ‘149’). 
 
@@ -136,7 +136,7 @@ The screenshot below shows the result after using this route (where productID is
 
  
 
-3. Product Comparison Route ("/api/compare/:productID"): Using the GET method, it is tailored for comparing details of a specific product, including additional comparison data. It utilizes the product ID from the route parameter, fetches both product details and comparison data from the database, and responds with a comprehensive JSON object. 
+3. Product Comparison Route ("/api/compare?id={productID}"): Using the GET method, it is tailored for comparing details of a specific product, including additional comparison data. It uses product ID from query params, fetches both product details and comparison data from the database, and responds with a comprehensive JSON object. 
 
 The screenshot below shows the result after using this route (where productID is ‘149’). 
 
