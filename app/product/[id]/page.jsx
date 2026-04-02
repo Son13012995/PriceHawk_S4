@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 // Skeleton giữ nguyên
 const DetailSkeleton = () => (
@@ -29,6 +30,32 @@ export default function ProductItem({ params }) {
     const [comparison, setComparison] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [wishlistMessage, setWishlistMessage] = useState("");
+
+    const addToWishlist = () => {
+        if (!product?.id || typeof window === "undefined") {
+            return;
+        }
+
+        try {
+            const storageKey = "budspot:wishlist";
+            const raw = localStorage.getItem(storageKey);
+            const parsed = raw ? JSON.parse(raw) : [];
+            const existing = Array.isArray(parsed) ? parsed.map(String) : [];
+            const id = String(product.id);
+
+            if (existing.includes(id)) {
+                setWishlistMessage("Sản phẩm đã có trong wishlist.");
+                return;
+            }
+
+            const next = [id, ...existing];
+            localStorage.setItem(storageKey, JSON.stringify(next));
+            setWishlistMessage("Đã thêm vào wishlist.");
+        } catch (storageError) {
+            setWishlistMessage("Không thể lưu wishlist trên trình duyệt này.");
+        }
+    };
 
     useEffect(() => {
         async function fetchData() {
@@ -112,6 +139,31 @@ export default function ProductItem({ params }) {
                             </div>
 
                             <hr className="border-slate-100 my-10" />
+
+                            <div className="mb-8 flex flex-wrap items-center gap-3">
+                                <Link
+                                    href={`/price-history/${params.id}`}
+                                    className="px-4 py-2.5 rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 text-sm font-semibold hover:bg-cyan-100 transition-colors"
+                                >
+                                    Lịch sử giá
+                                </Link>
+                                <Link
+                                    href="/alerts"
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                                >
+                                    Set price alert
+                                </Link>
+                                <button
+                                    onClick={addToWishlist}
+                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
+                                >
+                                    Add to wishlist
+                                </button>
+                            </div>
+
+                            {wishlistMessage ? (
+                                <p className="mb-6 text-sm text-slate-500">{wishlistMessage}</p>
+                            ) : null}
 
                             <div>
                                 {/* Hạ từ bold xuống semibold */}

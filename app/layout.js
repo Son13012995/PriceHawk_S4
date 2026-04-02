@@ -20,11 +20,7 @@ export default function RootLayout({ children }) {
             {children}
         </main>
 
-        <footer className="w-full bg-white border-t border-slate-200 py-6 mt-auto">
-            <div className="container mx-auto px-4 text-center text-sm text-slate-500">
-                <p>&copy; {new Date().getFullYear()} BudSpot. All rights reserved.</p>
-            </div>
-        </footer>
+
         </body>
         </html>
     );

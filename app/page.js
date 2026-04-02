@@ -107,20 +107,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Source Code Links Ribbon (Thay thế Footer cũ rườm rà) */}
-            <section className="py-8 bg-slate-900">
-                <div className="container mx-auto px-4 max-w-7xl flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="text-slate-400 font-medium text-sm">
-                        Budspot Project Report & Source Code:
-                    </div>
-                    <div className="flex flex-wrap justify-center md:justify-end gap-6 text-sm font-medium">
-                        {/* Thay dòng chữ BỎ_LINK_CỦA_BẠN_VÀO_ĐÂY bằng link GitHub thật */}
-                        <a target="_blank" href="https://github.com/Son13012995/PriceHawk_S4" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-                            <span className="h-2 w-2 bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.8)]"></span> Xem trên GitHub
-                        </a>
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }

@@ -1,15 +1,27 @@
-require('dotenv').config();
+const path = require("path");
+require("dotenv").config({
+  path: path.resolve(process.cwd(), ".env"),
+  override: true,
+});
 
 const mysql = require("mysql2");
 
+const dbConfig = {
+  host: process.env.DB_HOST || "localhost",
+  user: (process.env.DB_USER || "").trim(),
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "priceComparison",
+  connectionLimit: Number(process.env.DB_CONNECTION_LIMIT || 10),
+};
+
+if (!dbConfig.user) {
+  console.error(
+    "Database config error: DB_USER is empty. Please set DB_USER in .env file."
+  );
+}
+
 // Creating a MySQL connection pool
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: 'priceComparison',
-  connectionLimit: 10,
-});
+const pool = mysql.createPool(dbConfig);
 
 /**
  * Function to execute SQL queries using a connection from the pool.
