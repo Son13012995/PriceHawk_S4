@@ -32,14 +32,13 @@ export default async function handler(req, res) {
           w.\`id\`, 
           w.\`product_id\`, 
           w.\`added_at\`,
-          p.\`id\` as product_id,
           p.\`name\`,
           p.\`brand\`,
           p.\`image_url\`,
           p.\`current_price\`
         FROM \`wishlist\` w
         JOIN \`product\` p ON w.\`product_id\` = p.\`id\`
-        WHERE w.\`user_id\` IS NULL OR w.\`user_id\` = ?
+        WHERE w.\`user_id\` <=> ?
         ORDER BY w.\`added_at\` DESC`,
         [userId]
       );
@@ -58,7 +57,7 @@ export default async function handler(req, res) {
 
     try {
       await db.query(
-        "DELETE FROM `wishlist` WHERE `product_id` = ? AND (`user_id` IS NULL OR `user_id` = ?)",
+        "DELETE FROM `wishlist` WHERE `product_id` = ? AND `user_id` <=> ?",
         [productId, userId]
       );
       res.status(200).json({ message: "Removed from wishlist" });
