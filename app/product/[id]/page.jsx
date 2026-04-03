@@ -31,29 +31,71 @@ export default function ProductItem({ params }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [wishlistMessage, setWishlistMessage] = useState("");
+    const [showAlertForm, setShowAlertForm] = useState(false);
+    const [alertTarget, setAlertTarget] = useState("");
+    const [alertNote, setAlertNote] = useState("");
+    const [alertError, setAlertError] = useState("");
 
-    const addToWishlist = () => {
-        if (!product?.id || typeof window === "undefined") {
+    const addToWishlist = async () => {
+        if (!product?.id) {
             return;
         }
 
         try {
-            const storageKey = "budspot:wishlist";
-            const raw = localStorage.getItem(storageKey);
-            const parsed = raw ? JSON.parse(raw) : [];
-            const existing = Array.isArray(parsed) ? parsed.map(String) : [];
-            const id = String(product.id);
+            const response = await axios.post("/api/wishlist", {
+                productId: product.id,
+                userId: null,
+            });
 
-            if (existing.includes(id)) {
-                setWishlistMessage("Sản phẩm đã có trong wishlist.");
-                return;
+            if (response.status === 201 || response.status === 200) {
+                setWishlistMessage("✓ Đã thêm vào wishlist.");
+                setTimeout(() => setWishlistMessage(""), 3000);
             }
+        } catch (error) {
+            if (error.response?.status === 409) {
+                setWishlistMessage("Sản phẩm đã có trong wishlist.");
+            } else {
+                setWishlistMessage("Không thể thêm vào wishlist. Vui lòng thử lại.");
+            }
+            setTimeout(() => setWishlistMessage(""), 3000);
+        }
+    };
 
-            const next = [id, ...existing];
-            localStorage.setItem(storageKey, JSON.stringify(next));
-            setWishlistMessage("Đã thêm vào wishlist.");
-        } catch (storageError) {
-            setWishlistMessage("Không thể lưu wishlist trên trình duyệt này.");
+    const handlePriceAlertSubmit = async (e) => {
+        e.preventDefault();
+        setAlertError("");
+
+        const currentPrice = product?.current_price || 0;
+        const target = Number(alertTarget);
+
+        if (!alertTarget.trim() || target <= 0) {
+            setAlertError("Vui lòng nhập mức giá hợp lệ.");
+            return;
+        }
+
+        if (target >= currentPrice) {
+            setAlertError(`Mức giá mục tiêu phải thấp hơn giá hiện tại (£${currentPrice}).`);
+            return;
+        }
+
+        try {
+            const response = await axios.post("/api/price-alert", {
+                productId: product.id,
+                targetPrice: target,
+                note: alertNote.trim() || null,
+                userId: null,
+            });
+
+            if (response.status === 201) {
+                setWishlistMessage(`✓ Đã tạo price alert (mục tiêu: £${target})`);
+                setTimeout(() => setWishlistMessage(""), 3000);
+
+                setShowAlertForm(false);
+                setAlertTarget("");
+                setAlertNote("");
+            }
+        } catch (error) {
+            setAlertError(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
         }
     };
 
@@ -147,12 +189,12 @@ export default function ProductItem({ params }) {
                                 >
                                     Lịch sử giá
                                 </Link>
-                                <Link
-                                    href="/alerts"
+                                <button
+                                    onClick={() => setShowAlertForm(true)}
                                     className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
                                 >
                                     Set price alert
-                                </Link>
+                                </button>
                                 <button
                                     onClick={addToWishlist}
                                     className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
@@ -224,6 +266,121 @@ export default function ProductItem({ params }) {
                     </div>
                 )}
             </div>
+
+            {/* Price Alert Form Modal */}
+            {showAlertForm && product && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-bold text-slate-900">Tạo Price Alert</h2>
+                            <button
+                                onClick={() => {
+                                    setShowAlertForm(false);
+                                    setAlertError("");
+                                    setAlertTarget("");
+                                    setAlertNote("");
+                                }}
+                                className="text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Product info */}
+                        <div className="mb-6 flex items-center gap-3 p-3 bg-cyan-50 rounded-xl border border-cyan-200">
+                            {product?.image_url && (
+                                <img
+                                    src={product.image_url}
+                                    alt={product.name}
+                                    className="h-12 w-12 rounded object-cover"
+                                />
+                            )}
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-slate-900 truncate">{product?.name}</p>
+                                <p className="text-sm text-cyan-700 font-bold">£{product?.current_price}</p>
+                            </div>
+                        </div>
+
+                        {/* Form */}
+                        <form onSubmit={handlePriceAlertSubmit} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                    Mức giá mục tiêu
+                                </label>
+                                <div className="relative">
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">£</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        value={alertTarget}
+                                        onChange={(e) => setAlertTarget(e.target.value)}
+                                        placeholder={`Dưới £${product?.current_price}`}
+                                        className="w-full pl-7 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
+                                        autoFocus
+                                    />
+                                </div>
+                                {alertTarget && (
+                                    <p className={`mt-2 text-xs font-medium ${
+                                        Number(alertTarget) < product?.current_price ? "text-emerald-600" : "text-rose-600"
+                                    }`}>
+                                        {Number(alertTarget) < product?.current_price
+                                            ? `✓ Tiết kiệm £${(product?.current_price - Number(alertTarget)).toFixed(2)}`
+                                            : `✗ Phải thấp hơn £${product?.price}`}
+                                    </p>
+                                )}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                    Ghi chú (tuỳ chọn)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={alertNote}
+                                    onChange={(e) => setAlertNote(e.target.value)}
+                                    placeholder="Vì sao bạn muốn alert này?"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
+                                />
+                            </div>
+
+                            {alertError && (
+                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700 font-medium">
+                                    {alertError}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowAlertForm(false);
+                                        setAlertError("");
+                                        setAlertTarget("");
+                                        setAlertNote("");
+                                    }}
+                                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={!alertTarget}
+                                    className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-white transition-colors ${
+                                        alertTarget
+                                            ? "bg-cyan-600 hover:bg-cyan-700"
+                                            : "bg-slate-300 cursor-not-allowed"
+                                    }`}
+                                >
+                                    Tạo Alert
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,22 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
-
-const STORAGE_KEY = "budspot:price-alerts";
-
-function loadAlerts() {
-  if (typeof window === "undefined") {
-    return [];
-  }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (error) {
-    return [];
-  }
-}
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
@@ -24,20 +11,30 @@ export default function AlertsPage() {
   const [targetPrice, setTargetPrice] = useState("");
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchAlerts = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get("/api/price-alert", { 
+        params: { userId: null, status: "active" } 
+      });
+      setAlerts(response.data.data || []);
+    } catch (error) {
+      setMessage("Không thể tải alerts. Vui lòng thử lại.");
+      console.error("Error fetching alerts:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    setAlerts(loadAlerts());
+    fetchAlerts();
   }, []);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
-    }
-  }, [alerts]);
+  const activeCount = useMemo(() => alerts.filter((item) => item.status === "active").length, [alerts]);
 
-  const activeCount = useMemo(() => alerts.filter((item) => item.active).length, [alerts]);
-
-  const submitAlert = (event) => {
+  const submitAlert = async (event) => {
     event.preventDefault();
     const target = Number(targetPrice);
 
@@ -46,31 +43,57 @@ export default function AlertsPage() {
       return;
     }
 
-    const nextAlert = {
-      id: `${selectedProduct.id}-${Date.now()}`,
-      productId: selectedProduct.id,
-      productName: selectedProduct.name,
-      targetPrice: target,
-      note: note.trim(),
-      active: true,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const response = await axios.post("/api/price-alert", {
+        productId: selectedProduct.id,
+        targetPrice: target,
+        note: note.trim() || null,
+        userId: null,
+      });
 
-    setAlerts((prev) => [nextAlert, ...prev]);
-    setSelectedProduct(null);
-    setTargetPrice("");
-    setNote("");
-    setMessage("Đã tạo price alert mới.");
+      if (response.status === 201) {
+        setMessage("Đã tạo price alert mới.");
+        setSelectedProduct(null);
+        setTargetPrice("");
+        setNote("");
+        setTimeout(() => setMessage(""), 3000);
+        // Reload alerts
+        fetchAlerts();
+      }
+    } catch (error) {
+      setMessage(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
+      setTimeout(() => setMessage(""), 3000);
+    }
   };
 
-  const toggleAlert = (id) => {
-    setAlerts((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, active: !item.active } : item))
-    );
+  const toggleAlert = async (id, currentStatus) => {
+    const newStatus = currentStatus === "active" ? "inactive" : "active";
+    try {
+      await axios.put("/api/price-alert", {
+        alertId: id,
+        status: newStatus,
+      });
+      // Reload alerts
+      fetchAlerts();
+    } catch (error) {
+      setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
+      setTimeout(() => setMessage(""), 3000);
+    }
   };
 
-  const removeAlert = (id) => {
-    setAlerts((prev) => prev.filter((item) => item.id !== id));
+  const removeAlert = async (id) => {
+    try {
+      await axios.delete("/api/price-alert", {
+        data: { alertId: id },
+      });
+      setMessage("Đã xóa alert.");
+      setTimeout(() => setMessage(""), 3000);
+      // Reload alerts
+      fetchAlerts();
+    } catch (error) {
+      setMessage("Không thể xóa alert. Vui lòng thử lại.");
+      setTimeout(() => setMessage(""), 3000);
+    }
   };
 
   return (
@@ -157,7 +180,13 @@ export default function AlertsPage() {
 
         <section className={cn(ui.card, "p-6 md:p-8")}> 
           <h2 className="text-xl font-bold text-slate-900">Danh sách alerts</h2>
-          {alerts.length === 0 ? (
+          {loading ? (
+            <div className="mt-4 space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+              ))}
+            </div>
+          ) : alerts.length === 0 ? (
             <p className={cn(ui.mutedText, "mt-3")}>Chưa có alert nào. Hãy tạo alert đầu tiên của bạn.</p>
           ) : (
             <div className="mt-4 space-y-3">
@@ -165,21 +194,21 @@ export default function AlertsPage() {
                 <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-bold text-slate-900">{item.productName || `Product #${item.productId}`}</p>
-                      <p className="text-sm text-slate-600">Target: £{item.targetPrice}</p>
+                      <p className="text-sm font-bold text-slate-900">{item.name || `Product #${item.product_id}`}</p>
+                      <p className="text-sm text-slate-600">Target: £{item.target_price}</p>
                       {item.note ? <p className="text-xs text-slate-500 mt-1">{item.note}</p> : null}
                     </div>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => toggleAlert(item.id)}
+                        onClick={() => toggleAlert(item.id, item.status)}
                         className={cn(
                           "rounded-lg px-3 py-1 text-xs font-semibold",
-                          item.active
+                          item.status === "active"
                             ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                         )}
                       >
-                        {item.active ? "Active" : "Paused"}
+                        {item.status === "active" ? "Active" : "Paused"}
                       </button>
                       <button
                         onClick={() => removeAlert(item.id)}
