@@ -6,88 +6,64 @@ import SearchCard from "../../components/SearchCard";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
 
-const STORAGE_KEY = "budspot:wishlist";
-
-function loadWishlistIds() {
-  if (typeof window === "undefined") {
-    return [];
-  }
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    return [];
-  }
-}
-
 export default function WishlistPage() {
-  const [ids, setIds] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  useEffect(() => {
-    setIds(loadWishlistIds());
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  const fetchWishlist = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get("/api/wishlist", { params: { userId: null } });
+      setProducts(response.data.data || []);
+    } catch (error) {
+      setMessage("Không thể tải wishlist. Vui lòng thử lại.");
+      console.error("Error fetching wishlist:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [ids]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function fetchProducts() {
-      if (ids.length === 0) {
-        setProducts([]);
-        setLoading(false);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const requests = ids.map((id) => axios.get(`/api/product`, { params: { id } }));
-        const responses = await Promise.all(requests);
-        const merged = responses
-          .map((res) => (Array.isArray(res.data) ? res.data[0] : null))
-          .filter(Boolean);
-
-        if (mounted) {
-          setProducts(merged);
-        }
-      } catch (error) {
-        if (mounted) {
-          setMessage("Không thể tải đầy đủ wishlist. Vui lòng thử lại.");
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    }
-
-    fetchProducts();
-
-    return () => {
-      mounted = false;
-    };
-  }, [ids]);
-
-  const addToWishlist = (product) => {
-    const id = String(product.id);
-    if (ids.includes(id)) {
-      setMessage("Sản phẩm này đã có trong wishlist.");
-      return;
-    }
-    setIds((prev) => [id, ...prev]);
-    setMessage("Đã thêm sản phẩm vào wishlist.");
   };
 
-  const removeItem = (id) => {
-    setIds((prev) => prev.filter((item) => item !== id));
+  useEffect(() => {
+    fetchWishlist();
+  }, []);
+
+  const addToWishlist = async (product) => {
+    try {
+      const response = await axios.post("/api/wishlist", {
+        productId: product.id,
+        userId: null,
+      });
+
+      if (response.status === 201 || response.status === 200) {
+        setMessage("Đã thêm sản phẩm vào wishlist.");
+        setTimeout(() => setMessage(""), 3000);
+        // Reload wishlist
+        fetchWishlist();
+      }
+    } catch (error) {
+      if (error.response?.status === 409) {
+        setMessage("Sản phẩm này đã có trong wishlist.");
+      } else {
+        setMessage("Không thể thêm sản phẩm. Vui lòng thử lại.");
+      }
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
+
+  const removeItem = async (productId) => {
+    try {
+      await axios.delete("/api/wishlist", {
+        data: { productId, userId: null },
+      });
+      setMessage("Đã xóa khỏi wishlist.");
+      setTimeout(() => setMessage(""), 3000);
+      // Reload wishlist
+      fetchWishlist();
+    } catch (error) {
+      setMessage("Không thể xóa sản phẩm. Vui lòng thử lại.");
+      setTimeout(() => setMessage(""), 3000);
+    }
   };
 
   return (
@@ -96,7 +72,7 @@ export default function WishlistPage() {
         <header className={cn(ui.card, "p-6 md:p-8")}> 
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">Saved Items</p>
           <h1 className={cn(ui.heading, "mt-3 text-3xl font-black sm:text-4xl")}>Wishlist</h1>
-          <p className={cn(ui.mutedText, "mt-3")}>Giao diện tab tương tự giỏ hàng để lưu và quay lại sản phẩm yêu thích.</p>
+          <p className={cn(ui.mutedText, "mt-3")}>Danh sách sản phẩm bạn đã lưu.</p>
         </header>
 
         <section className={cn(ui.card, "p-6 md:p-8")}> 
@@ -119,15 +95,15 @@ export default function WishlistPage() {
           ) : products.length > 0 ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {products.map((item) => (
-                <div key={item.id} className="space-y-2">
+                <div key={item.product_id} className="space-y-2">
                   <SearchCard
-                    id={item.id}
+                    id={item.product_id}
                     name={item.name}
                     brand={item.brand}
                     imageUrl={item.image_url}
                   />
                   <button
-                    onClick={() => removeItem(String(item.id))}
+                    onClick={() => removeItem(item.product_id)}
                     className={cn("w-full rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100", ui.ring)}
                   >
                     Remove

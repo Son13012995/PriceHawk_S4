@@ -7,7 +7,12 @@ export default async function handler(req, res) {
   if (!id) return res.status(400).json({ error: "Missing product ID" });
 
   try {
-    const productSql = "SELECT * FROM product WHERE id = ?";
+    const productSql = `
+      SELECT p.*, 
+        (SELECT MIN(price) FROM comparison c WHERE c.product_id = p.id) AS min_price,
+        (SELECT COUNT(*) FROM comparison c WHERE c.product_id = p.id) AS retailer_count
+      FROM product p WHERE p.id = ?
+    `;
     const comparisonSql = "SELECT * FROM comparison WHERE product_id = ?";
 
     const product = await db.query(productSql, [id]);
