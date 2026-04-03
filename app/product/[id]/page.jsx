@@ -328,7 +328,7 @@ export default function ProductItem({ params }) {
                                     }`}>
                                         {Number(alertTarget) < product?.current_price
                                             ? `✓ Tiết kiệm £${(product?.current_price - Number(alertTarget)).toFixed(2)}`
-                                            : `✗ Phải thấp hơn £${product?.price}`}
+                                            : `✗ Phải thấp hơn £${product?.current_price}`}
                                     </p>
                                 )}
                             </div>
@@ -341,7 +341,7 @@ export default function ProductItem({ params }) {
                                     type="text"
                                     value={alertNote}
                                     onChange={(e) => setAlertNote(e.target.value)}
-                                    placeholder="Vì sao bạn muốn alert này?"
+                                    placeholder="Ghi chú?"
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
                                 />
                             </div>
