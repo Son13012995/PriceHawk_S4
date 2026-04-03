@@ -24,7 +24,7 @@ export default function Home() {
                                 </span> thông minh
                             </h1>
                             <p className="text-lg text-slate-600 mb-8 leading-relaxed max-w-xl">
-                                Budspot giúp bạn dễ dàng tìm kiếm mức giá tốt nhất cho tai nghe và các thiết bị công nghệ từ những sàn thương mại điện tử hàng đầu.
+                                PriceHawk giúp bạn dễ dàng tìm kiếm mức giá tốt nhất cho tai nghe và các thiết bị công nghệ từ những sàn thương mại điện tử hàng đầu.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <Link href="/product" className="inline-flex justify-center items-center px-8 py-3.5 text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-300 hover:-translate-y-0.5 transition-all duration-300">

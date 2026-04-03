@@ -72,7 +72,7 @@ export default function WishlistPage() {
         <header className={cn(ui.card, "p-6 md:p-8")}> 
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">Saved Items</p>
           <h1 className={cn(ui.heading, "mt-3 text-3xl font-black sm:text-4xl")}>Wishlist</h1>
-          <p className={cn(ui.mutedText, "mt-3")}>Giao diện tab tương tự giỏ hàng để lưu và quay lại sản phẩm yêu thích.</p>
+          <p className={cn(ui.mutedText, "mt-3")}>Danh sách sản phẩm bạn đã lưu.</p>
         </header>
 
         <section className={cn(ui.card, "p-6 md:p-8")}> 

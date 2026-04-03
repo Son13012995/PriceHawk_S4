@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-    title: "BudSpot | So sánh giá đồ điện tử",
+    title: "PriceHawkS4 | So sánh giá đồ điện tử",
     description: "Hệ thống so sánh giá đồ công nghệ thông minh, cập nhật thời gian thực.",
     keywords: ["so sánh giá", "đồ điện tử", "tai nghe", "earbuds", "headphones", "VNU IT"],
 };

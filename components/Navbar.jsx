@@ -12,7 +12,7 @@ export default function Navbar() {
 
                     <div className="flex-shrink-0 flex items-center">
                         <Link href="/" className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-700 to-sky-500">
-                            BudSpot
+                            PriceHawk
                         </Link>
                     </div>
 
