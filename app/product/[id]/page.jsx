@@ -5,6 +5,7 @@ import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { formatPrice } from "@/app/utils/format";
 
 // Skeleton giữ nguyên
 const DetailSkeleton = () => (
@@ -74,7 +75,7 @@ export default function ProductItem({ params }) {
         }
 
         if (target >= currentPrice) {
-            setAlertError(`Mức giá mục tiêu phải thấp hơn giá hiện tại (£${currentPrice}).`);
+            setAlertError(`Mức giá mục tiêu phải thấp hơn giá hiện tại (${formatPrice(currentPrice)}đ).`);
             return;
         }
 
@@ -87,7 +88,7 @@ export default function ProductItem({ params }) {
             });
 
             if (response.status === 201) {
-                setWishlistMessage(`✓ Đã tạo price alert (mục tiêu: £${target})`);
+                setWishlistMessage(`✓ Đã tạo price alert (mục tiêu: ${formatPrice(target)}đ)`);
                 setTimeout(() => setWishlistMessage(""), 3000);
 
                 setShowAlertForm(false);
@@ -232,7 +233,7 @@ export default function ProductItem({ params }) {
                                                         <span className="text-sm font-medium text-slate-500">Giá bán:</span>
                                                         {/* Hạ từ extrabold xuống bold */}
                                                         <span className="font-bold text-2xl tracking-tight text-slate-800 group-hover:text-indigo-600 transition-colors">
-                                                            &#163;{data?.price}
+                                                            {formatPrice(data?.price)}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -299,7 +300,7 @@ export default function ProductItem({ params }) {
                             )}
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-slate-900 truncate">{product?.name}</p>
-                                <p className="text-sm text-cyan-700 font-bold">£{product?.current_price}</p>
+                                <p className="text-sm text-cyan-700 font-bold">formatPrice(current_price)</p>
                             </div>
                         </div>
 
@@ -310,14 +311,14 @@ export default function ProductItem({ params }) {
                                     Mức giá mục tiêu
                                 </label>
                                 <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">£</span>
+                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">formatPrice(target)</span>
                                     <input
                                         type="number"
                                         step="0.01"
                                         min="0"
                                         value={alertTarget}
                                         onChange={(e) => setAlertTarget(e.target.value)}
-                                        placeholder={`Dưới £${product?.current_price}`}
+                                        placeholder={`Dưới formatPrice(product?.current_price})`}
                                         className="w-full pl-7 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
                                         autoFocus
                                     />
