@@ -86,7 +86,7 @@ export default function ProductSearch({ onSelectProduct, placeholder = "Tìm ki�
                   <p className="text-xs text-slate-500">{product.brand || "N/A"}</p>
                 </div>
                 {product.price && (
-                  <p className="text-sm font-bold text-cyan-600">£{product.price}</p>
+                  <p className="text-sm font-bold text-cyan-600">formatPrice(product.price)</p>
                 )}
               </button>
             ))

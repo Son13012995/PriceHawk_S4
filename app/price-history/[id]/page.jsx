@@ -25,6 +25,10 @@ function buildHistoryRows(basePrice) {
   });
 }
 
+function formatPrice(price) {
+  return new Intl.NumberFormat("vi-VN").format(price);
+}
+
 export default function PriceHistoryPage({ params }) {
   const [product, setProduct] = useState(null);
   const [comparison, setComparison] = useState([]);
@@ -98,7 +102,7 @@ export default function PriceHistoryPage({ params }) {
                       style={{ width: `${Math.max(12, (row.price / high) * 100)}%` }}
                     />
                   </div>
-                  <span className="text-right text-sm font-bold text-slate-900">£{row.price}</span>
+                  <span className="text-right text-sm font-bold text-slate-900">{formatPrice(row.price)}₫</span>
                 </div>
               ))}
             </div>

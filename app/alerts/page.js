@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
+import { formatPrice } from "../utils/format"
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
@@ -195,7 +196,7 @@ export default function AlertsPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-bold text-slate-900">{item.name || `Product #${item.product_id}`}</p>
-                      <p className="text-sm text-slate-600">Target: £{item.target_price}</p>
+                      <p className="text-sm text-slate-600">Target: {item.formatP}</p>
                       {item.note ? <p className="text-xs text-slate-500 mt-1">{item.note}</p> : null}
                     </div>
                     <div className="flex gap-2">
