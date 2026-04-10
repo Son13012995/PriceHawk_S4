@@ -46,3 +46,8 @@ next-env.d.ts
 .vscode/
 dump-priceComparison-202312131918.sql
 dump-priceComparison-202312131918.sql
+
+# Crawler data (don't push to repo)
+price-hawk/data/
+*.jsonl
+*.json
