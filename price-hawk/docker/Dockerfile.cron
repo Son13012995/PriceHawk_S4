@@ -1,0 +1,37 @@
+FROM python:3.12-slim
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    cron \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /app/price-hawk
+
+# Install Python dependencies first for better layer caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir scrapy pymysql python-dotenv && \
+    if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
+
+# Copy project
+COPY . .
+
+# Create logs directory
+RUN mkdir -p logs data
+
+# Make run_crawler.sh executable
+RUN chmod +x run_crawler.sh
+
+# Register cron schedule (hourly for production). Change as needed: * * * * * = every minute for testing
+RUN echo "0 * * * * /app/price-hawk/run_crawler.sh default >> /app/price-hawk/logs/cron.log 2>&1" > /etc/cron.d/crawler-cron && \
+    chmod 0644 /etc/cron.d/crawler-cron && \
+    crontab /etc/cron.d/crawler-cron
+
+# Health check
+HEALTHCHECK --interval=5m --timeout=30s --start-period=10s --retries=3 \
+    CMD ["sh", "-c", "test -f /app/price-hawk/logs/cron.log || test -n \"$(ls -A /app/price-hawk/logs/crawler_*.log 2>/dev/null)\""]
+
+# Start cron daemon and persist environment for cron jobs
+CMD ["sh", "-c", "printenv > /etc/environment && cron -f"]
