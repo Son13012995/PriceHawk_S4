@@ -1,0 +1,14 @@
+services:
+  crawler:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.cron
+    container_name: price_hawk_crawler
+    volumes:
+      - ..:/app/price-hawk
+      - ../logs:/app/price-hawk/logs
+    env_file:
+      - ../.env
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    restart: unless-stopped
