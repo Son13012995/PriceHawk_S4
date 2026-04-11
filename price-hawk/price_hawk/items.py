@@ -24,3 +24,5 @@ class PhoneItem(scrapy.Item):
     normalize_name = scrapy.Field()
     confidence_score = scrapy.Field()
     color_norm = scrapy.Field()
+    ram = scrapy.Field()
+    rom = scrapy.Field()
