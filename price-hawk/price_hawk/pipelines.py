@@ -47,6 +47,10 @@ class NormalizePhonePipeline:
         if not adapter.get("brand") and adapter.get("brand_norm"):
             adapter["brand"] = adapter.get("brand_norm")
 
+        # Keep RAM and ROM as separate fields
+        adapter["ram"] = adapter.get("ram_norm")
+        adapter["rom"] = adapter.get("rom_norm")
+
         if "old_price" in adapter:
             del adapter["old_price"]
         if "color_norm" in adapter:
@@ -73,6 +77,8 @@ class NormalizePhonePipeline:
             "scraped_at",
             "image_url",
             "description",
+            "ram",
+            "rom",
         }
         for key in list(adapter.keys()):
             if key not in allowed_fields:
