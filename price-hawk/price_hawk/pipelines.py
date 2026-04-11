@@ -47,9 +47,20 @@ class NormalizePhonePipeline:
         if not adapter.get("brand") and adapter.get("brand_norm"):
             adapter["brand"] = adapter.get("brand_norm")
 
-        # Keep RAM and ROM as separate fields
-        adapter["ram"] = adapter.get("ram_norm")
-        adapter["rom"] = adapter.get("rom_norm")
+        # Extract RAM and ROM from variant_key (preserve spider values as fallback)
+        variant_key = adapter.get("variant_key") or ""
+        ram_match = re.search(r'ram-(\w+?)(?:_|$)', variant_key)
+        rom_match = re.search(r'rom-(\w+?)(?:_|$)', variant_key)
+        
+        if ram_match and ram_match.group(1).lower() != 'na':
+            adapter["ram"] = ram_match.group(1)
+        elif not adapter.get("ram"):  # Only fallback if spider didn't set it
+            adapter["ram"] = adapter.get("ram_norm")
+        
+        if rom_match and rom_match.group(1).lower() != 'na':
+            adapter["rom"] = rom_match.group(1)
+        elif not adapter.get("rom"):  # Only fallback if spider didn't set it
+            adapter["rom"] = adapter.get("rom_norm")
 
         if "old_price" in adapter:
             del adapter["old_price"]

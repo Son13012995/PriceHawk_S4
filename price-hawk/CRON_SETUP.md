@@ -5,6 +5,7 @@
 This guide shows how to test cron locally using Docker, then deploy to production Linux server.
 
 **Files:**
+
 - `run_crawler.sh` - Main wrapper script (works locally & production)
 - `docker/` folder - Docker setup for local/team testing (NOT needed on production server)
 - `.env` - Environment variables (adjust database connection)
@@ -131,13 +132,13 @@ grep CRON /var/log/syslog  # Ubuntu/Debian
 
 ## 📊 Cron Schedule Examples
 
-| Schedule | Crontab | Mode | Use Case |
-|----------|---------|------|----------|
-| Daily 2 AM | `0 2 * * *` | skip | Default (normal operation) |
-| Every 6 hours | `0 */6 * * *` | skip | Frequent updates |
-| Every hour | `0 * * * *` | fast | High-frequency crawl |
-| Weekdays 2 AM | `0 2 * * 1-5` | skip | Business days only |
-| Custom retry | `*/15 * * * *` | default | Quick dev testing |
+| Schedule      | Crontab        | Mode    | Use Case                   |
+| ------------- | -------------- | ------- | -------------------------- |
+| Daily 2 AM    | `0 2 * * *`    | skip    | Default (normal operation) |
+| Every 6 hours | `0 */6 * * *`  | skip    | Frequent updates           |
+| Every hour    | `0 * * * *`    | fast    | High-frequency crawl       |
+| Weekdays 2 AM | `0 2 * * 1-5`  | skip    | Business days only         |
+| Custom retry  | `*/15 * * * *` | default | Quick dev testing          |
 
 ---
 
@@ -190,6 +191,7 @@ mysql -h localhost -u root -p priceComparison -e "SELECT 1;"
 ## 🎯 Summary
 
 **Local Testing:**
+
 ```bash
 docker build -f docker/Dockerfile.cron -t pricehawk-cron .
 docker run -it -v /path/to/price-hawk:/app/price-hawk pricehawk-cron bash
@@ -197,6 +199,7 @@ docker run -it -v /path/to/price-hawk:/app/price-hawk pricehawk-cron bash
 ```
 
 **Production:**
+
 ```bash
 # SSH to server
 chmod +x run_crawler.sh
@@ -209,11 +212,13 @@ crontab -e
 ## ☑️ Quick Deployment Checklist
 
 **Before pushing to server:**
+
 - [ ] Clone full repo (includes `docker/` for team reference)
 - [ ] Server won't use Docker - skip `docker/` folder
 - [ ] Server uses shell cron directly
 
 **On production server:**
+
 ```bash
 git clone <repo> price-hawk
 cd price-hawk
@@ -228,6 +233,7 @@ crontab -e
 ```
 
 **Team local testing (optional):**
+
 ```bash
 cd docker
 docker-compose up -d
@@ -236,6 +242,7 @@ docker-compose up -d
 ---
 
 **Cleanup local (after testing):**
+
 - `docker/` folder stays in repo (team can use anytime)
 - Server deployment ignores `docker/` folder - not needed
 - Keep `run_crawler.sh` in Git (required everywhere)
