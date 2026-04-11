@@ -1,4 +1,5 @@
 from urllib.parse import urljoin
+import re
 
 import scrapy
 from scrapy import signals
@@ -32,6 +33,40 @@ class FptCatalogSpider(scrapy.Spider):
             "path_prefix": "/may-tinh-bang/",
         },
     }
+
+    @staticmethod
+    def extract_memory_specs(text):
+        """Extract RAM/ROM from product name or description (format: 8GB 256GB)."""
+        if not text:
+            return None, None
+
+        text = str(text).lower()
+
+        # Extract all numbers followed by GB
+        numbers = re.findall(r'(\d+)\s*gb', text)
+        numbers = [int(n) for n in numbers]
+
+        if not numbers:
+            return None, None
+
+        # Remove duplicates and sort
+        numbers = sorted(set(numbers))
+
+        ram = None
+        rom = None
+
+        if len(numbers) >= 2:
+            # If 2+ numbers: smallest likely RAM, largest ROM
+            ram = f"{numbers[0]}gb"
+            rom = f"{numbers[-1]}gb"
+        elif len(numbers) == 1:
+            # If only 1 number: heuristic - if <=32 likely RAM, else ROM
+            if numbers[0] <= 32:
+                ram = f"{numbers[0]}gb"
+            else:
+                rom = f"{numbers[0]}gb"
+
+        return ram, rom
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -127,6 +162,10 @@ class FptCatalogSpider(scrapy.Spider):
 
         self.crawled_item_count += 1
 
+        # Extract RAM and ROM from name + description only (not full page which has noise)
+        combined_text = f"{name or ''} {description or ''}"
+        ram, rom = self.extract_memory_specs(combined_text)
+
         yield PhoneItem(
             source="fpt",
             product_id=response.url.rstrip("/").split("/")[-1],
@@ -141,6 +180,8 @@ class FptCatalogSpider(scrapy.Spider):
             image_url=image_url,
             description=clean_space(description),
             category_path_raw=category_path_raw,
+            ram=ram,
+            rom=rom,
         )
 
     def spider_closed(self, spider, reason):
