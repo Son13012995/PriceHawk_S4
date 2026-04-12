@@ -36,6 +36,8 @@ export default function ProductItem({ params }) {
     const [alertTarget, setAlertTarget] = useState("");
     const [alertNote, setAlertNote] = useState("");
     const [alertError, setAlertError] = useState("");
+    const [isInWishlist, setIsInWishlist] = useState(false);
+    const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
     const addToWishlist = async () => {
         if (!product?.id) return;
@@ -45,12 +47,35 @@ export default function ProductItem({ params }) {
                 userId: null,
             });
             if (response.status === 201 || response.status === 200) {
+                setIsInWishlist(true);
                 setWishlistMessage("✓ Đã thêm vào wishlist.");
                 setTimeout(() => setWishlistMessage(""), 3000);
             }
         } catch (error) {
-            setWishlistMessage("Sản phẩm đã có trong wishlist.");
+            setWishlistMessage("Lỗi khi thêm vào wishlist.");
             setTimeout(() => setWishlistMessage(""), 3000);
+        }
+    };
+
+    const removeFromWishlist = async () => {
+        if (!product?.id) return;
+        try {
+            await axios.delete("/api/wishlist", { data: { productId: product.id, userId: null } });
+            setIsInWishlist(false);
+            setWishlistMessage("Đã xóa khỏi wishlist.");
+            setTimeout(() => setWishlistMessage(""), 3000);
+            setShowRemoveConfirm(false);
+        } catch (error) {
+            setWishlistMessage("Lỗi khi xóa khỏi wishlist.");
+            setTimeout(() => setWishlistMessage(""), 3000);
+        }
+    };
+
+    const handleWishlistClick = () => {
+        if (isInWishlist) {
+            setShowRemoveConfirm(true);
+        } else {
+            addToWishlist();
         }
     };
 
@@ -95,6 +120,12 @@ export default function ProductItem({ params }) {
                 const res = await axios.get(`/api/compare?id=${params.id}`);
                 setProduct(res.data?.product[0]);
                 setComparison(res.data?.comparison);
+
+                // Fetch wishlist data to check if this product is saved
+                const wlRes = await axios.get("/api/wishlist");
+                const wlData = wlRes.data?.data || [];
+                setIsInWishlist(wlData.some(item => item.product_id === Number(params.id)));
+
             } catch (error) {
                 setError("Lỗi tải dữ liệu.");
             } finally {
@@ -157,11 +188,16 @@ export default function ProductItem({ params }) {
                                 </button>
 
                                 <button
-                                    onClick={addToWishlist}
-                                    className="flex-[1.5] min-w-[170px] px-6 py-4 bg-slate-900 dark:bg-teal-50 text-white dark:text-teal-900 font-bold rounded-[1.25rem] hover:bg-teal-600 dark:hover:bg-white hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 shadow-[0_8px_20px_rgb(0,0,0,0.12)] border-2 border-transparent"
+                                    onClick={handleWishlistClick}
+                                    className={`flex-[1.5] min-w-[170px] px-6 py-4 font-bold rounded-[1.25rem] transition-all flex items-center justify-center gap-3 border-2 ${isInWishlist
+                                            ? "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/40"
+                                            : "bg-slate-900 dark:bg-teal-50 text-white dark:text-teal-900 border-transparent hover:bg-teal-600 dark:hover:bg-white hover:-translate-y-0.5 shadow-[0_8px_20px_rgb(0,0,0,0.12)]"
+                                        }`}
                                 >
-                                    <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={0} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
-                                    Lưu vào Wishlist
+                                    <svg className={`w-5 h-5 ${isInWishlist ? 'text-rose-500' : 'text-red-500'}`} fill={isInWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isInWishlist ? 0 : 2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    {isInWishlist ? "Đã lưu vào Wishlist" : "Lưu vào Wishlist"}
                                 </button>
                             </div>
 
@@ -279,6 +315,19 @@ export default function ProductItem({ params }) {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Modal Confirm Remove Wishlist */}
+            {showRemoveConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200 dark:border-slate-700 p-6 animate-in zoom-in-95">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Bỏ lưu sản phẩm?</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Bạn có chắc chắn muốn bỏ lưu sản phẩm này khỏi Wishlist chứ?</p>
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setShowRemoveConfirm(false)} className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Không</button>
+                            <button onClick={removeFromWishlist} className="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/30">Nghỉ chơi luôn</button>
                         </div>
                     </div>
                 </div>
