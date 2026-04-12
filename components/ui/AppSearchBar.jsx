@@ -76,16 +76,16 @@ export default function AppSearchBar({
         onFocus={() => searchTerm.trim() && setIsOpen(true)}
         placeholder={placeholder}
         className={cn(
-          "w-full rounded-full border border-slate-200 bg-slate-50 pl-10 pr-4 text-slate-900 placeholder:text-slate-400 transition",
+          "w-full rounded-full border border-slate-200 bg-slate-50 pl-10 pr-4 text-slate-900 placeholder:text-slate-400 transition dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500",
           compact ? "py-2 text-sm" : "py-3 text-base",
-          "focus:border-cyan-500 focus:bg-white",
+          "focus:border-cyan-500 focus:bg-white dark:focus:border-cyan-500 dark:focus:bg-slate-900",
           ui.ring
         )}
       />
-      
+
       {isOpen && (results.length > 0 || loading) && (
         <div className={cn(
-          "absolute top-full left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg",
+          "absolute top-full left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800 dark:shadow-none",
           compact ? "text-sm" : ""
         )}>
           {loading ? (
@@ -96,7 +96,7 @@ export default function AppSearchBar({
                 key={product.id}
                 type="button"
                 onClick={() => handleSelectProduct(product)}
-                className="w-full flex items-center gap-3 border-b border-slate-100 px-4 py-3 hover:bg-cyan-50 text-left focus:outline-none focus:bg-cyan-50"
+                className="w-full flex items-center gap-3 border-b border-slate-100 px-4 py-3 hover:bg-cyan-50 text-left focus:outline-none focus:bg-cyan-50 dark:border-slate-700/50 dark:hover:bg-slate-700/50 dark:focus:bg-slate-700/50"
               >
                 {product.image_url && (
                   <img
@@ -106,13 +106,13 @@ export default function AppSearchBar({
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 truncate">
+                  <p className="text-sm font-semibold text-slate-900 truncate dark:text-slate-200">
                     {product.name}
                   </p>
-                  <p className="text-xs text-slate-500">{product.brand || "N/A"}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{product.brand || "N/A"}</p>
                 </div>
                 {product.price && (
-                  <p className="text-sm font-bold text-cyan-600">formatPrice(product.price)</p>
+                  <p className="text-sm font-bold text-cyan-600 dark:text-cyan-400">formatPrice(product.price)</p>
                 )}
               </button>
             ))

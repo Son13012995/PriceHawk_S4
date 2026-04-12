@@ -29,8 +29,8 @@ export default function PageTabs({ className = "" }) {
               "rounded-full border px-4 py-2 text-sm font-semibold transition",
               ui.ring,
               active
-                ? "border-cyan-200 bg-cyan-50 text-cyan-700"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                ? "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300"
+                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700/80"
             )}
           >
             {tab.label}
