@@ -13,13 +13,13 @@ export default function Home() {
                     <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
                         {/* Text Content */}
                         <div className="max-w-2xl">
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100/80 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 font-semibold text-xs tracking-wide uppercase mb-6 border border-indigo-200 dark:border-indigo-800 shadow-sm dark:shadow-none">
-                                <span className="flex h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse"></span>
+                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 font-semibold text-xs tracking-wide uppercase mb-6 border border-teal-200 dark:border-teal-800 shadow-sm dark:shadow-none">
+                                <span className="flex h-2 w-2 rounded-full bg-teal-500 dark:bg-teal-400 animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.8)]"></span>
                                 VNU IT Project - K68
                             </div>
                             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6 leading-[1.15]">
                                 So sánh giá <br className="hidden sm:block" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400">
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-500 dark:from-teal-400 dark:to-emerald-400">
                                     Đồ Điện Tử
                                 </span> thông minh
                             </h1>
@@ -27,7 +27,7 @@ export default function Home() {
                                 PriceHawk giúp bạn dễ dàng tìm kiếm mức giá tốt nhất cho tai nghe và các thiết bị công nghệ từ những sàn thương mại điện tử hàng đầu.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4">
-                                <Link href="/product" className="inline-flex justify-center items-center px-8 py-3.5 text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none hover:shadow-xl hover:shadow-indigo-300 hover:-translate-y-0.5 transition-all duration-300">
+                                <Link href="/product" className="inline-flex justify-center items-center px-8 py-3.5 text-base font-semibold text-white bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 rounded-2xl shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/30 hover:-translate-y-0.5 transition-all duration-300">
                                     Xem tất cả sản phẩm
                                 </Link>
                                 <Link href="#brands" className="inline-flex justify-center items-center px-8 py-3.5 text-base font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 rounded-xl transition-all duration-300">
@@ -85,17 +85,17 @@ export default function Home() {
                             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Trải nghiệm nhanh</h2>
                             <p className="text-slate-500 dark:text-slate-400">Xem ngay các sản phẩm đang được tự động so sánh giá</p>
                         </div>
-                        <Link href="/product" className="text-indigo-600 dark:text-indigo-400 font-semibold hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors">
+                        <Link href="/product" className="text-teal-600 dark:text-teal-400 font-semibold hover:text-teal-700 dark:hover:text-teal-300 flex items-center gap-1 transition-colors">
                             Xem tất cả danh mục <span aria-hidden="true">&rarr;</span>
                         </Link>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
                         {[147, 149, 150, 192, 193].map((id) => (
-                            <Link key={id} href={`/product/${id}`} className="group relative bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-xl hover:shadow-indigo-50/80 dark:hover:shadow-none hover:border-indigo-200 dark:hover:border-indigo-500 hover:-translate-y-1 transition-all duration-300">
-                                <div className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-4 ring-emerald-50 dark:ring-slate-900"></div>
-                                <div className="h-14 w-14 bg-indigo-50/50 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/60 transition-all duration-300">
+                            <Link key={id} href={`/product/${id}`} className="group relative bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-teal-500/10 dark:hover:shadow-none hover:border-teal-200 dark:hover:border-teal-800 hover:-translate-y-1 transition-all duration-300">
+                                <div className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-orange-400 ring-4 ring-orange-50 dark:ring-slate-900"></div>
+                                <div className="h-14 w-14 bg-teal-50/50 dark:bg-teal-900/40 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/60 transition-all duration-300">
                                     {/* Thay icon svg mặc định cho sinh động hơn */}
-                                    <svg className="w-7 h-7 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className="w-7 h-7 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM21 16c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2z" />
                                     </svg>
                                 </div>
