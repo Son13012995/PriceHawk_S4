@@ -38,26 +38,18 @@ export default function ProductItem({ params }) {
     const [alertError, setAlertError] = useState("");
 
     const addToWishlist = async () => {
-        if (!product?.id) {
-            return;
-        }
-
+        if (!product?.id) return;
         try {
             const response = await axios.post("/api/wishlist", {
                 productId: product.id,
                 userId: null,
             });
-
             if (response.status === 201 || response.status === 200) {
                 setWishlistMessage("✓ Đã thêm vào wishlist.");
                 setTimeout(() => setWishlistMessage(""), 3000);
             }
         } catch (error) {
-            if (error.response?.status === 409) {
-                setWishlistMessage("Sản phẩm đã có trong wishlist.");
-            } else {
-                setWishlistMessage("Không thể thêm vào wishlist. Vui lòng thử lại.");
-            }
+            setWishlistMessage("Sản phẩm đã có trong wishlist.");
             setTimeout(() => setWishlistMessage(""), 3000);
         }
     };
@@ -65,7 +57,6 @@ export default function ProductItem({ params }) {
     const handlePriceAlertSubmit = async (e) => {
         e.preventDefault();
         setAlertError("");
-
         const currentPrice = product?.current_price || 0;
         const target = Number(alertTarget);
 
@@ -73,9 +64,8 @@ export default function ProductItem({ params }) {
             setAlertError("Vui lòng nhập mức giá hợp lệ.");
             return;
         }
-
         if (target >= currentPrice) {
-            setAlertError(`Mức giá mục tiêu phải thấp hơn giá hiện tại (${formatPrice(currentPrice)}đ).`);
+            setAlertError(`Giá mục tiêu phải thấp hơn giá hiện tại (${formatPrice(currentPrice)}đ).`);
             return;
         }
 
@@ -86,32 +76,27 @@ export default function ProductItem({ params }) {
                 note: alertNote.trim() || null,
                 userId: null,
             });
-
             if (response.status === 201) {
-                setWishlistMessage(`✓ Đã tạo price alert (mục tiêu: ${formatPrice(target)}đ)`);
+                setWishlistMessage(`✓ Đã tạo alert: ${formatPrice(target)}đ`);
                 setTimeout(() => setWishlistMessage(""), 3000);
-
                 setShowAlertForm(false);
                 setAlertTarget("");
                 setAlertNote("");
             }
         } catch (error) {
-            setAlertError(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
+            setAlertError("Không thể tạo alert.");
         }
     };
 
     useEffect(() => {
         async function fetchData() {
             setLoading(true);
-            setError(null);
             try {
                 const res = await axios.get(`/api/compare?id=${params.id}`);
-                const data = res.data;
-                setProduct(data?.product[0]);
-                setComparison(data?.comparison);
+                setProduct(res.data?.product[0]);
+                setComparison(res.data?.comparison);
             } catch (error) {
-                setError("Không thể tải thông tin sản phẩm. Vui lòng thử lại sau.");
-                console.error("Error Fetching data:", error);
+                setError("Lỗi tải dữ liệu.");
             } finally {
                 setLoading(false);
             }
@@ -120,265 +105,154 @@ export default function ProductItem({ params }) {
     }, [params.id]);
 
     return (
-        <div className="min-h-screen bg-slate-50 font-sans text-slate-800 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-slate-50/50 py-10 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto">
-
                 {loading && <DetailSkeleton />}
-
-                {error && (
-                    <div className="bg-rose-50 text-rose-600 py-4 px-6 rounded-2xl border border-rose-100 flex items-center justify-center gap-2 font-medium shadow-sm">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {error}
-                    </div>
-                )}
 
                 {!loading && !error && product && (
                     <div className="flex flex-col lg:flex-row gap-10 lg:gap-16">
 
                         {/* CỘT TRÁI */}
                         <div className="w-full lg:w-1/2">
-                            <div className="sticky top-24 relative w-full aspect-square bg-white rounded-[2rem] border border-slate-100 shadow-sm shadow-slate-200/50 flex items-center justify-center p-8 overflow-hidden group">
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-50/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <div className="sticky top-24 aspect-square bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 flex items-center justify-center p-8 overflow-hidden group">
                                 <Image
                                     src={product?.image_url}
-                                    alt={product?.name || "Product Image"}
+                                    alt={product?.name}
                                     fill
-                                    sizes="(max-width: 1024px) 100vw, 50vw"
-                                    className="object-contain p-10 transition-transform duration-700 ease-out group-hover:scale-110 relative z-10"
+                                    className="object-contain p-12 transition-transform duration-500 group-hover:scale-110"
                                     priority
                                 />
                             </div>
                         </div>
 
                         {/* CỘT PHẢI */}
-                        <div className="w-full lg:w-1/2 flex flex-col pt-2 lg:pt-4">
-
-                            <button
-                                onClick={() => router.back()}
-                                className="self-start mb-8 text-sm font-medium text-slate-500 hover:text-indigo-600 flex items-center gap-2 transition-colors group py-2"
-                            >
-                                <div className="w-8 h-8 rounded-full bg-slate-200/50 flex items-center justify-center group-hover:bg-indigo-100 transition-colors">
-                                    <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                                    </svg>
-                                </div>
+                        <div className="w-full lg:w-1/2 flex flex-col pt-2">
+                            <button onClick={() => router.back()} className="self-start mb-6 flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-medium transition-colors group">
+                                <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                                 Quay lại
                             </button>
 
-                            {/* Tên & Brand - Hạ từ extrabold xuống bold, màu slate-800 */}
-                            <div>
-                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-800 leading-[1.15] mb-6 tracking-tight">
-                                    {product?.name}
-                                </h1>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-medium text-slate-400 uppercase tracking-widest">Brand:</span>
-                                    {/* Hạ từ bold xuống semibold */}
-                                    <span className="text-sm font-semibold text-indigo-700 bg-indigo-50 px-3.5 py-1.5 rounded-lg border border-indigo-100 shadow-sm">
-                                        {product?.brand}
-                                    </span>
-                                </div>
+                            <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 leading-tight mb-4 lowercase first-letter:uppercase">
+                                {product?.name}
+                            </h1>
+
+                            <div className="flex items-center gap-3 mb-8">
+                                <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 uppercase tracking-widest">
+                                    {product?.brand}
+                                </span>
                             </div>
 
-                            <hr className="border-slate-100 my-10" />
-
-                            <div className="mb-8 flex flex-wrap items-center gap-3">
-                                <Link
-                                    href={`/price-history/${params.id}`}
-                                    className="px-4 py-2.5 rounded-xl border border-cyan-200 bg-cyan-50 text-cyan-700 text-sm font-semibold hover:bg-cyan-100 transition-colors"
-                                >
+                            <div className="flex flex-wrap gap-3 mb-8">
+                                <Link href={`/price-history/${params.id}`} className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     Lịch sử giá
                                 </Link>
-                                <button
-                                    onClick={() => setShowAlertForm(true)}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
-                                >
-                                    Set price alert
+                                <button onClick={() => setShowAlertForm(true)} className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2">
+                                    <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                    Set alert
                                 </button>
-                                <button
-                                    onClick={addToWishlist}
-                                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
-                                >
-                                    Add to wishlist
+                                <button onClick={addToWishlist} className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-rose-500 transition-all">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
                                 </button>
                             </div>
 
-                            {wishlistMessage ? (
-                                <p className="mb-6 text-sm text-slate-500">{wishlistMessage}</p>
-                            ) : null}
+                            {wishlistMessage && <p className="mb-6 text-sm font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl inline-block">{wishlistMessage}</p>}
 
-                            <div>
-                                {/* Hạ từ bold xuống semibold */}
-                                <h2 className="text-xl font-semibold text-slate-800 mb-6 flex items-center gap-2.5">
-                                    <svg className="w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                                    </svg>
-                                    Hiện có sẵn tại
-                                </h2>
+                            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                                <svg className="w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                So sánh giá
+                            </h2>
 
-                                {comparison.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {comparison.map((data, index) => (
-                                            <div
-                                                key={data?.id || index}
-                                                className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300 gap-5"
-                                            >
-                                                <div className="flex-1">
-                                                    {/* Hạ từ bold xuống semibold */}
-                                                    <h3 className="text-lg font-semibold text-slate-800 mb-1 flex items-center gap-2">
-                                                        {data?.name}
-                                                    </h3>
-                                                    <div className="flex items-baseline gap-1.5 mt-2">
-                                                        <span className="text-sm font-medium text-slate-500">Giá bán:</span>
-                                                        {/* Hạ từ extrabold xuống bold */}
-                                                        <span className="font-bold text-2xl tracking-tight text-slate-800 group-hover:text-indigo-600 transition-colors">
-                                                            {formatPrice(data?.price)}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => window.open(data?.url, "_blank", "noopener,noreferrer")}
-                                                    // Hạ từ semibold xuống medium
-                                                    className="w-full sm:w-auto px-6 py-3 text-sm font-medium rounded-xl transition-all duration-300 shadow-sm flex items-center justify-center gap-2 bg-slate-50 hover:bg-indigo-600 text-slate-700 hover:text-white border border-slate-200 hover:border-indigo-600 active:scale-95"
-                                                >
-                                                    Tới cửa hàng
-                                                    <svg className="w-4 h-4 text-slate-400 group-hover:text-indigo-200 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <div className="bg-white rounded-2xl p-8 text-center border border-slate-100 shadow-sm flex flex-col items-center">
-                                        <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
-                                            <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
+                            <div className="space-y-4">
+                                {comparison.map((data, index) => (
+                                    <div key={index} className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-slate-100 hover:shadow-md transition-all group">
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-400 uppercase mb-1">{data?.name}</p>
+                                            <p className="text-2xl font-bold text-slate-800">{formatPrice(data?.price)}</p>
                                         </div>
-                                        <p className="text-slate-500 font-medium">Hiện chưa có thông tin giá bán cho sản phẩm này.</p>
+                                        <button onClick={() => window.open(data?.url, "_blank")} className="px-5 py-2.5 bg-slate-50 text-slate-700 font-bold rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all flex items-center gap-2">
+                                            Mua ngay
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                        </button>
                                     </div>
-                                )}
+                                ))}
                             </div>
-
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Price Alert Form Modal */}
+            {/* Modal Price Alert - Đã fix lỗi code hiển thị */}
             {showAlertForm && product && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-6">
-                        <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-2xl font-bold text-slate-900">Tạo Price Alert</h2>
-                            <button
-                                onClick={() => {
-                                    setShowAlertForm(false);
-                                    setAlertError("");
-                                    setAlertTarget("");
-                                    setAlertNote("");
-                                }}
-                                className="text-slate-400 hover:text-slate-600 transition-colors"
-                            >
-                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        {/* Product info */}
-                        <div className="mb-6 flex items-center gap-3 p-3 bg-cyan-50 rounded-xl border border-cyan-200">
-                            {product?.image_url && (
-                                <img
-                                    src={product.image_url}
-                                    alt={product.name}
-                                    className="h-12 w-12 rounded object-cover"
-                                />
-                            )}
-                            <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-slate-900 truncate">{product?.name}</p>
-                                <p className="text-sm text-cyan-700 font-bold">formatPrice(current_price)</p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95">
+                        <div className="p-8">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Tạo Cảnh Báo Giá</h2>
+                                <button onClick={() => setShowAlertForm(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
                             </div>
-                        </div>
 
-                        {/* Form */}
-                        <form onSubmit={handlePriceAlertSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                                    Mức giá mục tiêu
-                                </label>
-                                <div className="relative">
-                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">formatPrice(target)</span>
+                            <div className="mb-8 flex items-center gap-4 p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+                                <div className="h-12 w-12 relative bg-white rounded-lg p-1 border border-cyan-100">
+                                    <img src={product.image_url} alt="" className="object-contain h-full w-full" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-bold text-slate-900 truncate text-sm">{product.name}</p>
+                                    {/* FIX 1: Bọc trong ngoặc nhọn */}
+                                    <p className="text-cyan-700 font-bold">{formatPrice(product.current_price)}</p>
+                                </div>
+                            </div>
+
+                            <form onSubmit={handlePriceAlertSubmit} className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Giá mong muốn</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₫</span>
+                                        <input
+                                            type="number"
+                                            value={alertTarget}
+                                            onChange={(e) => setAlertTarget(e.target.value)}
+                                            /* FIX 2: Template literal đúng cú pháp */
+                                            placeholder={`Thấp hơn ${formatPrice(product.current_price)}`}
+                                            className="w-full pl-8 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-cyan-100 focus:border-cyan-500 transition-all font-bold outline-none"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    {alertTarget && (
+                                        <p className={`mt-2 text-xs font-bold ${Number(alertTarget) < product.current_price ? "text-emerald-600" : "text-rose-500"}`}>
+                                            {Number(alertTarget) < product.current_price
+                                                ? `✓ Tiết kiệm được ${formatPrice(product.current_price - Number(alertTarget))}`
+                                                : `! Phải thấp hơn ${formatPrice(product.current_price)}`
+                                            }
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ghi chú</label>
                                     <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={alertTarget}
-                                        onChange={(e) => setAlertTarget(e.target.value)}
-                                        placeholder={`Dưới formatPrice(product?.current_price})`}
-                                        className="w-full pl-7 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-                                        autoFocus
+                                        type="text"
+                                        value={alertNote}
+                                        onChange={(e) => setAlertNote(e.target.value)}
+                                        placeholder="Ví dụ: Quà sinh nhật..."
+                                        className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none"
                                     />
                                 </div>
-                                {alertTarget && (
-                                    <p className={`mt-2 text-xs font-medium ${
-                                        Number(alertTarget) < product?.current_price ? "text-emerald-600" : "text-rose-600"
-                                    }`}>
-                                        {Number(alertTarget) < product?.current_price
-                                            ? `✓ Tiết kiệm £${(product?.current_price - Number(alertTarget)).toFixed(2)}`
-                                            : `✗ Phải thấp hơn £${product?.current_price}`}
-                                    </p>
-                                )}
-                            </div>
 
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                                    Ghi chú (tuỳ chọn)
-                                </label>
-                                <input
-                                    type="text"
-                                    value={alertNote}
-                                    onChange={(e) => setAlertNote(e.target.value)}
-                                    placeholder="Ghi chú?"
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-slate-900 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100"
-                                />
-                            </div>
-
-                            {alertError && (
-                                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-sm text-rose-700 font-medium">
-                                    {alertError}
+                                <div className="flex gap-3 pt-2">
+                                    <button type="button" onClick={() => setShowAlertForm(false)} className="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">Hủy</button>
+                                    <button
+                                        type="submit"
+                                        disabled={!alertTarget || Number(alertTarget) >= product.current_price}
+                                        className="flex-[2] py-3.5 rounded-xl bg-cyan-600 text-white font-bold hover:bg-cyan-700 disabled:bg-slate-200 disabled:text-slate-400 shadow-lg shadow-cyan-100"
+                                    >
+                                        Tạo Alert
+                                    </button>
                                 </div>
-                            )}
-
-                            <div className="flex gap-3 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowAlertForm(false);
-                                        setAlertError("");
-                                        setAlertTarget("");
-                                        setAlertNote("");
-                                    }}
-                                    className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={!alertTarget}
-                                    className={`flex-1 px-4 py-2.5 rounded-xl font-semibold text-white transition-colors ${
-                                        alertTarget
-                                            ? "bg-cyan-600 hover:bg-cyan-700"
-                                            : "bg-slate-300 cursor-not-allowed"
-                                    }`}
-                                >
-                                    Tạo Alert
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}
