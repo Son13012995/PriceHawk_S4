@@ -2,23 +2,17 @@
 """
 Quick wrapper for smart parallel crawl with sensible defaults.
 Usage:
-    python3 crawl_all.py              # Run all 9 jobs with 3 workers
-    python3 crawl_all.py --fast       # 0% skip threshold (always update)
-    python3 crawl_all.py --skip-mode  # Aggressive skip (180min cooldown)
+    python crawl_all.py              # Run all 9 jobs with 3 workers
+    python crawl_all.py --fast       # 0% skip threshold (always update)
+    python crawl_all.py --skip-mode  # Aggressive skip (180min cooldown)
 """
 
 import subprocess
 import sys
 import os
 
-# Use absolute path for python3 (needed for cron compatibility)
-PYTHON_BIN = os.path.join(os.path.dirname(sys.executable), "python3")
-if not os.path.exists(PYTHON_BIN):
-    PYTHON_BIN = "/usr/local/bin/python3"
-if not os.path.exists(PYTHON_BIN):
-    PYTHON_BIN = "/usr/bin/python3"
-if not os.path.exists(PYTHON_BIN):
-    PYTHON_BIN = "python3"
+# Use current Python interpreter (works on Windows, Linux, Docker)
+PYTHON_BIN = sys.executable
 
 DEFAULT_ARGS = [
     PYTHON_BIN, "scripts/run_smart_catalogs.py",

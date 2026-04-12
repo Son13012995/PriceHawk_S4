@@ -38,6 +38,9 @@ fi
 # Change to project directory
 cd "$PROJECT_DIR"
 
+# Set PYTHONPATH for imports
+export PYTHONPATH="$PROJECT_DIR:$PROJECT_DIR/price_hawk:$PYTHONPATH"
+
 # Select Python binary
 if [ -x "/usr/local/bin/python3" ]; then
     PY_BIN="/usr/local/bin/python3"
@@ -64,9 +67,9 @@ fi
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] OK: Crawler completed successfully" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✅ Crawler + DB insert completed successfully" | tee -a "$LOG_FILE"
 else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Crawler failed with exit code $EXIT_CODE" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ❌ Crawler failed with exit code $EXIT_CODE" | tee -a "$LOG_FILE"
 fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log: $LOG_FILE" >> "$LOG_FILE"
