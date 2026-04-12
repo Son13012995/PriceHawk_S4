@@ -175,11 +175,21 @@ export default function ProductItem({ params }) {
                             <div className="space-y-4">
                                 {comparison?.map((data, index) => {
                                     const rName = data?.name?.toLowerCase() || '';
+                                    let domain = '';
+                                    try {
+                                        domain = new URL(data?.url).hostname;
+                                    } catch (e) { }
+                                    const logoSrc = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : null;
+
                                     return (
                                         <div key={index} className="flex flex-col md:flex-row items-center gap-4 justify-between p-6 bg-white dark:bg-slate-800/80 rounded-[2rem] border border-slate-100 dark:border-slate-700/60 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-none transition-all group">
                                             <div className="flex items-center gap-5 w-full md:w-auto">
-                                                <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-bold text-slate-400 text-xs shadow-inner shrink-0">
-                                                    {rName.includes('fpt') ? 'FPT' : rName.includes('tgdd') || rName.includes('di động') ? 'TGDD' : rName.includes('cellphone') ? 'CPS' : rName.includes('hoang') ? 'H2S' : data?.name?.substring(0, 2).toUpperCase()}
+                                                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-bold text-slate-400 text-xs shadow-inner shrink-0 overflow-hidden relative">
+                                                    {logoSrc ? (
+                                                        <img src={logoSrc} alt={data?.name} className="w-8 h-8 object-contain drop-shadow-sm" />
+                                                    ) : (
+                                                        rName.includes('fpt') ? 'FPT' : rName.includes('tgdd') || rName.includes('di động') ? 'TGDD' : rName.includes('cellphone') ? 'CPS' : rName.includes('hoang') ? 'H2S' : data?.name?.substring(0, 2).toUpperCase()
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{data?.name}</p>
