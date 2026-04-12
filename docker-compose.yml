@@ -1,0 +1,36 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pricecomparison
+      MYSQL_PASSWORD: rootpassword
+    networks:
+      - mynetwork
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  main:
+    container_name: pricecomaprison
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "3000:3000"
+    networks:
+      - mynetwork
+    env_file:
+      - .env_product
+    depends_on:
+      - mysql
+volumes:
+  mysql_data:
+networks:
+  mynetwork:
+    external: true
