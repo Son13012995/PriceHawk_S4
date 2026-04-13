@@ -10,16 +10,23 @@ export default async function handler(req, res) {
     }
 
     try {
+      // Manual check to prevent duplicates if UNIQUE constraint is missing
+      const existing = await db.query(
+        "SELECT `id` FROM `wishlist` WHERE `product_id` = ? AND `user_id` <=> ?",
+        [productId, userId]
+      );
+
+      if (existing.length > 0) {
+        return res.status(409).json({ error: "Already in wishlist" });
+      }
+
       await db.query(
-        "INSERT INTO `wishlist` (`product_id`, `user_id`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `id`=`id`",
+        "INSERT INTO `wishlist` (`product_id`, `user_id`) VALUES (?, ?)",
         [productId, userId]
       );
       res.status(201).json({ message: "Added to wishlist" });
     } catch (error) {
       console.error("Database error:", error);
-      if (error.code === "ER_DUP_ENTRY") {
-        return res.status(409).json({ error: "Already in wishlist" });
-      }
       res.status(500).json({ error: "Internal Server Error" });
     }
   } else if (req.method === "GET") {

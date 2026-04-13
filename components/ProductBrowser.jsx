@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { getProducts, searchProducts } from "../lib/apiClient";
+import axios from "axios"; // Keeping this for error checking IsCancel, but replacing requests
 import SearchCard from "./SearchCard";
 
 const SkeletonLoader = () => (
@@ -9,7 +10,7 @@ const SkeletonLoader = () => (
     {Array.from({ length: 8 }).map((_, index) => (
       <div
         key={index}
-        className="bg-slate-100 rounded-2xl h-80 w-full shadow-inner border border-slate-100"
+        className="bg-slate-100 dark:bg-slate-800 rounded-2xl h-80 w-full shadow-inner border border-slate-100 dark:border-slate-700"
       />
     ))}
   </div>
@@ -38,14 +39,8 @@ export default function ProductBrowser({ searchTerm = "" }) {
 
       try {
         const request = isSearchMode
-          ? axios.get("/api/pagination", {
-              params: { q: searchTerm, page: currentPage, pageSize },
-              signal: controller.signal,
-            })
-          : axios.get("/api/product", {
-              params: { page: currentPage, pageSize },
-              signal: controller.signal,
-            });
+          ? searchProducts(searchTerm, currentPage, pageSize, controller.signal)
+          : getProducts(currentPage, pageSize, controller.signal);
 
         const res = await request;
         const payload = res.data || {};
@@ -74,24 +69,24 @@ export default function ProductBrowser({ searchTerm = "" }) {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / pageSize)), [totalItems]);
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-16 text-slate-800">
-      <header className="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-16 text-slate-800 dark:text-slate-200">
+      <header className="bg-white dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 shadow-sm sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
             {isSearchMode ? (
               <>
-                Ket qua cho
-                <span className="font-bold text-sky-700"> "{decodeURIComponent(searchTerm)}"</span>
+                Kết quả cho
+                <span className="font-bold text-sky-700 dark:text-sky-400"> "{decodeURIComponent(searchTerm)}"</span>
               </>
             ) : (
-              "Kham pha san pham"
+              "Khám phá sản phẩm"
             )}
           </h1>
 
           {!loading && !error ? (
-            <p className="text-sm text-slate-500 mt-2">
-              Hien thi <span className="font-semibold text-slate-700">{items.length}</span> tren tong so{" "}
-              <span className="font-semibold text-slate-700">{totalItems}</span> ket qua
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+              Hiển thị <span className="font-semibold text-slate-700 dark:text-slate-300">{items.length}</span> trên tổng số{" "}
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{totalItems}</span> kết quả
             </p>
           ) : null}
         </div>
@@ -99,7 +94,7 @@ export default function ProductBrowser({ searchTerm = "" }) {
 
       <main className="max-w-7xl mx-auto px-6 mt-10">
         {error ? (
-          <div className="bg-rose-50 text-rose-700 py-4 px-6 rounded-xl border border-rose-100 text-center shadow-sm font-medium mb-6">
+          <div className="bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400 py-4 px-6 rounded-xl border border-rose-100 dark:border-rose-900/50 text-center shadow-sm font-medium mb-6">
             {error}
           </div>
         ) : null}
@@ -123,13 +118,13 @@ export default function ProductBrowser({ searchTerm = "" }) {
         {!loading && !error && items.length === 0 ? (
           <div className="text-center py-24 flex flex-col items-center">
             <div className="text-7xl mb-6 grayscale opacity-40">{isSearchMode ? "?" : "[]"}</div>
-            <h2 className="text-xl font-medium text-slate-700">
-              {isSearchMode ? "Khong tim thay ket qua phu hop" : "Hien chua co san pham nao"}
+            <h2 className="text-xl font-medium text-slate-700 dark:text-slate-200">
+              {isSearchMode ? "Không tìm thấy kết quả phù hợp" : "Hiện chưa có sản phẩm nào"}
             </h2>
-            <p className="text-slate-500 mt-2">
+            <p className="text-slate-500 dark:text-slate-400 mt-2">
               {isSearchMode
-                ? "Hay thu tu khoa khac hoac kiem tra lai chinh ta."
-                : "Vui long quay lai sau."}
+                ? "Hãy thử từ khóa khác hoặc kiểm tra lại chính tả."
+                : "Vui lòng quay lại sau."}
             </p>
           </div>
         ) : null}
@@ -139,19 +134,19 @@ export default function ProductBrowser({ searchTerm = "" }) {
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-6 py-2.5 rounded-full border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
+              className="px-6 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
             >
-              Truoc
+              Trước
             </button>
 
-            <div className="px-6 py-2.5 bg-sky-50 text-sky-800 rounded-full font-bold shadow-inner border border-sky-100">
+            <div className="px-6 py-2.5 bg-sky-50 dark:bg-sky-900/40 text-sky-800 dark:text-sky-200 rounded-full font-bold shadow-inner border border-sky-100 dark:border-sky-800">
               {currentPage} / {totalPages}
             </div>
 
             <button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="px-6 py-2.5 rounded-full border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
+              className="px-6 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
             >
               Sau
             </button>
