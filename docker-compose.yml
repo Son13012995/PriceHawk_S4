@@ -7,30 +7,49 @@ services:
       MYSQL_ROOT_PASSWORD: rootpassword
       MYSQL_DATABASE: pricecomparison
       MYSQL_PASSWORD: rootpassword
-    networks:
-      - mynetwork
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - mynetwork
 
   main:
-    container_name: pricecomaprison
+    container_name: pricecomparison
     build:
       context: .
       dockerfile: Dockerfile
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "3000:3000"
-    networks:
-      - mynetwork
     env_file:
       - .env_product
     depends_on:
       - mysql
+    networks:
+      - mynetwork
+
+  crawler:
+    container_name: price_hawk_crawler
+    build:
+      context: .
+      dockerfile: price-hawk/docker/Dockerfile.cron
+    volumes:
+      - ./price-hawk:/app/price-hawk
+      - ./price-hawk/logs:/app/price-hawk/logs
+    env_file:
+      - ./price-hawk/.env_product
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    networks:
+      - mynetwork
+
 volumes:
   mysql_data:
+
 networks:
   mynetwork:
     external: true

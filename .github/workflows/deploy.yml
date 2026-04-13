@@ -19,7 +19,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd /root/pricecomparison/PriceHawk_S4
-            git checkout main
-            git pull origin main
-            docker compose down
-            docker compose up -d --build
+            git fetch origin
+            git reset --hard origin/main
+
+            docker compose up -d --build --remove-orphans
