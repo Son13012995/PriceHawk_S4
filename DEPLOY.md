@@ -86,6 +86,7 @@
 **Cron Schedule:** `*/5 * * * *` (5-minute intervals)
 
 **Action:**
+
 ```bash
 # Runs inside Docker
 /app/price-hawk/run_crawler.sh
@@ -100,7 +101,7 @@
 **9 Spiders execute in parallel** (3 workers per ThreadPoolExecutor):
 
 ```
-Cycle Start → 
+Cycle Start →
   ├─ tgdd_phone → Scrape thegioididong.com phone listings
   ├─ tgdd_laptop → Scrape thegioididong.com laptop listings
   ├─ tgdd_tablet → Scrape thegioididong.com tablet listings
@@ -110,7 +111,7 @@ Cycle Start →
   ├─ hoangha_phone → Scrape hoanghamobile.com phone listings
   ├─ hoangha_laptop → Scrape hoanghamobile.com laptop listings
   └─ hoangha_tablet → Scrape hoanghamobile.com tablet listings
-  
+
 Result: 1,400+ product JSON objects (each with: name, price, URL, image, brand, etc.)
 ```
 
@@ -123,7 +124,6 @@ Result: 1,400+ product JSON objects (each with: name, price, URL, image, brand, 
 **For each crawled item:**
 
 1. **Normalize text** - Remove extra spaces, convert to lowercase
-   
 2. **Extract metadata:**
    - Brand: Xiaomi, Apple, Samsung, etc.
    - RAM/ROM: "12GB", "256GB", "1TB"
@@ -154,6 +154,7 @@ For each crawled item:
 ```
 
 **Example (Current Behavior):**
+
 ```
 Xiaomi 15T Pro/256GB (TGDD) + model_key="xiaomi-15t-pro", variant_key="ram-12gb_rom-256gb"
 Xiaomi 15T Pro/512GB (HoangHa) + model_key="xiaomi-15t-pro", variant_key="ram-12gb_rom-512gb"
@@ -169,6 +170,7 @@ Result: DIFFERENT variant_key → 2 separate products (ID 518, ID 1301)
 **For each product group:**
 
 1. **Find or create product record:**
+
    ```
    If URL exists in comparison table:
      → Reuse product_id
@@ -188,10 +190,11 @@ Result: DIFFERENT variant_key → 2 separate products (ID 518, ID 1301)
    ```
 
 **Example:**
+
 ```
 Product: Xiaomi 15T Pro (ID 1301)
 ├─ Comparison 1: TGDD 256GB → URL1, Price 17.19M
-├─ Comparison 2: TGDD 512GB → URL2, Price 19.49M  
+├─ Comparison 2: TGDD 512GB → URL2, Price 19.49M
 └─ Comparison 3: TGDD 1TB → URL3, Price 21.49M
 
 On next crawl (5 min later):
@@ -201,6 +204,7 @@ On next crawl (5 min later):
 ```
 
 **Anti-Duplicate Logic:**
+
 - ✅ Primary key: `(product_id, url)` pair - ensures uniqueness
 - ✅ Fallback: `name + brand` matching - prevents duplicate products
 - ✅ Result: **Zero duplicates on re-crawl**
@@ -212,6 +216,7 @@ On next crawl (5 min later):
 **User visits:** `localhost:3000/product/1301`
 
 **Frontend fetches:**
+
 ```javascript
 GET /api/compare?id=1301
   ↓
@@ -241,6 +246,7 @@ Returns:
 ## Database Schema
 
 ### `product` table
+
 ```sql
 CREATE TABLE product (
   id INT PRIMARY KEY AUTO_INCREMENT,
@@ -253,6 +259,7 @@ CREATE TABLE product (
 ```
 
 ### `comparison` table
+
 ```sql
 CREATE TABLE comparison (
   id INT PRIMARY KEY AUTO_INCREMENT,
@@ -270,6 +277,7 @@ CREATE TABLE comparison (
 ## Current Deployment Status
 
 ### **Crawler (Docker Container)**
+
 ```
 Service: price_hawk_crawler
 Base Image: python:3.12-slim
@@ -282,6 +290,7 @@ Log: /app/price-hawk/logs/cron.log
 ```
 
 ### **Frontend + API (Next.js - Local Dev)**
+
 ```
 Server: localhost:3000
 Build: npm run build
@@ -290,6 +299,7 @@ Database Connection: 127.0.0.1:3306 (local MySQL)
 ```
 
 ### **Database (MySQL - Local)**
+
 ```
 Host: 127.0.0.1
 Port: 3306
@@ -340,7 +350,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.web  # ← Create this
+      dockerfile: Dockerfile.web # ← Create this
     ports:
       - "3000:3000"
     depends_on:
@@ -358,16 +368,16 @@ volumes:
 
 ## Key Metrics (Current Run)
 
-| Metric | Value |
-|--------|-------|
-| Total Products | 1,413 |
-| Total Comparisons | 1,409 |
-| FPT Records | 673 |
-| TGDD Records | 611 |
-| HoangHa Records | 125 |
-| Crawl Duration | ~4 minutes |
-| Cron Interval | 5 minutes |
-| Database No-Duplicate Rate | 100% ✓ |
+| Metric                     | Value      |
+| -------------------------- | ---------- |
+| Total Products             | 1,413      |
+| Total Comparisons          | 1,409      |
+| FPT Records                | 673        |
+| TGDD Records               | 611        |
+| HoangHa Records            | 125        |
+| Crawl Duration             | ~4 minutes |
+| Cron Interval              | 5 minutes  |
+| Database No-Duplicate Rate | 100% ✓     |
 
 ---
 
@@ -375,7 +385,6 @@ volumes:
 
 1. **Product Variant Splitting** - Xiaomi 15T Pro 256GB/512GB/1TB currently in 4 separate product IDs due to STRICT variant matching
    - Status: Can relax `ProductMatcher` logic to merge by `model_key` only
-   
 2. **Schema** - No dedicated `variant_id` column (all variants grouped under single product)
    - Status: Can add later if needed
 
