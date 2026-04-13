@@ -3,12 +3,13 @@ import os
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
+from .product_matcher import ProductMatcher
 
 load_dotenv()
 
 
 class BatchDBProcessor:
-    """Batch process crawled items directly to DB (no file buffering)"""
+    """Batch process crawled items directly to DB using ProductMatcher for strict grouping"""
     
     def __init__(self, batch_size: int = 500, auto_commit: bool = True):
         self.batch_size = batch_size
@@ -16,6 +17,7 @@ class BatchDBProcessor:
         self.buffer: List[Dict] = []
         self.conn: Optional[pymysql.Connection] = None
         self.cursor: Optional[pymysql.cursors.Cursor] = None
+        self.matcher = ProductMatcher(fuzzy_threshold=95)  # STRICT matching like import_to_db
         self._init_connection()
     
     def _init_connection(self):
@@ -44,13 +46,13 @@ class BatchDBProcessor:
         return True
     
     def flush(self) -> bool:
-        """Flush buffer to DB"""
+        """Flush buffer to DB using ProductMatcher for strict grouping"""
         if not self.buffer:
             return True
         
         try:
-            # Group by normalize_name (basic matching)
-            groups = self._group_items(self.buffer)
+            # Use ProductMatcher to strictly group items (same logic as import_to_db)
+            groups = self.matcher.group_products(self.buffer)
             
             for group in groups:
                 self._insert_group(group)
@@ -60,7 +62,7 @@ class BatchDBProcessor:
             
             count = len(self.buffer)
             self.buffer = []
-            print(f"✅ Flushed {count} items to DB")
+            print(f"✅ Flushed {count} items into {len(groups)} groups to DB")
             return True
             
         except Exception as e:
@@ -68,120 +70,113 @@ class BatchDBProcessor:
             self.conn.rollback()
             return False
     
-    def _group_items(self, items: List[Dict]) -> List[List[Dict]]:
-        """Group items by normalize_name (same product)"""
-        groups_dict = {}
-        
-        for item in items:
-            key = (
-                item.get("normalize_name", ""),
-                item.get("brand", ""),
-                item.get("model_key", ""),
-                item.get("variant_key", "")
-            )
-            
-            if key not in groups_dict:
-                groups_dict[key] = []
-            groups_dict[key].append(item)
-        
-        return list(groups_dict.values())
-    
     def _insert_group(self, group: List[Dict]):
-        """Insert product group to DB"""
+        """Insert product group to DB following setup.sql schema
+        
+        Schema:
+        - product: id, name, description, image_url, brand, current_price
+        - comparison: id, product_id, price, url, name (source)
+        """
         if not group:
             return
         
-        # Representative product (first item)
         rep = group[0]
         
-        # Get min price from group
-        prices = [item.get("price") for item in group if item.get("price")]
-        current_price = min([int(p) if p else 999999 for p in prices]) if prices else None
-        
-        # Insert product
         try:
             name = rep.get("name")
-            brand = rep.get("brand")
+            brand = rep.get("brand_norm")
             description = rep.get("description")
             image_url = rep.get("image_url")
             
-            self.cursor.execute("""
-                SELECT id FROM product 
-                WHERE name = %s AND brand = %s
-            """, (name, brand))
+            # Get min price from group
+            prices = [p.get("price") for p in group if p.get("price") is not None]
+            current_price = min(prices) if prices else None
             
-            result = self.cursor.fetchone()
+            # Try to match by first URL (unique identifier for variant)
+            product_id = None
+            first_url = group[0].get("product_url") if group else None
             
-            if result:
-                product_id = result[0]
-            else:
+            if first_url:
+                # Check if URL already exists in comparison records
                 self.cursor.execute("""
-                    INSERT INTO product (name, brand, description, image_url, created_at)
-                    VALUES (%s, %s, %s, %s, NOW())
-                """, (name, brand, description, image_url))
+                    SELECT DISTINCT product_id FROM comparison
+                    WHERE url = %s
+                    LIMIT 1
+                """, (first_url,))
+                result = self.cursor.fetchone()
+                if result:
+                    product_id = result[0]
+            
+            # Fallback: search by name + brand if URL not found
+            if not product_id:
+                self.cursor.execute("""
+                    SELECT id FROM product
+                    WHERE name = %s AND brand = %s
+                """, (name, brand))
+                result = self.cursor.fetchone()
+                if result:
+                    product_id = result[0]
+            
+            # If product found, UPDATE it
+            if product_id:
+                self.cursor.execute("""
+                    UPDATE product
+                    SET current_price = %s,
+                        description = %s,
+                        image_url = %s
+                    WHERE id = %s
+                """, (current_price, description, image_url, product_id))
+            else:
+                # INSERT new product
+                self.cursor.execute("""
+                    INSERT INTO product (name, description, image_url, brand, current_price)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (name, description, image_url, brand, current_price))
                 product_id = self.cursor.lastrowid
             
-            # Insert variants and prices
+            # Insert comparison records from all sources in group
             for item in group:
-                self._insert_variant(product_id, item)
+                self._insert_comparison(product_id, item)
         
         except Exception as e:
             print(f"⚠️ Skipped product {rep.get('name')}: {e}")
     
-    def _insert_variant(self, product_id: int, item: Dict):
-        """Insert variant and price"""
+    def _insert_comparison(self, product_id: int, item: Dict):
+        """Insert comparison record (price from source)"""
         try:
-            ram = item.get("ram")
-            rom = item.get("rom")
-            color = item.get("color")
-            
-            # Check if variant exists
-            self.cursor.execute("""
-                SELECT id FROM product_variant
-                WHERE product_id = %s AND ram = %s AND rom = %s
-                LIMIT 1
-            """, (product_id, ram, rom))
-            
-            variant = self.cursor.fetchone()
-            
-            if variant:
-                variant_id = variant[0]
-            else:
-                self.cursor.execute("""
-                    INSERT INTO product_variant (product_id, ram, rom, color)
-                    VALUES (%s, %s, %s, %s)
-                """, (product_id, ram, rom, color))
-                variant_id = self.cursor.lastrowid
-            
-            # Insert price from this source
             price = item.get("price")
-            source = item.get("source")
             url = item.get("product_url")
+            source = item.get("source", "unknown")
             
-            if price and url:
+            if not (price and url):
+                return
+            
+            # Check if comparison record exists for this source
+            self.cursor.execute("""
+                SELECT id FROM comparison
+                WHERE product_id = %s AND url = %s
+                LIMIT 1
+            """, (product_id, url))
+            
+            existing = self.cursor.fetchone()
+            
+            if existing:
+                # UPDATE price
+                comparison_id = existing[0]
                 self.cursor.execute("""
-                    SELECT id FROM price_record
-                    WHERE variant_id = %s AND source = %s
-                    LIMIT 1
-                """, (variant_id, source))
-                
-                existing = self.cursor.fetchone()
-                
-                if existing:
-                    price_id = existing[0]
-                    self.cursor.execute("""
-                        UPDATE price_record 
-                        SET price = %s, url = %s, updated_at = NOW()
-                        WHERE id = %s
-                    """, (price, url, price_id))
-                else:
-                    self.cursor.execute("""
-                        INSERT INTO price_record (variant_id, source, price, url, updated_at)
-                        VALUES (%s, %s, %s, %s, NOW())
-                    """, (variant_id, source, price, url))
+                    UPDATE comparison 
+                    SET price = %s
+                    WHERE id = %s
+                """, (price, comparison_id))
+            else:
+                # INSERT new comparison
+                self.cursor.execute("""
+                    INSERT INTO comparison (product_id, price, url, name)
+                    VALUES (%s, %s, %s, %s)
+                """, (product_id, price, url, source))
         
         except Exception as e:
-            print(f"⚠️ Failed to insert variant: {e}")
+            print(f"⚠️ Failed to insert comparison: {e}")
     
     def close(self):
         """Flush remaining and close"""
