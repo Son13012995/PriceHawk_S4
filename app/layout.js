@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import { ThemeProvider } from "../components/ThemeProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -12,16 +13,15 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="vi" className="scroll-smooth">
-        <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased selection:bg-blue-600 selection:text-white min-h-screen flex flex-col`}>
-        <Navbar />
-
-        <main className="flex-grow w-full">
-            {children}
-        </main>
-
-
-        </body>
+        <html lang="vi" className="scroll-smooth" suppressHydrationWarning>
+            <body className={`${inter.className} bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 antialiased selection:bg-blue-600 selection:text-white min-h-screen flex flex-col transition-colors`}>
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+                    <Navbar />
+                    <main className="flex-grow w-full">
+                        {children}
+                    </main>
+                </ThemeProvider>
+            </body>
         </html>
     );
 }

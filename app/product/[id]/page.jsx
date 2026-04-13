@@ -10,16 +10,16 @@ import { formatPrice } from "@/app/utils/format";
 // Skeleton giữ nguyên
 const DetailSkeleton = () => (
     <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 animate-pulse w-full max-w-6xl mx-auto">
-        <div className="w-full lg:w-1/2 aspect-square bg-white rounded-[2rem] border border-slate-100 shadow-sm"></div>
+        <div className="w-full lg:w-1/2 aspect-square bg-white dark:bg-slate-800 rounded-[2rem] border border-slate-100 dark:border-slate-700 shadow-sm"></div>
         <div className="w-full lg:w-1/2 space-y-6 pt-4 lg:pt-10">
-            <div className="h-6 w-24 bg-slate-200 rounded-full mb-8"></div>
-            <div className="h-12 bg-slate-200 rounded-xl w-4/5"></div>
-            <div className="h-8 bg-slate-200 rounded-lg w-1/4"></div>
-            <div className="h-px bg-slate-200 w-full my-10"></div>
-            <div className="h-8 bg-slate-200 rounded-lg w-1/3 mb-6"></div>
+            <div className="h-6 w-24 bg-slate-200 dark:bg-slate-700 rounded-full mb-8"></div>
+            <div className="h-12 bg-slate-200 dark:bg-slate-700 rounded-xl w-4/5"></div>
+            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded-lg w-1/4"></div>
+            <div className="h-px bg-slate-200 dark:bg-slate-700 w-full my-10"></div>
+            <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded-lg w-1/3 mb-6"></div>
             <div className="space-y-4">
-                <div className="h-24 bg-slate-200 rounded-2xl w-full"></div>
-                <div className="h-24 bg-slate-200 rounded-2xl w-full"></div>
+                <div className="h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl w-full"></div>
+                <div className="h-24 bg-slate-200 dark:bg-slate-700 rounded-2xl w-full"></div>
             </div>
         </div>
     </div>
@@ -36,6 +36,8 @@ export default function ProductItem({ params }) {
     const [alertTarget, setAlertTarget] = useState("");
     const [alertNote, setAlertNote] = useState("");
     const [alertError, setAlertError] = useState("");
+    const [isInWishlist, setIsInWishlist] = useState(false);
+    const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
     const addToWishlist = async () => {
         if (!product?.id) return;
@@ -45,12 +47,35 @@ export default function ProductItem({ params }) {
                 userId: null,
             });
             if (response.status === 201 || response.status === 200) {
+                setIsInWishlist(true);
                 setWishlistMessage("✓ Đã thêm vào wishlist.");
                 setTimeout(() => setWishlistMessage(""), 3000);
             }
         } catch (error) {
-            setWishlistMessage("Sản phẩm đã có trong wishlist.");
+            setWishlistMessage("Lỗi khi thêm vào wishlist.");
             setTimeout(() => setWishlistMessage(""), 3000);
+        }
+    };
+
+    const removeFromWishlist = async () => {
+        if (!product?.id) return;
+        try {
+            await axios.delete("/api/wishlist", { data: { productId: product.id, userId: null } });
+            setIsInWishlist(false);
+            setWishlistMessage("Đã xóa khỏi wishlist.");
+            setTimeout(() => setWishlistMessage(""), 3000);
+            setShowRemoveConfirm(false);
+        } catch (error) {
+            setWishlistMessage("Lỗi khi xóa khỏi wishlist.");
+            setTimeout(() => setWishlistMessage(""), 3000);
+        }
+    };
+
+    const handleWishlistClick = () => {
+        if (isInWishlist) {
+            setShowRemoveConfirm(true);
+        } else {
+            addToWishlist();
         }
     };
 
@@ -95,6 +120,12 @@ export default function ProductItem({ params }) {
                 const res = await axios.get(`/api/compare?id=${params.id}`);
                 setProduct(res.data?.product[0]);
                 setComparison(res.data?.comparison);
+
+                // Fetch wishlist data to check if this product is saved
+                const wlRes = await axios.get("/api/wishlist");
+                const wlData = wlRes.data?.data || [];
+                setIsInWishlist(wlData.some(item => item.product_id === Number(params.id)));
+
             } catch (error) {
                 setError("Lỗi tải dữ liệu.");
             } finally {
@@ -105,7 +136,7 @@ export default function ProductItem({ params }) {
     }, [params.id]);
 
     return (
-        <div className="min-h-screen bg-slate-50/50 py-10 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-slate-50/50 dark:bg-slate-900 py-10 px-4 sm:px-6 lg:px-8 text-slate-800 dark:text-slate-200">
             <div className="max-w-6xl mx-auto">
                 {loading && <DetailSkeleton />}
 
@@ -114,7 +145,7 @@ export default function ProductItem({ params }) {
 
                         {/* CỘT TRÁI */}
                         <div className="w-full lg:w-1/2">
-                            <div className="sticky top-24 aspect-square bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/30 flex items-center justify-center p-8 overflow-hidden group">
+                            <div className="sticky top-24 aspect-square bg-white dark:bg-slate-800 rounded-[2.5rem] border border-slate-100 dark:border-slate-700 shadow-xl shadow-slate-200/30 dark:shadow-none flex items-center justify-center p-8 overflow-hidden group">
                                 <Image
                                     src={product?.image_url}
                                     alt={product?.name}
@@ -127,55 +158,87 @@ export default function ProductItem({ params }) {
 
                         {/* CỘT PHẢI */}
                         <div className="w-full lg:w-1/2 flex flex-col pt-2">
-                            <button onClick={() => router.back()} className="self-start mb-6 flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-medium transition-colors group">
+                            <button onClick={() => router.back()} className="self-start mb-6 flex items-center gap-2 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors group">
                                 <svg className="w-5 h-5 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                                 Quay lại
                             </button>
 
-                            <h1 className="text-3xl lg:text-4xl font-bold text-slate-800 leading-tight mb-4 lowercase first-letter:uppercase">
+                            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 dark:text-white mb-6 leading-tight tracking-tight drop-shadow-sm">
                                 {product?.name}
                             </h1>
 
-                            <div className="flex items-center gap-3 mb-8">
-                                <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-100 uppercase tracking-widest">
+                            <div className="flex items-center gap-3 mb-10">
+                                <span className="text-xs font-bold text-white bg-gradient-to-r from-teal-500 to-emerald-400 shadow-md px-4 py-1.5 rounded-full uppercase tracking-widest">
                                     {product?.brand}
                                 </span>
                             </div>
 
-                            <div className="flex flex-wrap gap-3 mb-8">
-                                <Link href={`/price-history/${params.id}`} className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold hover:bg-slate-50 transition-all shadow-sm flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <div className="flex flex-col sm:flex-row flex-wrap xl:flex-nowrap gap-4 mb-12 border-b border-slate-200 dark:border-slate-800 pb-12">
+                                <Link
+                                    href={`/price-history/${params.id}`}
+                                    className="flex-1 min-w-[140px] px-6 py-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-[1.25rem] hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-3 shadow-sm"
+                                >
+                                    <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     Lịch sử giá
                                 </Link>
-                                <button onClick={() => setShowAlertForm(true)} className="px-5 py-2.5 rounded-xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-all shadow-lg flex items-center gap-2">
-                                    <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                    Set alert
+
+                                <button onClick={() => setShowAlertForm(true)} className="flex-1 min-w-[140px] px-6 py-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-[1.25rem] hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-3 shadow-sm">
+                                    <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                    Theo dõi giá
                                 </button>
-                                <button onClick={addToWishlist} className="p-2.5 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-rose-500 transition-all">
-                                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+
+                                <button
+                                    onClick={handleWishlistClick}
+                                    className={`flex-[1.5] min-w-[170px] px-6 py-4 font-bold rounded-[1.25rem] transition-all flex items-center justify-center gap-3 border-2 ${isInWishlist
+                                            ? "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/40"
+                                            : "bg-slate-900 dark:bg-teal-50 text-white dark:text-teal-900 border-transparent hover:bg-teal-600 dark:hover:bg-white hover:-translate-y-0.5 shadow-[0_8px_20px_rgb(0,0,0,0.12)]"
+                                        }`}
+                                >
+                                    <svg className={`w-5 h-5 ${isInWishlist ? 'text-rose-500' : 'text-red-500'}`} fill={isInWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isInWishlist ? 0 : 2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    {isInWishlist ? "Đã lưu vào Wishlist" : "Lưu vào Wishlist"}
                                 </button>
                             </div>
 
-                            {wishlistMessage && <p className="mb-6 text-sm font-bold text-emerald-600 bg-emerald-50 p-3 rounded-xl inline-block">{wishlistMessage}</p>}
+                            {wishlistMessage && <p className="mb-6 text-sm font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 p-3 rounded-xl inline-block border border-emerald-100 dark:border-emerald-800">{wishlistMessage}</p>}
 
-                            <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                                <svg className="w-6 h-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
+                                <svg className="w-7 h-7 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                                 So sánh giá
                             </h2>
 
                             <div className="space-y-4">
-                                {comparison.map((data, index) => (
-                                    <div key={index} className="flex items-center justify-between p-5 bg-white rounded-[1.5rem] border border-slate-100 hover:shadow-md transition-all group">
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-400 uppercase mb-1">{data?.name}</p>
-                                            <p className="text-2xl font-bold text-slate-800">{formatPrice(data?.price)}</p>
+                                {comparison?.map((data, index) => {
+                                    const rName = data?.name?.toLowerCase() || '';
+                                    let domain = '';
+                                    try {
+                                        domain = new URL(data?.url).hostname;
+                                    } catch (e) { }
+                                    const logoSrc = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=128` : null;
+
+                                    return (
+                                        <div key={index} className="flex flex-col md:flex-row items-center gap-4 justify-between p-6 bg-white dark:bg-slate-800/80 rounded-[2rem] border border-slate-100 dark:border-slate-700/60 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:hover:shadow-none transition-all group">
+                                            <div className="flex items-center gap-5 w-full md:w-auto">
+                                                <div className="w-12 h-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700 flex items-center justify-center font-bold text-slate-400 text-xs shadow-inner shrink-0 overflow-hidden relative">
+                                                    {logoSrc ? (
+                                                        <img src={logoSrc} alt={data?.name} className="w-8 h-8 object-contain drop-shadow-sm" />
+                                                    ) : (
+                                                        rName.includes('fpt') ? 'FPT' : rName.includes('tgdd') || rName.includes('di động') ? 'TGDD' : rName.includes('cellphone') ? 'CPS' : rName.includes('hoang') ? 'H2S' : data?.name?.substring(0, 2).toUpperCase()
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{data?.name}</p>
+                                                    <p className="text-2xl font-black text-teal-600 dark:text-teal-400 tracking-tight">{formatPrice(data?.price)}</p>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => window.open(data?.url, "_blank")} className="w-full md:w-auto px-6 py-3 bg-white dark:bg-transparent border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-2xl hover:border-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-2 shadow-sm">
+                                                Mua ngay
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                                            </button>
                                         </div>
-                                        <button onClick={() => window.open(data?.url, "_blank")} className="px-5 py-2.5 bg-slate-50 text-slate-700 font-bold rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-all flex items-center gap-2">
-                                            Mua ngay
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                        </button>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </div>
                         </div>
                     </div>
@@ -184,30 +247,30 @@ export default function ProductItem({ params }) {
 
             {/* Modal Price Alert - Đã fix lỗi code hiển thị */}
             {showAlertForm && product && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-900/80 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white dark:bg-slate-800 rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95">
                         <div className="p-8">
                             <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Tạo Cảnh Báo Giá</h2>
-                                <button onClick={() => setShowAlertForm(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400">
+                                <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Tạo Cảnh Báo Giá</h2>
+                                <button onClick={() => setShowAlertForm(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full text-slate-400 dark:text-slate-500">
                                     <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
 
-                            <div className="mb-8 flex items-center gap-4 p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
-                                <div className="h-12 w-12 relative bg-white rounded-lg p-1 border border-cyan-100">
+                            <div className="mb-8 flex items-center gap-4 p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-2xl border border-cyan-100 dark:border-cyan-800">
+                                <div className="h-12 w-12 relative bg-white dark:bg-slate-800 rounded-lg p-1 border border-cyan-100 dark:border-cyan-800">
                                     <img src={product.image_url} alt="" className="object-contain h-full w-full" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="font-bold text-slate-900 truncate text-sm">{product.name}</p>
+                                    <p className="font-bold text-slate-900 dark:text-slate-200 truncate text-sm">{product.name}</p>
                                     {/* FIX 1: Bọc trong ngoặc nhọn */}
-                                    <p className="text-cyan-700 font-bold">{formatPrice(product.current_price)}</p>
+                                    <p className="text-cyan-700 dark:text-cyan-400 font-bold">{formatPrice(product.current_price)}</p>
                                 </div>
                             </div>
 
                             <form onSubmit={handlePriceAlertSubmit} className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Giá mong muốn</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Giá mong muốn</label>
                                     <div className="relative">
                                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₫</span>
                                         <input
@@ -216,12 +279,12 @@ export default function ProductItem({ params }) {
                                             onChange={(e) => setAlertTarget(e.target.value)}
                                             /* FIX 2: Template literal đúng cú pháp */
                                             placeholder={`Thấp hơn ${formatPrice(product.current_price)}`}
-                                            className="w-full pl-8 pr-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-cyan-100 focus:border-cyan-500 transition-all font-bold outline-none"
+                                            className="w-full pl-8 pr-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-cyan-100 dark:focus:ring-cyan-800 focus:border-cyan-500 transition-all font-bold outline-none"
                                             autoFocus
                                         />
                                     </div>
                                     {alertTarget && (
-                                        <p className={`mt-2 text-xs font-bold ${Number(alertTarget) < product.current_price ? "text-emerald-600" : "text-rose-500"}`}>
+                                        <p className={`mt-2 text-xs font-bold ${Number(alertTarget) < product.current_price ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}`}>
                                             {Number(alertTarget) < product.current_price
                                                 ? `✓ Tiết kiệm được ${formatPrice(product.current_price - Number(alertTarget))}`
                                                 : `! Phải thấp hơn ${formatPrice(product.current_price)}`
@@ -231,27 +294,40 @@ export default function ProductItem({ params }) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Ghi chú</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Ghi chú</label>
                                     <input
                                         type="text"
                                         value={alertNote}
                                         onChange={(e) => setAlertNote(e.target.value)}
                                         placeholder="Ví dụ: Quà sinh nhật..."
-                                        className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white outline-none"
+                                        className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 outline-none"
                                     />
                                 </div>
 
                                 <div className="flex gap-3 pt-2">
-                                    <button type="button" onClick={() => setShowAlertForm(false)} className="flex-1 py-3.5 rounded-xl bg-slate-100 text-slate-600 font-bold hover:bg-slate-200">Hủy</button>
+                                    <button type="button" onClick={() => setShowAlertForm(false)} className="flex-1 py-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700">Hủy</button>
                                     <button
                                         type="submit"
                                         disabled={!alertTarget || Number(alertTarget) >= product.current_price}
-                                        className="flex-[2] py-3.5 rounded-xl bg-cyan-600 text-white font-bold hover:bg-cyan-700 disabled:bg-slate-200 disabled:text-slate-400 shadow-lg shadow-cyan-100"
+                                        className="flex-[2] py-3.5 rounded-xl bg-cyan-600 text-white font-bold hover:bg-cyan-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 shadow-lg shadow-cyan-100 dark:shadow-none"
                                     >
                                         Tạo Alert
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Modal Confirm Remove Wishlist */}
+            {showRemoveConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-sm w-full border border-slate-200 dark:border-slate-700 p-6 animate-in zoom-in-95">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">Bỏ lưu sản phẩm?</h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">Bạn có chắc chắn muốn bỏ lưu sản phẩm này khỏi Wishlist chứ?</p>
+                        <div className="flex items-center gap-3">
+                            <button onClick={() => setShowRemoveConfirm(false)} className="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">Không</button>
+                            <button onClick={removeFromWishlist} className="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 transition-colors shadow-lg shadow-rose-500/30">Nghỉ chơi luôn</button>
                         </div>
                     </div>
                 </div>

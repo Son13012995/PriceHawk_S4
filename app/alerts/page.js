@@ -17,8 +17,8 @@ export default function AlertsPage() {
   const fetchAlerts = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/price-alert", { 
-        params: { userId: null, status: "active" } 
+      const response = await axios.get("/api/price-alert", {
+        params: { userId: null, status: "active" }
       });
       setAlerts(response.data.data || []);
     } catch (error) {
@@ -98,9 +98,9 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className={cn(ui.pageWrap, "py-10")}> 
-      <div className={cn(ui.container, "space-y-6")}> 
-        <header className={cn(ui.card, "p-6 md:p-8")}> 
+    <div className={cn(ui.pageWrap, "py-10")}>
+      <div className={cn(ui.container, "space-y-6")}>
+        <header className={cn(ui.card, "p-6 md:p-8")}>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">Alert Center</p>
           <h1 className={cn(ui.heading, "mt-3 text-3xl font-black sm:text-4xl")}>Set Price Alert</h1>
           <p className={cn(ui.mutedText, "mt-3")}>Tạo cảnh báo khi giá sản phẩm giảm về mức bạn mong muốn.</p>
@@ -111,16 +111,16 @@ export default function AlertsPage() {
           </div>
         </header>
 
-        <section className={cn(ui.card, "grid gap-6 p-6 md:grid-cols-5 md:p-8")}> 
+        <section className={cn(ui.card, "grid gap-6 p-6 md:grid-cols-5 md:p-8")}>
           <form onSubmit={submitAlert} className="md:col-span-3 space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-semibold text-slate-700">Chọn sản phẩm</label>
+              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Chọn sản phẩm</label>
               <ProductSearch
                 onSelectProduct={setSelectedProduct}
                 placeholder="Tìm kiếm tên sản phẩm..."
               />
               {selectedProduct && (
-                <div className="mt-2 flex items-center gap-2 rounded-lg bg-cyan-50 p-3 border border-cyan-200">
+                <div className="mt-2 flex items-center gap-2 rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-3 border border-cyan-200 dark:border-cyan-800">
                   {selectedProduct.image_url && (
                     <img
                       src={selectedProduct.image_url}
@@ -129,8 +129,8 @@ export default function AlertsPage() {
                     />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900">{selectedProduct.name}</p>
-                    <p className="text-xs text-slate-600">{selectedProduct.brand || "N/A"}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">{selectedProduct.name}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400">{selectedProduct.brand || "N/A"}</p>
                   </div>
                   <button
                     type="button"
@@ -143,24 +143,24 @@ export default function AlertsPage() {
               )}
             </div>
             <div>
-              <label className="mb-1 block text-sm font-semibold text-slate-700">Target Price</label>
+              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Target Price</label>
               <input
                 type="number"
                 min="1"
                 value={targetPrice}
                 onChange={(e) => setTargetPrice(e.target.value)}
                 placeholder="Ví dụ: 99"
-                className={cn("w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5", ui.ring)}
+                className={cn("w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500", ui.ring)}
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-semibold text-slate-700">Ghi chú (tuỳ chọn)</label>
+              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Ghi chú (tuỳ chọn)</label>
               <input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Tai nghe cho đi làm"
-                className={cn("w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5", ui.ring)}
+                className={cn("w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500", ui.ring)}
               />
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -169,9 +169,9 @@ export default function AlertsPage() {
             </div>
           </form>
 
-          <aside className="md:col-span-2 rounded-2xl border border-slate-200 bg-slate-50 p-5">
-            <h2 className="text-base font-bold text-slate-800">Cách hoạt động</h2>
-            <ul className="mt-3 space-y-2 text-sm text-slate-600">
+          <aside className="md:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5">
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">Cách hoạt động</h2>
+            <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li>1. Tìm kiếm tên sản phẩm chọn từ kết quả.</li>
               <li>2. Nhập giá mục tiêu và lưu alert.</li>
               <li>3. Khi giá thấp hơn ngưỡng, alert sẽ được đánh dấu.</li>
@@ -179,8 +179,8 @@ export default function AlertsPage() {
           </aside>
         </section>
 
-        <section className={cn(ui.card, "p-6 md:p-8")}> 
-          <h2 className="text-xl font-bold text-slate-900">Danh sách alerts</h2>
+        <section className={cn(ui.card, "p-6 md:p-8")}>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Danh sách alerts</h2>
           {loading ? (
             <div className="mt-4 space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -192,12 +192,12 @@ export default function AlertsPage() {
           ) : (
             <div className="mt-4 space-y-3">
               {alerts.map((item) => (
-                <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                <article key={item.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-bold text-slate-900">{item.name || `Product #${item.product_id}`}</p>
-                      <p className="text-sm text-slate-600">Target: {item.formatP}</p>
-                      {item.note ? <p className="text-xs text-slate-500 mt-1">{item.note}</p> : null}
+                      <p className="text-sm font-bold text-slate-900 dark:text-slate-200">{item.name || `Product #${item.product_id}`}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Target: {item.formatP}</p>
+                      {item.note ? <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{item.note}</p> : null}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -205,15 +205,15 @@ export default function AlertsPage() {
                         className={cn(
                           "rounded-lg px-3 py-1 text-xs font-semibold",
                           item.status === "active"
-                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 text-slate-300 dark:hover:bg-slate-600"
                         )}
                       >
                         {item.status === "active" ? "Active" : "Paused"}
                       </button>
                       <button
                         onClick={() => removeAlert(item.id)}
-                        className="rounded-lg bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
+                        className="rounded-lg bg-rose-100 dark:bg-rose-900/30 px-3 py-1 text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/50"
                       >
                         Delete
                       </button>

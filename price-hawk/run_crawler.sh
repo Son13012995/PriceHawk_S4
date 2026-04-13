@@ -18,11 +18,11 @@ fi
 # Create logs directory if not exists
 mkdir -p "$PROJECT_DIR/logs"
 
-# Default mode (can be overridden: skip|fast|default)
-MODE="${1:-default}"
+# Default mode (simplified - no modes, just crawl all)
+MODE="default"
 LOG_FILE="$PROJECT_DIR/logs/crawler_$(date +%Y%m%d_%H%M%S).log"
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting crawler (mode: $MODE)" | tee -a "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting crawler" | tee -a "$LOG_FILE"
 
 # Activate virtual environment
 if [ -f "$PROJECT_DIR/.venv/bin/activate" ]; then
@@ -37,6 +37,9 @@ fi
 
 # Change to project directory
 cd "$PROJECT_DIR"
+
+# Set PYTHONPATH for imports
+export PYTHONPATH="$PROJECT_DIR:$PROJECT_DIR/price_hawk:$PYTHONPATH"
 
 # Select Python binary
 if [ -x "/usr/local/bin/python3" ]; then
@@ -53,20 +56,16 @@ else
 fi
 
 # Run crawler
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running: $PY_BIN crawl_all.py --$MODE" >> "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running: $PY_BIN crawl_all.py" >> "$LOG_FILE"
 
-if [ "$MODE" = "default" ]; then
-    "$PY_BIN" crawl_all.py >> "$LOG_FILE" 2>&1
-else
-    "$PY_BIN" crawl_all.py --"$MODE" >> "$LOG_FILE" 2>&1
-fi
+"$PY_BIN" crawl_all.py >> "$LOG_FILE" 2>&1
 
 EXIT_CODE=$?
 
 if [ $EXIT_CODE -eq 0 ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] OK: Crawler completed successfully" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ✅ Crawler + DB insert completed successfully" | tee -a "$LOG_FILE"
 else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: Crawler failed with exit code $EXIT_CODE" | tee -a "$LOG_FILE"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ❌ Crawler failed with exit code $EXIT_CODE" | tee -a "$LOG_FILE"
 fi
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Log: $LOG_FILE" >> "$LOG_FILE"
