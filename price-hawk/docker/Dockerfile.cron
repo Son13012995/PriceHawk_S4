@@ -25,7 +25,7 @@ RUN mkdir -p logs data
 RUN chmod +x run_crawler.sh
 
 # Register cron schedule (every 5 minutes for testing). For production use: 0 * * * * (hourly)
-RUN echo "*/5 * * * * /app/price-hawk/run_crawler.sh default >> /app/price-hawk/logs/cron.log 2>&1" > /etc/cron.d/crawler-cron && \
+RUN echo "*/5 * * * * /app/price-hawk/run_crawler.sh >> /app/price-hawk/logs/cron.log 2>&1" > /etc/cron.d/crawler-cron && \
     chmod 0644 /etc/cron.d/crawler-cron && \
     crontab /etc/cron.d/crawler-cron
 

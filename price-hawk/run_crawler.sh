@@ -18,11 +18,11 @@ fi
 # Create logs directory if not exists
 mkdir -p "$PROJECT_DIR/logs"
 
-# Default mode (can be overridden: skip|fast|default)
-MODE="${1:-default}"
+# Default mode (simplified - no modes, just crawl all)
+MODE="default"
 LOG_FILE="$PROJECT_DIR/logs/crawler_$(date +%Y%m%d_%H%M%S).log"
 
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting crawler (mode: $MODE)" | tee -a "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Starting crawler" | tee -a "$LOG_FILE"
 
 # Activate virtual environment
 if [ -f "$PROJECT_DIR/.venv/bin/activate" ]; then
@@ -56,13 +56,9 @@ else
 fi
 
 # Run crawler
-echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running: $PY_BIN crawl_all.py --$MODE" >> "$LOG_FILE"
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running: $PY_BIN crawl_all.py" >> "$LOG_FILE"
 
-if [ "$MODE" = "default" ]; then
-    "$PY_BIN" crawl_all.py >> "$LOG_FILE" 2>&1
-else
-    "$PY_BIN" crawl_all.py --"$MODE" >> "$LOG_FILE" 2>&1
-fi
+"$PY_BIN" crawl_all.py >> "$LOG_FILE" 2>&1
 
 EXIT_CODE=$?
 
