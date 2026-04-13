@@ -121,3 +121,25 @@ def parse_price(value):
     except ValueError:
         return None
 
+
+class BatchDBPipeline:
+    """Insert items directly to DB (batch mode, no file buffering)"""
+    
+    def __init__(self):
+        from price_hawk.db_batch_processor import BatchDBProcessor
+        self.db_processor = BatchDBProcessor(batch_size=100)
+    
+    def process_item(self, item, spider=None):
+        """Add item to DB batch buffer"""
+        try:
+            self.db_processor.add_item(dict(item))
+        except Exception as e:
+            spider.logger.error(f"DB insert failed: {e}")
+        return item
+    
+    def close_spider(self, spider):
+        """Flush remaining items when spider closes"""
+        spider.logger.info("Flushing remaining DB items...")
+        self.db_processor.flush()
+        self.db_processor.close()
+

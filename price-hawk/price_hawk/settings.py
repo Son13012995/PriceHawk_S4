@@ -18,6 +18,7 @@ DEFAULT_REQUEST_HEADERS = {
 
 ITEM_PIPELINES = {
     "price_hawk.pipelines.NormalizePhonePipeline": 300,
+    "price_hawk.pipelines.BatchDBPipeline": 400,
 }
 
 FEEDS = {

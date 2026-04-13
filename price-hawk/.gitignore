@@ -44,6 +44,9 @@ logs/
 *.log
 .DS_Store
 
+# Test & benchmark files
+test_benchmark.py
+
 # Data (optional - uncomment if you want to ignore data folder)
 # data/
 # data_backup/
