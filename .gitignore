@@ -39,8 +39,7 @@ next-env.d.ts
 # IntelliJ IDE files
 .idea/
 
-# SQL dump files (local database backups)
-*.sql
+
 
 # Local environment
 .vscode/

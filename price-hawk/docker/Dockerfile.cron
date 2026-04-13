@@ -10,22 +10,24 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app/price-hawk
 
-# Install Python dependencies first for better layer caching
-COPY requirements.txt .
+# Copy requirements đúng path
+COPY price-hawk/requirements.txt .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir scrapy pymysql python-dotenv && \
     if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
 
-# Copy project
-COPY . .
+# Copy project đúng thư mục
+COPY price-hawk/ .
 
 # Create logs directory
 RUN mkdir -p logs data
 
-# Make run_crawler.sh executable
+# Make run script executable
 RUN chmod +x run_crawler.sh
 
-# Register cron schedule (every 5 minutes for testing). For production use: 0 * * * * (hourly)
-RUN echo "*/5 * * * * /app/price-hawk/run_crawler.sh >> /app/price-hawk/logs/cron.log 2>&1" > /etc/cron.d/crawler-cron && \
+# Setup cron
+RUN echo "*/5 * * * * cd /app/price-hawk && ./run_crawler.sh >> /app/price-hawk/logs/cron.log 2>&1" > /etc/cron.d/crawler-cron && \
     chmod 0644 /etc/cron.d/crawler-cron && \
     crontab /etc/cron.d/crawler-cron
 
@@ -33,5 +35,5 @@ RUN echo "*/5 * * * * /app/price-hawk/run_crawler.sh >> /app/price-hawk/logs/cro
 HEALTHCHECK --interval=5m --timeout=30s --start-period=10s --retries=3 \
     CMD ["sh", "-c", "test -f /app/price-hawk/logs/cron.log || test -n \"$(ls -A /app/price-hawk/logs/crawler_*.log 2>/dev/null)\""]
 
-# Start cron daemon and persist environment for cron jobs
+# Start cron
 CMD ["sh", "-c", "printenv > /etc/environment && cron -f"]
