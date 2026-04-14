@@ -55,7 +55,7 @@ def run_spider(shop: str, category: str) -> tuple:
         success = result.returncode == 0
         
         if success:
-            # Count items in output file
+    # Count items in output file
             count = 0
             if output_file.exists():
                 with open(output_file, 'r') as f:
@@ -63,6 +63,8 @@ def run_spider(shop: str, category: str) -> tuple:
             print(f"[{thread_id}] ✅ {shop}:{category} (crawled {count} items in {elapsed:.1f}s)")
         else:
             print(f"[{thread_id}] ❌ {shop}:{category} (failed in {elapsed:.1f}s)")
+            print(f"--- STDERR ---\n{result.stderr.strip()}\n")
+            print(f"--- STDOUT ---\n{result.stdout.strip()}\n")
         
         return (shop, category, success, output_file)
     
