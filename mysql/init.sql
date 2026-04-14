@@ -28,6 +28,9 @@ CREATE TABLE `comparison` (
   `price` float NOT NULL,
   `url` text NOT NULL,
   `name` varchar(100) NOT NULL,
+  `min_price` float DEFAULT NULL,
+  `min_price_at` timestamp NULL DEFAULT NULL,
+  `current_price_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_url` (`url`(255)),
   KEY `comparison_FK` (`product_id`),
@@ -176,4 +179,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-04-14  8:19:40
+-- Dump completed on 2026-04-14 22:01:58
