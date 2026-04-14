@@ -32,8 +32,8 @@ services:
   crawler:
     container_name: price_hawk_crawler
     build:
-      context: .
-      dockerfile: price-hawk/docker/Dockerfile.cron
+      context: ./price-hawk
+      dockerfile: docker/Dockerfile.cron
     volumes:
       - ./price-hawk:/app/price-hawk
       - ./price-hawk/logs:/app/price-hawk/logs
@@ -52,4 +52,3 @@ volumes:
 
 networks:
   mynetwork:
-    external: true
