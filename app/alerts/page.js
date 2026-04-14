@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
-import { formatPrice } from "../utils/format"
+import { formatPrice, formatPriceInput, parsePriceInput } from "../utils/format";
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState([]);
@@ -18,7 +18,7 @@ export default function AlertsPage() {
     setLoading(true);
     try {
       const response = await axios.get("/api/price-alert", {
-        params: { userId: null, status: "active" }
+        params: { userId: null, status: "active" },
       });
       setAlerts(response.data.data || []);
     } catch (error) {
@@ -33,11 +33,13 @@ export default function AlertsPage() {
     fetchAlerts();
   }, []);
 
-  const activeCount = useMemo(() => alerts.filter((item) => item.status === "active").length, [alerts]);
+  const activeCount = useMemo(() => {
+    return alerts.filter((item) => item.status === "active").length;
+  }, [alerts]);
 
   const submitAlert = async (event) => {
     event.preventDefault();
-    const target = Number(targetPrice);
+    const target = parsePriceInput(targetPrice);
 
     if (!selectedProduct || !target || target <= 0) {
       setMessage("Vui lòng chọn sản phẩm và nhập mức giá hợp lệ.");
@@ -58,7 +60,6 @@ export default function AlertsPage() {
         setTargetPrice("");
         setNote("");
         setTimeout(() => setMessage(""), 3000);
-        // Reload alerts
         fetchAlerts();
       }
     } catch (error) {
@@ -74,7 +75,6 @@ export default function AlertsPage() {
         alertId: id,
         status: newStatus,
       });
-      // Reload alerts
       fetchAlerts();
     } catch (error) {
       setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
@@ -89,7 +89,6 @@ export default function AlertsPage() {
       });
       setMessage("Đã xóa alert.");
       setTimeout(() => setMessage(""), 3000);
-      // Reload alerts
       fetchAlerts();
     } catch (error) {
       setMessage("Không thể xóa alert. Vui lòng thử lại.");
@@ -112,15 +111,12 @@ export default function AlertsPage() {
         </header>
 
         <section className={cn(ui.card, "grid gap-6 p-6 md:grid-cols-5 md:p-8")}>
-          <form onSubmit={submitAlert} className="md:col-span-3 space-y-4">
+          <form onSubmit={submitAlert} className="space-y-4 md:col-span-3">
             <div>
               <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Chọn sản phẩm</label>
-              <ProductSearch
-                onSelectProduct={setSelectedProduct}
-                placeholder="Tìm kiếm tên sản phẩm..."
-              />
+              <ProductSearch onSelectProduct={setSelectedProduct} placeholder="Tìm kiếm tên sản phẩm..." />
               {selectedProduct && (
-                <div className="mt-2 flex items-center gap-2 rounded-lg bg-cyan-50 dark:bg-cyan-900/20 p-3 border border-cyan-200 dark:border-cyan-800">
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
                   {selectedProduct.image_url && (
                     <img
                       src={selectedProduct.image_url}
@@ -142,16 +138,25 @@ export default function AlertsPage() {
                 </div>
               )}
             </div>
+
             <div>
-              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Target Price</label>
+              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Giá mong muốn (đ)</label>
               <input
-                type="number"
-                min="1"
+                type="text"
+                inputMode="numeric"
                 value={targetPrice}
-                onChange={(e) => setTargetPrice(e.target.value)}
-                placeholder="Ví dụ: 99"
-                className={cn("w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500", ui.ring)}
+                onChange={(e) => setTargetPrice(formatPriceInput(e.target.value))}
+                placeholder="Ví dụ: 1.000.000 đ"
+                className={cn(
+                  "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500",
+                  ui.ring
+                )}
               />
+              {targetPrice && parsePriceInput(targetPrice) > 0 ? (
+                <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Giá mục tiêu: {formatPrice(parsePriceInput(targetPrice))}
+                </p>
+              ) : null}
             </div>
 
             <div>
@@ -160,16 +165,21 @@ export default function AlertsPage() {
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Tai nghe cho đi làm"
-                className={cn("w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500", ui.ring)}
+                className={cn(
+                  "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500",
+                  ui.ring
+                )}
               />
             </div>
             <div className="flex flex-wrap items-center gap-3 pt-1">
-              <button type="submit" className={cn(ui.primaryButton, ui.ring)}>Tạo alert</button>
+              <button type="submit" className={cn(ui.primaryButton, ui.ring)}>
+                Tạo alert
+              </button>
               {message && <span className="text-sm font-medium text-slate-500">{message}</span>}
             </div>
           </form>
 
-          <aside className="md:col-span-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5">
+          <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800/50 md:col-span-2">
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">Cách hoạt động</h2>
             <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-400">
               <li>1. Tìm kiếm tên sản phẩm chọn từ kết quả.</li>
@@ -192,12 +202,17 @@ export default function AlertsPage() {
           ) : (
             <div className="mt-4 space-y-3">
               {alerts.map((item) => (
-                <article key={item.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/80 p-4">
+                <article
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800/80"
+                >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="text-sm font-bold text-slate-900 dark:text-slate-200">{item.name || `Product #${item.product_id}`}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Target: {item.formatP}</p>
-                      {item.note ? <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">{item.note}</p> : null}
+                      <p className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                        {item.name || `Product #${item.product_id}`}
+                      </p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">Target: {formatPrice(item.target_price)}</p>
+                      {item.note ? <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">{item.note}</p> : null}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -213,7 +228,7 @@ export default function AlertsPage() {
                       </button>
                       <button
                         onClick={() => removeAlert(item.id)}
-                        className="rounded-lg bg-rose-100 dark:bg-rose-900/30 px-3 py-1 text-xs font-semibold text-rose-700 dark:text-rose-400 hover:bg-rose-200 dark:hover:bg-rose-900/50"
+                        className="rounded-lg bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200 dark:bg-rose-900/30 dark:text-rose-400 dark:hover:bg-rose-900/50"
                       >
                         Delete
                       </button>

@@ -5,7 +5,7 @@ import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { formatPrice } from "@/app/utils/format";
+import { formatPrice, formatPriceInput, formatPriceUpdateTime, parsePriceInput } from "@/app/utils/format";
 
 // Skeleton giữ nguyên
 const DetailSkeleton = () => (
@@ -83,14 +83,14 @@ export default function ProductItem({ params }) {
         e.preventDefault();
         setAlertError("");
         const currentPrice = product?.current_price || 0;
-        const target = Number(alertTarget);
+        const target = parsePriceInput(alertTarget);
 
         if (!alertTarget.trim() || target <= 0) {
             setAlertError("Vui lòng nhập mức giá hợp lệ.");
             return;
         }
         if (target >= currentPrice) {
-            setAlertError(`Giá mục tiêu phải thấp hơn giá hiện tại (${formatPrice(currentPrice)}đ).`);
+            setAlertError(`Giá mong muốn phải thấp hơn giá hiện tại (${formatPrice(currentPrice)}).`);
             return;
         }
 
@@ -102,7 +102,7 @@ export default function ProductItem({ params }) {
                 userId: null,
             });
             if (response.status === 201) {
-                setWishlistMessage(`✓ Đã tạo alert: ${formatPrice(target)}đ`);
+                setWishlistMessage(`✓ Đã tạo alert: ${formatPrice(target)}`);
                 setTimeout(() => setWishlistMessage(""), 3000);
                 setShowAlertForm(false);
                 setAlertTarget("");
@@ -230,6 +230,9 @@ export default function ProductItem({ params }) {
                                                 <div>
                                                     <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">{data?.name}</p>
                                                     <p className="text-2xl font-black text-teal-600 dark:text-teal-400 tracking-tight">{formatPrice(data?.price)}</p>
+                                                    <p className="mt-1 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                        Cập nhật: {formatPriceUpdateTime(data?.current_price_at)}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <button onClick={() => window.open(data?.url, "_blank")} className="w-full md:w-auto px-6 py-3 bg-white dark:bg-transparent border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-2xl hover:border-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/30 dark:hover:border-teal-500 hover:text-teal-700 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-2 shadow-sm">
@@ -270,23 +273,28 @@ export default function ProductItem({ params }) {
 
                             <form onSubmit={handlePriceAlertSubmit} className="space-y-6">
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Giá mong muốn</label>
+                                    <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-2">Giá mong muốn (đ)</label>
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₫</span>
                                         <input
-                                            type="number"
+                                            type="text"
+                                            inputMode="numeric"
                                             value={alertTarget}
-                                            onChange={(e) => setAlertTarget(e.target.value)}
+                                            onChange={(e) => setAlertTarget(formatPriceInput(e.target.value))}
                                             /* FIX 2: Template literal đúng cú pháp */
                                             placeholder={`Thấp hơn ${formatPrice(product.current_price)}`}
-                                            className="w-full pl-8 pr-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-cyan-100 dark:focus:ring-cyan-800 focus:border-cyan-500 transition-all font-bold outline-none"
+                                            className="w-full px-4 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-slate-900 dark:text-white focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-cyan-100 dark:focus:ring-cyan-800 focus:border-cyan-500 transition-all font-bold outline-none"
                                             autoFocus
                                         />
                                     </div>
+                                    {alertTarget && parsePriceInput(alertTarget) > 0 ? (
+                                        <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            Giá mong muốn: {formatPrice(parsePriceInput(alertTarget))}
+                                        </p>
+                                    ) : null}
                                     {alertTarget && (
-                                        <p className={`mt-2 text-xs font-bold ${Number(alertTarget) < product.current_price ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}`}>
-                                            {Number(alertTarget) < product.current_price
-                                                ? `✓ Tiết kiệm được ${formatPrice(product.current_price - Number(alertTarget))}`
+                                        <p className={`mt-2 text-xs font-bold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}`}>
+                                            {parsePriceInput(alertTarget) < product.current_price
+                                                ? `✓ Tiết kiệm được ${formatPrice(product.current_price - parsePriceInput(alertTarget))}`
                                                 : `! Phải thấp hơn ${formatPrice(product.current_price)}`
                                             }
                                         </p>
@@ -308,7 +316,7 @@ export default function ProductItem({ params }) {
                                     <button type="button" onClick={() => setShowAlertForm(false)} className="flex-1 py-3.5 rounded-xl bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-200 dark:hover:bg-slate-700">Hủy</button>
                                     <button
                                         type="submit"
-                                        disabled={!alertTarget || Number(alertTarget) >= product.current_price}
+                                        disabled={!alertTarget || parsePriceInput(alertTarget) >= product.current_price}
                                         className="flex-[2] py-3.5 rounded-xl bg-cyan-600 text-white font-bold hover:bg-cyan-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 shadow-lg shadow-cyan-100 dark:shadow-none"
                                     >
                                         Tạo Alert
