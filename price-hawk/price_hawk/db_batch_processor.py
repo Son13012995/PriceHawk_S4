@@ -71,12 +71,7 @@ class BatchDBProcessor:
             return False
     
     def _insert_group(self, group: List[Dict]):
-        """Insert product group to DB following setup.sql schema
-        
-        Schema:
-        - product: id, name, description, image_url, brand, current_price
-        - comparison: id, product_id, price, url, name (source)
-        """
+        """Insert product group to DB using identity_key for uniqueness"""
         if not group:
             return
         
@@ -84,55 +79,47 @@ class BatchDBProcessor:
         
         try:
             name = rep.get("name")
-            brand = rep.get("brand_norm")
+            brand = rep.get("brand_norm", "").lower().replace(" ", "_")
+            model = rep.get("model_key", "").lower().replace(" ", "_")
+            variant = rep.get("variant_key", "").lower().replace(" ", "_")
             description = rep.get("description")
             image_url = rep.get("image_url")
+            
+            # Generate identity_key from brand + model + variant
+            if not (brand and model and variant):
+                print(f"⚠️ Skip product (incomplete identity): {name}")
+                return
+            
+            identity_key = f"{brand}_{model}_{variant}"
             
             # Get min price from group
             prices = [p.get("price") for p in group if p.get("price") is not None]
             current_price = min(prices) if prices else None
             
-            # Try to match by first URL (unique identifier for variant)
-            product_id = None
-            first_url = group[0].get("product_url") if group else None
+            # Insert or update product by identity_key (UNIQUE)
+            # Always keep the minimum price across all shops
+            self.cursor.execute("""
+                INSERT INTO product (identity_key, name, description, image_url, brand, current_price)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    current_price = CASE 
+                        WHEN product.current_price IS NULL THEN VALUES(current_price)
+                        ELSE LEAST(product.current_price, VALUES(current_price))
+                    END,
+                    description = VALUES(description),
+                    image_url = VALUES(image_url)
+            """, (identity_key, name, description, image_url, brand, current_price))
             
-            if first_url:
-                # Check if URL already exists in comparison records
-                self.cursor.execute("""
-                    SELECT DISTINCT product_id FROM comparison
-                    WHERE url = %s
-                    LIMIT 1
-                """, (first_url,))
-                result = self.cursor.fetchone()
-                if result:
-                    product_id = result[0]
+            # Get product_id by identity_key
+            self.cursor.execute("""
+                SELECT id FROM product WHERE identity_key = %s
+            """, (identity_key,))
+            result = self.cursor.fetchone()
+            product_id = result[0] if result else None
             
-            # Fallback: search by name + brand if URL not found
             if not product_id:
-                self.cursor.execute("""
-                    SELECT id FROM product
-                    WHERE name = %s AND brand = %s
-                """, (name, brand))
-                result = self.cursor.fetchone()
-                if result:
-                    product_id = result[0]
-            
-            # If product found, UPDATE it
-            if product_id:
-                self.cursor.execute("""
-                    UPDATE product
-                    SET current_price = %s,
-                        description = %s,
-                        image_url = %s
-                    WHERE id = %s
-                """, (current_price, description, image_url, product_id))
-            else:
-                # INSERT new product
-                self.cursor.execute("""
-                    INSERT INTO product (name, description, image_url, brand, current_price)
-                    VALUES (%s, %s, %s, %s, %s)
-                """, (name, description, image_url, brand, current_price))
-                product_id = self.cursor.lastrowid
+                print(f"⚠️ Failed to get product_id for: {name}")
+                return
             
             # Insert comparison records from all sources in group
             for item in group:
@@ -142,7 +129,7 @@ class BatchDBProcessor:
             print(f"⚠️ Skipped product {rep.get('name')}: {e}")
     
     def _insert_comparison(self, product_id: int, item: Dict):
-        """Insert comparison record (price from source)"""
+        """Insert comparison record (price from source) using ON DUPLICATE KEY"""
         try:
             price = item.get("price")
             url = item.get("product_url")
@@ -151,32 +138,18 @@ class BatchDBProcessor:
             if not (price and url):
                 return
             
-            # Check if comparison record exists for this source
+            # Use ON DUPLICATE KEY to handle existing URLs
             self.cursor.execute("""
-                SELECT id FROM comparison
-                WHERE product_id = %s AND url = %s
-                LIMIT 1
-            """, (product_id, url))
-            
-            existing = self.cursor.fetchone()
-            
-            if existing:
-                # UPDATE price
-                comparison_id = existing[0]
-                self.cursor.execute("""
-                    UPDATE comparison 
-                    SET price = %s
-                    WHERE id = %s
-                """, (price, comparison_id))
-            else:
-                # INSERT new comparison
-                self.cursor.execute("""
-                    INSERT INTO comparison (product_id, price, url, name)
-                    VALUES (%s, %s, %s, %s)
-                """, (product_id, price, url, source))
+                INSERT INTO comparison (product_id, price, url, name)
+                VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    product_id = VALUES(product_id),
+                    price = VALUES(price),
+                    name = VALUES(name)
+            """, (product_id, price, url, source))
         
         except Exception as e:
-            print(f"⚠️ Failed to insert comparison: {e}")
+            print(f"⚠️ Failed to insert comparison ({url}): {e}")
     
     def close(self):
         """Flush remaining and close"""

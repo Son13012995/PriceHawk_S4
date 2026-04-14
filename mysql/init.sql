@@ -26,9 +26,10 @@ CREATE TABLE `comparison` (
   `id` int NOT NULL AUTO_INCREMENT,
   `product_id` int DEFAULT NULL,
   `price` float NOT NULL,
-  `url` text,
+  `url` text NOT NULL,
   `name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_url` (`url`(255)),
   KEY `comparison_FK` (`product_id`),
   KEY `idx_comparison_product_price` (`product_id`,`price`),
   CONSTRAINT `comparison_FK` FOREIGN KEY (`product_id`) REFERENCES `product` (`id`)
@@ -123,7 +124,9 @@ CREATE TABLE `product` (
   `image_url` text,
   `brand` varchar(100) DEFAULT NULL,
   `current_price` float DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `identity_key` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_identity_key` (`identity_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
