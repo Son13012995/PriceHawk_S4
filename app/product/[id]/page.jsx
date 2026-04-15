@@ -5,6 +5,7 @@ import Image from "next/image";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import MinPriceBox from "@/components/MinPriceBox";
 import { formatPrice, formatPriceInput, formatPriceUpdateTime, parsePriceInput } from "@/app/utils/format";
 
 // Skeleton giữ nguyên
@@ -174,30 +175,26 @@ export default function ProductItem({ params }) {
                             </div>
 
                             <div className="flex flex-col sm:flex-row flex-wrap xl:flex-nowrap gap-4 mb-12 border-b border-slate-200 dark:border-slate-800 pb-12">
-                                <Link
-                                    href={`/price-history/${params.id}`}
-                                    className="flex-1 min-w-[140px] px-6 py-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-[1.25rem] hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-3 shadow-sm"
-                                >
-                                    <svg className="w-5 h-5 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    Lịch sử giá
-                                </Link>
+                                <div className="flex-[2] min-w-[200px]">
+                                    <MinPriceBox productId={params.id} />
+                                </div>
 
-                                <button onClick={() => setShowAlertForm(true)} className="flex-1 min-w-[140px] px-6 py-4 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-[1.25rem] hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-3 shadow-sm">
-                                    <svg className="w-5 h-5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                                    Theo dõi giá
+                                <button onClick={() => setShowAlertForm(true)} className="flex-1 min-w-[100px] px-4 py-3 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-sm rounded-[1.25rem] hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-teal-500 hover:text-teal-600 dark:hover:text-teal-400 transition-all flex items-center justify-center gap-2 shadow-sm">
+                                    <svg className="w-4 h-4 text-orange-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                                    <span className="whitespace-nowrap">Theo dõi</span>
                                 </button>
 
                                 <button
                                     onClick={handleWishlistClick}
-                                    className={`flex-[1.5] min-w-[170px] px-6 py-4 font-bold rounded-[1.25rem] transition-all flex items-center justify-center gap-3 border-2 ${isInWishlist
+                                    className={`flex-[1.2] min-w-[140px] px-4 py-3 font-semibold text-sm rounded-[1.25rem] transition-all flex items-center justify-center gap-2 border-2 ${isInWishlist
                                             ? "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 dark:hover:bg-rose-900/40"
                                             : "bg-slate-900 dark:bg-teal-50 text-white dark:text-teal-900 border-transparent hover:bg-teal-600 dark:hover:bg-white hover:-translate-y-0.5 shadow-[0_8px_20px_rgb(0,0,0,0.12)]"
                                         }`}
                                 >
-                                    <svg className={`w-5 h-5 ${isInWishlist ? 'text-rose-500' : 'text-red-500'}`} fill={isInWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg className={`w-4 h-4 ${isInWishlist ? 'text-rose-500' : 'text-red-500'} flex-shrink-0`} fill={isInWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isInWishlist ? 0 : 2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
-                                    {isInWishlist ? "Đã lưu vào Wishlist" : "Lưu vào Wishlist"}
+                                    <span className="whitespace-nowrap">{isInWishlist ? "Đã lưu" : "Wishlist"}</span>
                                 </button>
                             </div>
 
