@@ -20,11 +20,13 @@ RUN pip install --no-cache-dir scrapy pymysql python-dotenv && \
 # Copy project đúng thư mục
 COPY price-hawk/ .
 
+COPY price-hawk/run_crawler.sh /app/price-hawk/run_crawler.sh
+
 # Create logs directory
 RUN mkdir -p logs data
 
 # Make run script executable
-RUN chmod +x run_crawler.sh
+RUN chmod +x /app/price-hawk/run_crawler.sh
 
 # Setup cron
 RUN echo "*/30 * * * * cd /app/price-hawk && ./run_crawler.sh >> /app/price-hawk/logs/cron.log 2>&1" > /etc/cron.d/crawler-cron && \
