@@ -16,7 +16,7 @@ describe('GET /api/product', () => {
     it('should return single product by ID', async () => {
       const productId = await insertTestProduct({
         name: 'iPhone 14',
-        price: 999,
+        current_price: 999,
       });
 
       const req = createMockRequest({
@@ -52,7 +52,7 @@ describe('GET /api/product', () => {
     it('should include product details with min_price and retailer_count', async () => {
       const productId = await insertTestProduct({
         name: 'Samsung Galaxy',
-        price: 899,
+        current_price: 899,
       });
 
       const req = createMockRequest({
@@ -72,12 +72,14 @@ describe('GET /api/product', () => {
   });
 
   describe('Product List with Pagination', () => {
+    const TEST_PRODUCT_COUNT = 15;
+
     beforeEach(async () => {
-      // Insert multiple test products
-      for (let i = 1; i <= 15; i++) {
+      // Insert exactly TEST_PRODUCT_COUNT products
+      for (let i = 1; i <= TEST_PRODUCT_COUNT; i++) {
         await insertTestProduct({
           name: `Product ${i}`,
-          price: 100 + i * 10,
+          current_price: 100 + i * 10,
         });
       }
     });
@@ -96,7 +98,7 @@ describe('GET /api/product', () => {
       expect(data).toHaveProperty('data');
       expect(data).toHaveProperty('totalCount');
       expect(Array.isArray(data.data)).toBe(true);
-      expect(data.totalCount).toBeGreaterThanOrEqual(15);
+      expect(data.totalCount).toBe(TEST_PRODUCT_COUNT);
     });
 
     it('should respect page parameter', async () => {
@@ -148,7 +150,7 @@ describe('GET /api/product', () => {
       await productHandler(req, res);
 
       const data = JSON.parse(res._data);
-      expect(data.totalCount).toBeGreaterThanOrEqual(15);
+      expect(data.totalCount).toBe(TEST_PRODUCT_COUNT);
     });
   });
 

@@ -16,7 +16,7 @@ describe('/api/wishlist', () => {
     it('should add product to wishlist', async () => {
       const productId = await insertTestProduct({
         name: 'Wireless Headphones',
-        price: 150,
+        current_price: 150,
       });
 
       const req = createMockRequest({
@@ -48,7 +48,7 @@ describe('/api/wishlist', () => {
     it('should prevent duplicate wishlist entries', async () => {
       const productId = await insertTestProduct({
         name: 'Bluetooth Speaker',
-        price: 80,
+        current_price: 80,
       });
 
       // Add first time
@@ -73,14 +73,14 @@ describe('/api/wishlist', () => {
     it('should accept userId in wishlist entry', async () => {
       const productId = await insertTestProduct({
         name: 'Keyboard',
-        price: 120,
+        current_price: 120,
       });
 
       const req = createMockRequest({
         method: 'POST',
         body: {
           productId,
-          userId: 'user-123',
+          userId: 1,
         },
       });
       const res = createMockResponse();
@@ -93,7 +93,7 @@ describe('/api/wishlist', () => {
     it('should handle NULL userId', async () => {
       const productId = await insertTestProduct({
         name: 'Mouse',
-        price: 45,
+        current_price: 45,
       });
 
       const req = createMockRequest({
@@ -112,27 +112,33 @@ describe('/api/wishlist', () => {
   });
 
   describe('GET - Retrieve Wishlist', () => {
-    beforeEach(async () => {
-      const productId = await insertTestProduct({
-        name: 'Monitor',
-        price: 300,
-      });
+    const ITEMS_TO_ADD = 3;
 
-      const req = createMockRequest({
-        method: 'POST',
-        body: {
-          productId,
-          userId: 'test-user',
-        },
-      });
-      const res = createMockResponse();
-      await wishlistHandler(req, res);
+    beforeEach(async () => {
+      // Explicitly add known number of items to wishlist
+      for (let i = 1; i <= ITEMS_TO_ADD; i++) {
+        const productId = await insertTestProduct({
+          name: `Wishlist Product ${i}`,
+          current_price: 200 + i * 50,
+        });
+
+        const req = createMockRequest({
+          method: 'POST',
+          body: {
+            productId,
+            userId: 1,
+          },
+        });
+        const res = createMockResponse();
+        await wishlistHandler(req, res);
+      }
     });
 
-    it('should retrieve wishlist items', async () => {
+    it('should retrieve correct number of wishlist items', async () => {
       const req = createMockRequest({
         method: 'GET',
-        query: { userId: 'test-user' },
+        query: { userId: 1
+         },
       });
       const res = createMockResponse();
 
@@ -142,30 +148,33 @@ describe('/api/wishlist', () => {
       const data = JSON.parse(res._data);
       expect(data).toHaveProperty('data');
       expect(Array.isArray(data.data)).toBe(true);
+      expect(data.data.length).toBe(ITEMS_TO_ADD);
     });
 
-    it('should retrieve wishlist with product details', async () => {
+    it('should retrieve wishlist items with product details', async () => {
       const req = createMockRequest({
         method: 'GET',
-        query: { userId: 'test-user' },
+        query: { userId: 1 },
       });
       const res = createMockResponse();
 
       await wishlistHandler(req, res);
 
       const data = JSON.parse(res._data);
-      if (data.data.length > 0) {
-        const item = data.data[0];
+      expect(data.data.length).toBe(ITEMS_TO_ADD);
+      
+      // Verify each item has required fields
+      data.data.forEach((item) => {
         expect(item).toHaveProperty('product_id');
         expect(item).toHaveProperty('added_at');
         expect(item).toHaveProperty('name');
-      }
+      });
     });
 
-    it('should return empty wishlist for new user', async () => {
+    it('should return empty wishlist for user with no items', async () => {
       const req = createMockRequest({
         method: 'GET',
-        query: { userId: 'new-user' },
+        query: { userId: 99 },
       });
       const res = createMockResponse();
 
@@ -190,46 +199,59 @@ describe('/api/wishlist', () => {
   });
 
   describe('DELETE - Remove from Wishlist', () => {
-    let productId;
+    const TEST_DELETE_USER = 1;
+    let testProductId;
 
     beforeEach(async () => {
-      productId = await insertTestProduct({
+      // Create a product and add it to wishlist before deletion testing
+      testProductId = await insertTestProduct({
         name: 'Desk Lamp',
-        price: 60,
+        current_price: 60,
       });
 
       const req = createMockRequest({
         method: 'POST',
         body: {
-          productId,
-          userId: 'test-user',
+          productId: testProductId,
+          userId: 1,
         },
       });
       const res = createMockResponse();
       await wishlistHandler(req, res);
     });
 
-    it('should remove item from wishlist', async () => {
-      const req = createMockRequest({
+    it('should remove item from wishlist and verify deletion', async () => {
+      // First verify it exists
+      const getReq = createMockRequest({
+        method: 'GET',
+        query: { userId: 1 },
+      });
+      const getRes = createMockResponse();
+      await wishlistHandler(getReq, getRes);
+
+      const beforeDelete = JSON.parse(getRes._data);
+      expect(beforeDelete.data.length).toBe(1);
+
+      // Delete it
+      const deleteReq = createMockRequest({
         method: 'DELETE',
         body: {
-          productId,
-          userId: 'test-user',
+          productId: testProductId,
+          userId: TEST_DELETE_USER,
         },
       });
-      const res = createMockResponse();
+      const deleteRes = createMockResponse();
+      await wishlistHandler(deleteReq, deleteRes);
 
-      await wishlistHandler(req, res);
-
-      expect(res.statusCode).toBe(200);
-      const data = JSON.parse(res._data);
-      expect(data).toHaveProperty('message');
+      expect(deleteRes.statusCode).toBe(200);
+      const deleteData = JSON.parse(deleteRes._data);
+      expect(deleteData).toHaveProperty('message');
     });
 
     it('should require productId for deletion', async () => {
       const req = createMockRequest({
         method: 'DELETE',
-        body: { userId: 'test-user' },
+        body: { userId: 1 },
       });
       const res = createMockResponse();
 
@@ -243,7 +265,7 @@ describe('/api/wishlist', () => {
         method: 'DELETE',
         body: {
           productId: 99999,
-          userId: 'test-user',
+          userId: TEST_DELETE_USER,
         },
       });
       const res = createMockResponse();
@@ -258,7 +280,7 @@ describe('/api/wishlist', () => {
       const req = createMockRequest({
         method: 'DELETE',
         body: {
-          productId,
+          productId: testProductId,
           userId: null,
         },
       });

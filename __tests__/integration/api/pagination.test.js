@@ -4,13 +4,15 @@ import { createMockRequest, createMockResponse } from '../../helpers/api';
 import { cleanupDatabase, insertTestProduct } from '../../helpers/db';
 
 describe('GET /api/pagination', () => {
+  const TEST_PRODUCT_COUNT = 25; // Explicit test data amount
+
   beforeEach(async () => {
     await cleanupDatabase();
-    // Insert test products
-    for (let i = 1; i <= 20; i++) {
+    // Insert exactly TEST_PRODUCT_COUNT products
+    for (let i = 1; i <= TEST_PRODUCT_COUNT; i++) {
       await insertTestProduct({
         name: `Test Product ${i}`,
-        price: 100 + i * 10,
+        current_price: 100 + i * 10,
       });
     }
   });
@@ -50,10 +52,11 @@ describe('GET /api/pagination', () => {
     expect(Array.isArray(data.data)).toBe(true);
   });
 
-  it('should return correct pagination metadata', async () => {
+  it('should return pagination metadata', async () => {
+    const pageSize = 5;
     const req = createMockRequest({
       method: 'GET',
-      query: { q: 'Product', page: '1', pageSize: '5' },
+      query: { q: 'Product', page: '1', pageSize: pageSize.toString() },
     });
     const res = createMockResponse();
 
@@ -61,36 +64,45 @@ describe('GET /api/pagination', () => {
 
     const data = JSON.parse(res._data);
     expect(data.page).toBe(1);
-    expect(data.pageSize).toBe(5);
-    expect(data.totalPages).toBe(Math.ceil(data.totalCount / 5));
+    expect(data.pageSize).toBe(pageSize);
+    expect(data.totalPages).toBe(Math.ceil(TEST_PRODUCT_COUNT / pageSize));
+    expect(data.totalCount).toBe(TEST_PRODUCT_COUNT);
   });
 
   it('should respect page parameter', async () => {
+    const pageSize = 5;
+    const page = 2;
     const req = createMockRequest({
       method: 'GET',
-      query: { q: 'Product', page: '2', pageSize: '5' },
+      query: { q: 'Product', page: page.toString(), pageSize: pageSize.toString() },
     });
     const res = createMockResponse();
 
     await paginationHandler(req, res);
 
     const data = JSON.parse(res._data);
-    expect(data.page).toBe(2);
-    expect(data.data.length).toBeLessThanOrEqual(5);
+    expect(data.page).toBe(page);
+    expect(data.data.length).toBeLessThanOrEqual(pageSize);
+    // Verify it's returning different data than page 1 (unless it's the last page)
+    if (data.totalPages > page) {
+      expect(data.data.length).toBeGreaterThan(0);
+    }
   });
 
   it('should respect pageSize parameter', async () => {
+    const pageSize = 7;
     const req = createMockRequest({
       method: 'GET',
-      query: { q: 'Product', pageSize: '7' },
+      query: { q: 'Product', pageSize: pageSize.toString() },
     });
     const res = createMockResponse();
 
     await paginationHandler(req, res);
 
     const data = JSON.parse(res._data);
-    expect(data.pageSize).toBe(7);
-    expect(data.data.length).toBeLessThanOrEqual(7);
+    expect(data.pageSize).toBe(pageSize);
+    // First page should respect pageSize
+    expect(data.data.length).toBeLessThanOrEqual(pageSize);
   });
 
   it('should handle case-insensitive search', async () => {
@@ -132,6 +144,7 @@ describe('GET /api/pagination', () => {
 
     const data = JSON.parse(res._data);
     expect(data.page).toBe(1);
+    expect(data.totalCount).toBe(TEST_PRODUCT_COUNT);
   });
 
   it('should default to pageSize 10 if not provided', async () => {
@@ -145,6 +158,8 @@ describe('GET /api/pagination', () => {
 
     const data = JSON.parse(res._data);
     expect(data.pageSize).toBe(10);
+    // Verify pagination behavior: data returned should respect the pageSize
+    expect(data.data.length).toBeLessThanOrEqual(data.pageSize);
   });
 
   it('should handle empty search query', async () => {
@@ -173,23 +188,27 @@ describe('GET /api/pagination', () => {
   });
 
   it('should calculate totalPages correctly', async () => {
+    const pageSize = 5;
     const req = createMockRequest({
       method: 'GET',
-      query: { q: 'Product', pageSize: '3' },
+      query: { q: 'Product', pageSize: pageSize.toString() },
     });
     const res = createMockResponse();
 
     await paginationHandler(req, res);
 
     const data = JSON.parse(res._data);
-    const expectedPages = Math.ceil(data.totalCount / 3);
+    const expectedPages = Math.ceil(TEST_PRODUCT_COUNT / pageSize);
     expect(data.totalPages).toBe(expectedPages);
+    expect(data.totalCount).toBe(TEST_PRODUCT_COUNT);
   });
 
   it('should handle page beyond totalPages', async () => {
+    const pageSize = 10;
+    const beyondLastPage = Math.ceil(TEST_PRODUCT_COUNT / pageSize) + 5;
     const req = createMockRequest({
       method: 'GET',
-      query: { q: 'Product', page: '999' },
+      query: { q: 'Product', page: beyondLastPage.toString(), pageSize: pageSize.toString() },
     });
     const res = createMockResponse();
 

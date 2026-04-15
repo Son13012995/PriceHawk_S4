@@ -5,18 +5,25 @@ let pool;
 /**
  * Create and return test database pool
  */
-export async function getPool() {
+export function getPool() {
   if (!pool) {
-    pool = mysql.createPool({
-      host: process.env.DB_HOST || 'localhost',
-      user: process.env.DB_USER || 'testuser',
-      password: process.env.DB_PASSWORD || 'testpass',
-      database: process.env.DB_NAME || 'pricecomparison_test',
-      port: parseInt(process.env.DB_PORT || '3306'),
+    const config = {
+      host: process.env.DB_HOST || '127.0.0.1',
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || 'rootpassword',
+      database: process.env.DB_NAME || 'pricecomparison',
+      port: parseInt(process.env.DB_PORT || '3307'),
       waitForConnections: true,
       connectionLimit: 5,
       queueLimit: 0,
+    };
+    
+    console.log('Initializing DB pool with config:', { 
+      ...config, 
+      password: '***' 
     });
+    
+    pool = mysql.createPool(config);
   }
   return pool;
 }
@@ -66,14 +73,14 @@ export async function insertTestProduct(productData = {}) {
     const data = {
       name: 'Test Product',
       description: 'Test Description',
-      category: 'Test Category',
-      price: 100,
+      brand: 'Test Brand',
+      current_price: 100,
       ...productData,
     };
 
     const [result] = await connection.execute(
-      'INSERT INTO product (name, description, category, price) VALUES (?, ?, ?, ?)',
-      [data.name, data.description, data.category, data.price]
+      'INSERT INTO product (name, description, brand, current_price) VALUES (?, ?, ?, ?)',
+      [data.name, data.description, data.brand, data.current_price]
     );
 
     return result.insertId;
@@ -90,15 +97,15 @@ export async function insertTestAlert(alertData = {}) {
   try {
     const data = {
       product_id: 1,
+      user_id: 1,
       target_price: 50,
-      user_email: 'test@example.com',
       status: 'active',
       ...alertData,
     };
 
     const [result] = await connection.execute(
-      'INSERT INTO price_alert (product_id, target_price, user_email, status) VALUES (?, ?, ?, ?)',
-      [data.product_id, data.target_price, data.user_email, data.status]
+      'INSERT INTO price_alert (product_id, user_id, target_price, status) VALUES (?, ?, ?, ?)',
+      [data.product_id, data.user_id, data.target_price, data.status]
     );
 
     return result.insertId;

@@ -16,7 +16,7 @@ describe('/api/price-alert', () => {
     it('should create a price alert', async () => {
       const productId = await insertTestProduct({
         name: 'Gaming Laptop',
-        price: 1500,
+        current_price: 1500,
       });
 
       const req = createMockRequest({
@@ -50,7 +50,7 @@ describe('/api/price-alert', () => {
     it('should reject targetPrice >= current price', async () => {
       const productId = await insertTestProduct({
         name: 'Tablet',
-        price: 500,
+        current_price: 500,
       });
 
       const req = createMockRequest({
@@ -70,7 +70,7 @@ describe('/api/price-alert', () => {
     it('should reject targetPrice higher than current price', async () => {
       const productId = await insertTestProduct({
         name: 'Monitor',
-        price: 300,
+        current_price: 300,
       });
 
       const req = createMockRequest({
@@ -90,7 +90,7 @@ describe('/api/price-alert', () => {
     it('should accept optional note field', async () => {
       const productId = await insertTestProduct({
         name: 'Smartphone',
-        price: 800,
+        current_price: 800,
       });
 
       const req = createMockRequest({
@@ -111,7 +111,7 @@ describe('/api/price-alert', () => {
     it('should accept optional userId', async () => {
       const productId = await insertTestProduct({
         name: 'Headphones',
-        price: 200,
+        current_price: 200,
       });
 
       const req = createMockRequest({
@@ -132,7 +132,7 @@ describe('/api/price-alert', () => {
     it('should reject duplicate alerts', async () => {
       const productId = await insertTestProduct({
         name: 'Camera',
-        price: 1000,
+        current_price: 1000,
       });
 
       // Create first alert
@@ -164,18 +164,26 @@ describe('/api/price-alert', () => {
   });
 
   describe('GET - Retrieve Alerts', () => {
+    const ACTIVE_ALERT_COUNT = 2;
+    const TEST_PRODUCT_ID_REF = {};
+
     beforeEach(async () => {
+      // Create known test data
       const productId = await insertTestProduct({
         name: 'Product for Alert',
-        price: 500,
+        current_price: 500,
       });
+      TEST_PRODUCT_ID_REF.id = productId;
 
-      await insertTestAlert({
-        product_id: productId,
-        target_price: 400,
-        user_email: 'test@example.com',
-        status: 'active',
-      });
+      // Insert exactly ACTIVE_ALERT_COUNT active alerts
+      for (let i = 1; i <= ACTIVE_ALERT_COUNT; i++) {
+        await insertTestAlert({
+          product_id: productId,
+          target_price: 400 - i * 10,
+          user_id: 1,
+          status: 'active',
+        });
+      }
     });
 
     it('should retrieve price alerts', async () => {
@@ -191,23 +199,10 @@ describe('/api/price-alert', () => {
       const data = JSON.parse(res._data);
       expect(data).toHaveProperty('data');
       expect(Array.isArray(data.data)).toBe(true);
+      expect(data.data.length).toBeGreaterThanOrEqual(ACTIVE_ALERT_COUNT);
     });
 
-    it('should filter by userId', async () => {
-      const req = createMockRequest({
-        method: 'GET',
-        query: { userId: 'test-user' },
-      });
-      const res = createMockResponse();
-
-      await priceAlertHandler(req, res);
-
-      expect(res.statusCode).toBe(200);
-      const data = JSON.parse(res._data);
-      expect(Array.isArray(data.data)).toBe(true);
-    });
-
-    it('should filter by status (default active)', async () => {
+    it('should filter by status active', async () => {
       const req = createMockRequest({
         method: 'GET',
         query: { status: 'active' },
@@ -217,7 +212,13 @@ describe('/api/price-alert', () => {
       await priceAlertHandler(req, res);
 
       const data = JSON.parse(res._data);
-      expect(data.data.every((alert) => alert.status === 'active' || alert.status !== 'triggered')).toBe(true);
+      expect(Array.isArray(data.data)).toBe(true);
+      // Verify returned alerts are actually active
+      if (data.data.length > 0) {
+        data.data.forEach((alert) => {
+          expect(alert.status).toBe('active');
+        });
+      }
     });
 
     it('should support status=all to get all alerts', async () => {
@@ -244,12 +245,13 @@ describe('/api/price-alert', () => {
       await priceAlertHandler(req, res);
 
       const data = JSON.parse(res._data);
-      if (data.data.length > 0) {
-        const alert = data.data[0];
-        expect(alert).toHaveProperty('id');
-        expect(alert).toHaveProperty('product_id');
-        expect(alert).toHaveProperty('target_price');
-        expect(alert).toHaveProperty('status');
+      // Find an active alert in the results
+      const activeAlert = data.data.find((a) => a.status === 'active');
+      if (activeAlert) {
+        expect(activeAlert).toHaveProperty('id');
+        expect(activeAlert).toHaveProperty('product_id');
+        expect(activeAlert).toHaveProperty('target_price');
+        expect(activeAlert).toHaveProperty('status');
       }
     });
   });
@@ -260,13 +262,13 @@ describe('/api/price-alert', () => {
     beforeEach(async () => {
       const productId = await insertTestProduct({
         name: 'Update Test Product',
-        price: 600,
+        current_price: 600,
       });
 
       alertId = await insertTestAlert({
         product_id: productId,
         target_price: 500,
-        user_email: 'update@example.com',
+        user_id: 1,
         status: 'active',
       });
     });
@@ -320,13 +322,13 @@ describe('/api/price-alert', () => {
     beforeEach(async () => {
       const productId = await insertTestProduct({
         name: 'Delete Test Product',
-        price: 700,
+        current_price: 700,
       });
 
       alertId = await insertTestAlert({
         product_id: productId,
         target_price: 550,
-        user_email: 'delete@example.com',
+        user_id: 1,
         status: 'active',
       });
     });

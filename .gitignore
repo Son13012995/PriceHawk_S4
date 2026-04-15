@@ -50,3 +50,5 @@ dump-priceComparison-202312131918.sql
 price-hawk/data/
 *.jsonl
 *.json
+*.md
+*.txt
