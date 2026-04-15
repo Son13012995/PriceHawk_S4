@@ -1,37 +1,57 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
+import useSWR, { mutate } from "swr";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
 import { formatPrice, formatPriceInput, parsePriceInput } from "../utils/format";
 
+const fetcher = (url) => axios.get(url).then((res) => res.data);
+
 export default function AlertsPage() {
-  const [alerts, setAlerts] = useState([]);
+  const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [targetPrice, setTargetPrice] = useState("");
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [showTriggeredModal, setShowTriggeredModal] = useState(false);
 
-  const fetchAlerts = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get("/api/price-alert", {
-        params: { userId: null, status: "active" },
-      });
-      setAlerts(response.data.data || []);
-    } catch (error) {
-      setMessage("Không thể tải alerts. Vui lòng thử lại.");
-      console.error("Error fetching alerts:", error);
-    } finally {
-      setLoading(false);
+  // Auto-fetch alerts every 5 seconds
+  const { data: alertsData, isLoading: alertsLoading } = useSWR(
+    "/api/price-alert?userId=null&status=all",
+    fetcher,
+    {
+      refreshInterval: 5000, // Auto-refresh every 5 seconds
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000,
     }
-  };
+  );
 
+  // Auto-fetch triggered alerts every 5 seconds
+  const { data: triggeredData } = useSWR(
+    "/api/price-alert?action=check-triggers",
+    fetcher,
+    {
+      refreshInterval: 5000, // Auto-refresh every 5 seconds
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000,
+    }
+  );
+
+  const alerts = alertsData?.data || [];
+  const triggeredAlerts = triggeredData?.details?.filter((item) => item.triggered) || [];
+  const loading = alertsLoading;
+
+  // Auto-show modal when alerts are triggered
   useEffect(() => {
-    fetchAlerts();
-  }, []);
+    if (triggeredAlerts.length > 0) {
+      setShowTriggeredModal(true);
+    }
+  }, [triggeredAlerts]);
 
   const activeCount = useMemo(() => {
     return alerts.filter((item) => item.status === "active").length;
@@ -60,7 +80,10 @@ export default function AlertsPage() {
         setTargetPrice("");
         setNote("");
         setTimeout(() => setMessage(""), 3000);
-        fetchAlerts();
+        
+        // Revalidate both endpoints
+        mutate("/api/price-alert?userId=null&status=all");
+        mutate("/api/price-alert?action=check-triggers");
       }
     } catch (error) {
       setMessage(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
@@ -75,7 +98,10 @@ export default function AlertsPage() {
         alertId: id,
         status: newStatus,
       });
-      fetchAlerts();
+      
+      // Revalidate both endpoints
+      mutate("/api/price-alert?userId=null&status=all");
+      mutate("/api/price-alert?action=check-triggers");
     } catch (error) {
       setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
       setTimeout(() => setMessage(""), 3000);
@@ -89,15 +115,113 @@ export default function AlertsPage() {
       });
       setMessage("Đã xóa alert.");
       setTimeout(() => setMessage(""), 3000);
-      fetchAlerts();
+      
+      // Revalidate both endpoints
+      mutate("/api/price-alert?userId=null&status=all");
+      mutate("/api/price-alert?action=check-triggers");
     } catch (error) {
       setMessage("Không thể xóa alert. Vui lòng thử lại.");
       setTimeout(() => setMessage(""), 3000);
     }
   };
 
+  const handleProductClick = (productId) => {
+    router.push(`/product/${productId}`);
+  };
+
+  const handleCloseTriggeredModal = () => {
+    setShowTriggeredModal(false);
+    // Revalidate to update status
+    mutate("/api/price-alert?userId=null&status=all");
+    mutate("/api/price-alert?action=check-triggers");
+  };
+
   return (
     <div className={cn(ui.pageWrap, "py-10")}>
+      {/* Triggered Alerts Modal */}
+      {showTriggeredModal && triggeredAlerts.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className={cn(ui.card, "w-full max-w-2xl space-y-6 p-8 shadow-2xl")}>
+            {/* Header */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                  <span className="text-lg">🎉</span>
+                </div>
+                <h2 className={cn(ui.heading, "text-2xl font-black")}>Giá hiện tại đã đạt mục tiêu!</h2>
+              </div>
+              <p className={cn(ui.mutedText, "text-sm")}>
+                {triggeredAlerts.length} sản phẩm trong danh sách price alert của bạn đã đạt giá mong muốn
+              </p>
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent dark:via-slate-700" />
+
+            {/* Triggered Products List */}
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {triggeredAlerts.map((alert, index) => (
+                <button
+                  key={alert.alertId}
+                  onClick={() => {
+                    handleProductClick(alert.productId);
+                    setShowTriggeredModal(false);
+                  }}
+                  className={cn(
+                    "group w-full rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-50/50 p-4 text-left transition-all hover:border-emerald-300 hover:shadow-lg dark:border-emerald-900/40 dark:from-emerald-900/20 dark:to-emerald-900/10 dark:hover:shadow-emerald-900/30"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-lg font-bold text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                        {alert.productName}
+                      </p>
+                      <p className={cn(ui.mutedText, "text-sm")}>
+                        {alert.brand} • Giá hiện tại: {formatPrice(alert.currentPrice)}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        Triggered
+                      </span>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Mục tiêu: {formatPrice(alert.targetPrice)}
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent dark:via-slate-700" />
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => handleCloseTriggeredModal()}
+                className={cn(ui.secondaryButton, "flex-1")}
+              >
+                Đóng
+              </button>
+              <button
+                onClick={() => {
+                  handleCloseTriggeredModal();
+                  mutate("/api/price-alert?userId=null&status=all");
+                  mutate("/api/price-alert?action=check-triggers");
+                }}
+                className={cn(ui.primaryButton, "flex-1")}
+              >
+                Cập nhật Alerts
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={cn(ui.container, "space-y-6")}>
         <header className={cn(ui.card, "p-6 md:p-8")}>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">Alert Center</p>
@@ -105,8 +229,13 @@ export default function AlertsPage() {
           <p className={cn(ui.mutedText, "mt-3")}>Tạo cảnh báo khi giá sản phẩm giảm về mức bạn mong muốn.</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              {activeCount} alert đang bật
+              {alerts.filter((item) => item.status === "active").length} alert đang bật
             </span>
+            {triggeredAlerts.length > 0 && (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 animate-pulse">
+                🔔 {triggeredAlerts.length} có thay đổi giá
+              </span>
+            )}
           </div>
         </header>
 
@@ -204,27 +333,43 @@ export default function AlertsPage() {
               {alerts.map((item) => (
                 <article
                   key={item.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800/80"
+                  className={cn(
+                    "rounded-2xl border p-4 transition-colors",
+                    item.status === "triggered"
+                      ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-900/10"
+                      : item.status === "active"
+                      ? "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/80"
+                      : "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
+                  )}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-bold text-slate-900 dark:text-slate-200">
-                        {item.name || `Product #${item.product_id}`}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                          {item.name || `Product #${item.product_id}`}
+                        </p>
+                        {item.status === "triggered" && (
+                          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        )}
+                      </div>
+                      <p className={cn("text-sm", item.status === "triggered" ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-slate-600 dark:text-slate-400")}>
+                        Target: {formatPrice(item.target_price)} {item.status === "triggered" && "✓ Đã đạt"}
                       </p>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">Target: {formatPrice(item.target_price)}</p>
                       {item.note ? <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">{item.note}</p> : null}
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => toggleAlert(item.id, item.status)}
                         className={cn(
-                          "rounded-lg px-3 py-1 text-xs font-semibold",
+                          "rounded-lg px-3 py-1 text-xs font-semibold transition",
                           item.status === "active"
                             ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 text-slate-300 dark:hover:bg-slate-600"
+                            : item.status === "triggered"
+                            ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
                         )}
                       >
-                        {item.status === "active" ? "Active" : "Paused"}
+                        {item.status === "active" ? "Active" : item.status === "triggered" ? "Triggered" : "Paused"}
                       </button>
                       <button
                         onClick={() => removeAlert(item.id)}
