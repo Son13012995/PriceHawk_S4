@@ -22,28 +22,11 @@ export function parsePriceInput(value) {
 }
 
 export function formatPriceUpdateTime(timestamp) {
-  if (!timestamp) return "Chua co du lieu cap nhat";
+  if (!timestamp) return "Chưa cập nhật";
 
   const updatedAt = new Date(timestamp);
   if (Number.isNaN(updatedAt.getTime())) {
-    return "Chua co du lieu cap nhat";
-  }
-
-  const now = new Date();
-  const isSameDay =
-    updatedAt.getDate() === now.getDate() &&
-    updatedAt.getMonth() === now.getMonth() &&
-    updatedAt.getFullYear() === now.getFullYear();
-
-  if (isSameDay) {
-    const diffMs = now.getTime() - updatedAt.getTime();
-    const diffMinutes = Math.max(0, Math.floor(diffMs / 60000));
-
-    if (diffMinutes < 1) return "vua xong";
-    if (diffMinutes < 60) return `${diffMinutes} phut truoc`;
-
-    const diffHours = Math.floor(diffMinutes / 60);
-    return `${diffHours} gio truoc`;
+    return "Chưa cập nhật";
   }
 
   return new Intl.DateTimeFormat("vi-VN", {

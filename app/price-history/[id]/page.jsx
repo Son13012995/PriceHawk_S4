@@ -82,7 +82,7 @@ export default function PriceHistoryPage({ params }) {
           </div>
         </header>
 
-        <section className={cn(ui.card, "p-6 md:p-8")}> 
+        <section className={cn(ui.card, "overflow-hidden p-6 md:p-8")}> 
           {loading ? (
             <div className="space-y-3">
               {Array.from({ length: 7 }).map((_, idx) => (
@@ -92,17 +92,17 @@ export default function PriceHistoryPage({ params }) {
           ) : error ? (
             <p className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-rose-700">{error}</p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-x-auto">
               {rows.map((row) => (
-                <div key={row.date} className="grid grid-cols-[95px_1fr_88px] items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3">
-                  <span className="text-sm font-semibold text-slate-700">{row.date}</span>
+                <div key={row.date} className="grid grid-cols-[75px_1fr_90px] items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 sm:gap-3 sm:px-4">
+                  <span className="truncate text-xs font-semibold text-slate-700 sm:text-sm">{row.date}</span>
                   <div className="h-2 rounded-full bg-slate-100">
                     <div
                       className="h-2 rounded-full bg-gradient-to-r from-cyan-500 to-sky-400"
                       style={{ width: `${Math.max(12, (row.price / high) * 100)}%` }}
                     />
                   </div>
-                  <span className="text-right text-sm font-bold text-slate-900">{formatPrice(row.price)}₫</span>
+                  <span className="truncate text-right text-xs font-bold text-slate-900 sm:text-sm">{formatPrice(row.price)}₫</span>
                 </div>
               ))}
             </div>
