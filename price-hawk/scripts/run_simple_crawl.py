@@ -19,8 +19,7 @@ DATA_DIR = ROOT_DIR / "data"
 
 SPIDER_BY_SHOP = {
     "tgdd": "tgdd_catalog",
-    "fpt": "fpt_catalog",
-    "hoangha": "hoangha_catalog",
+    "fpt": "fpt_catalog"
 }
 
 CATEGORIES = ["dien-thoai", "laptop", "tablet"]

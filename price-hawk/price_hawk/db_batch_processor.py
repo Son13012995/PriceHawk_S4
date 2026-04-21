@@ -140,13 +140,32 @@ class BatchDBProcessor:
             
             # Use ON DUPLICATE KEY to handle existing URLs
             self.cursor.execute("""
-                INSERT INTO comparison (product_id, price, url, name)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO comparison (
+                    product_id, price, url, name,
+                    current_price_at,
+                    min_price,
+                    min_price_at
+                )
+                VALUES (%s, %s, %s, %s, NOW(), %s, NOW())
                 ON DUPLICATE KEY UPDATE
                     product_id = VALUES(product_id),
                     price = VALUES(price),
-                    name = VALUES(name)
-            """, (product_id, price, url, source))
+                    name = VALUES(name),
+
+                    current_price_at = NOW(),
+
+                    min_price = CASE 
+                        WHEN min_price IS NULL OR VALUES(price) < min_price 
+                        THEN VALUES(price)
+                        ELSE min_price
+                    END,
+
+                    min_price_at = CASE 
+                        WHEN min_price IS NULL OR VALUES(price) < min_price 
+                        THEN NOW()
+                        ELSE min_price_at
+                    END
+            """, (product_id, price, url, source, price))
         
         except Exception as e:
             print(f"⚠️ Failed to insert comparison ({url}): {e}")
