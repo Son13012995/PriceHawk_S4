@@ -1,6 +1,128 @@
 import db from "./database";
 
+/**
+ * Check all active price alerts and trigger them if current_price <= target_price
+ */
+async function checkAndTriggerPriceAlerts() {
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] Starting price alert check...`);
+
+  try {
+    // Get all active alerts with current product prices
+    const activeAlerts = await db.query(
+      `SELECT 
+        pa.\`id\`,
+        pa.\`product_id\`,
+        pa.\`target_price\`,
+        pa.\`current_price\` as alert_created_price,
+        p.\`current_price\` as latest_price,
+        p.\`name\`,
+        p.\`brand\`
+      FROM \`price_alert\` pa
+      JOIN \`product\` p ON pa.\`product_id\` = p.\`id\`
+      WHERE pa.\`status\` = 'active'`
+    );
+
+    if (!activeAlerts || activeAlerts.length === 0) {
+      console.log(`[${timestamp}] No active alerts found.`);
+      return {
+        success: true,
+        triggered: 0,
+        checked: 0,
+        details: []
+      };
+    }
+
+    console.log(`[${timestamp}] Found ${activeAlerts.length} active alerts. Checking...`);
+
+    const triggeredAlerts = [];
+    const checkDetails = [];
+
+    // Check each alert and trigger if necessary
+    for (const alert of activeAlerts) {
+      const { id, product_id, target_price, latest_price, name, brand } = alert;
+      
+      const detail = {
+        alertId: id,
+        productId: product_id,
+        productName: name,
+        brand,
+        targetPrice: target_price,
+        currentPrice: latest_price,
+        triggered: false
+      };
+
+      // Check if current price is at or below target price
+      if (latest_price <= target_price) {
+        try {
+          // Update alert status to triggered
+          await db.query(
+            `UPDATE \`price_alert\` 
+            SET \`status\` = 'triggered', \`triggered_at\` = NOW() 
+            WHERE \`id\` = ?`,
+            [id]
+          );
+
+          detail.triggered = true;
+          triggeredAlerts.push(id);
+
+          console.log(
+            `[${timestamp}] ✓ Alert #${id} TRIGGERED: ${name} (${brand}) - Price: ${latest_price} <= Target: ${target_price}`
+          );
+        } catch (updateError) {
+          console.error(`[${timestamp}] ✗ Error triggering alert #${id}:`, updateError);
+          detail.error = updateError.message;
+        }
+      } else {
+        console.log(
+          `[${timestamp}] ○ Alert #${id} waiting: ${name} - Price: ${latest_price} > Target: ${target_price}`
+        );
+      }
+
+      checkDetails.push(detail);
+    }
+
+    const result = {
+      success: true,
+      checked: activeAlerts.length,
+      triggered: triggeredAlerts.length,
+      triggeredIds: triggeredAlerts,
+      details: checkDetails,
+      timestamp
+    };
+
+    console.log(`[${timestamp}] Check completed. Triggered: ${triggeredAlerts.length}/${activeAlerts.length}`);
+    return result;
+  } catch (error) {
+    console.error(`[${new Date().toISOString()}] Error in checkAndTriggerPriceAlerts:`, error);
+    return {
+      success: false,
+      error: error.message,
+      triggered: 0,
+      checked: 0,
+      details: []
+    };
+  }
+}
+
 export default async function handler(req, res) {
+  // Handle cron check trigger
+  const { action } = req.query;
+  
+  if (action === "check-triggers" && req.method === "GET") {
+    try {
+      console.log("📡 Manual trigger of price alert check via API");
+      const result = await checkAndTriggerPriceAlerts();
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("API Error:", error);
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
   if (req.method === "POST") {
     // Create price alert
     const { productId, targetPrice, note = null, userId = null } = req.body;

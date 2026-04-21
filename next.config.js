@@ -19,7 +19,8 @@ const nextConfig = {
             "cdnv2.tgdd.vn",
             "mwg-static.tgdd.vn",
             "hoanghamobile.com",
-            "avatar.cdnvn.com"
+            "avatar.cdnvn.com",
+            "via.placeholder.com"
         ]
     }
 }

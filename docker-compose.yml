@@ -35,7 +35,6 @@ services:
       context: .
       dockerfile: price-hawk/docker/Dockerfile.cron
     volumes:
-      - ./price-hawk:/app/price-hawk
       - ./price-hawk/logs:/app/price-hawk/logs
     env_file:
       - ./price-hawk/.env_product
