@@ -22,13 +22,13 @@ export function ThemeToggle() {
     return (
         <button
             onClick={() => setTheme(currentTheme === "dark" ? "light" : "dark")}
-            className="relative flex items-center w-14 h-8 p-1 rounded-full bg-slate-200 dark:bg-slate-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            className="relative flex items-center w-14 h-8 p-1 rounded-full bg-zinc-200 dark:bg-violet-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
             aria-label="Toggle theme"
         >
             {/* Sliding background knob (Empty) */}
             <div
-                className={`absolute left-1 w-6 h-6 rounded-full transition-transform duration-300 ease-out shadow-sm ${currentTheme === "dark"
-                        ? 'translate-x-6 bg-slate-800'
+                className={`absolute left-1 w-6 h-6 rounded-full transition-transform duration-200 ease-out shadow-sm ${currentTheme === "dark"
+                        ? 'translate-x-6 bg-zinc-900'
                         : 'translate-x-0 bg-white'
                     }`}
             />
@@ -36,11 +36,11 @@ export function ThemeToggle() {
             <div className="relative z-10 w-full flex justify-between items-center px-1 pointer-events-none">
                 <Sun
                     size={14}
-                    className={`transition-colors duration-300 ${currentTheme === "dark" ? "text-slate-400" : "text-amber-500"}`}
+                    className={`transition-colors duration-200 ${currentTheme === "dark" ? "text-zinc-400" : "text-amber-500"}`}
                 />
                 <Moon
                     size={14}
-                    className={`transition-colors duration-300 ${currentTheme === "dark" ? "text-cyan-400" : "text-slate-500"}`}
+                    className={`transition-colors duration-200 ${currentTheme === "dark" ? "text-zinc-100" : "text-zinc-500"}`}
                 />
             </div>
         </button>
