@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  .dark body {
+    background-color: #0f0a19;
+    color: #f4f4f5; /* zinc-100 */
+  }
+}
+
+
 
 .banner {
   background: linear-gradient(to bottom, #3498db, #6c5ce7);
