@@ -14,7 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="vi" className="scroll-smooth" suppressHydrationWarning>
-            <body className={`${inter.className} bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50 antialiased selection:bg-blue-600 selection:text-white min-h-screen flex flex-col transition-colors`}>
+            <body className={`${inter.className} antialiased bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 min-h-screen flex flex-col transition-colors`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
                     <Navbar />
                     <main className="flex-grow w-full">
