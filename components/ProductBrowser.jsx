@@ -10,7 +10,7 @@ const SkeletonLoader = () => (
     {Array.from({ length: 8 }).map((_, index) => (
       <div
         key={index}
-        className="bg-slate-100 dark:bg-slate-800 rounded-2xl h-80 w-full shadow-inner border border-slate-100 dark:border-slate-700"
+        className="bg-zinc-100 dark:bg-zinc-800 rounded-2xl h-80 w-full shadow-inner border border-zinc-100 dark:border-zinc-700"
       />
     ))}
   </div>
@@ -69,14 +69,14 @@ export default function ProductBrowser({ searchTerm = "" }) {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / pageSize)), [totalItems]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-16 text-slate-800 dark:text-slate-200">
-      <header className="bg-white dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 shadow-sm sticky top-0 z-20">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-16 text-zinc-800 dark:text-zinc-200">
+      <header className="bg-white dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 shadow-sm sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             {isSearchMode ? (
               <>
                 Kết quả cho
-                <span className="font-bold text-sky-700 dark:text-sky-400"> "{decodeURIComponent(searchTerm)}"</span>
+                <span className="font-bold text-violet-700 dark:text-violet-400"> "{decodeURIComponent(searchTerm)}"</span>
               </>
             ) : (
               "Khám phá sản phẩm"
@@ -84,9 +84,9 @@ export default function ProductBrowser({ searchTerm = "" }) {
           </h1>
 
           {!loading && !error ? (
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-              Hiển thị <span className="font-semibold text-slate-700 dark:text-slate-300">{items.length}</span> trên tổng số{" "}
-              <span className="font-semibold text-slate-700 dark:text-slate-300">{totalItems}</span> kết quả
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+              Hiển thị <span className="font-semibold text-zinc-700 dark:text-zinc-300">{items.length}</span> trên tổng số{" "}
+              <span className="font-semibold text-zinc-700 dark:text-zinc-300">{totalItems}</span> kết quả
             </p>
           ) : null}
         </div>
@@ -118,10 +118,10 @@ export default function ProductBrowser({ searchTerm = "" }) {
         {!loading && !error && items.length === 0 ? (
           <div className="text-center py-24 flex flex-col items-center">
             <div className="text-7xl mb-6 grayscale opacity-40">{isSearchMode ? "?" : "[]"}</div>
-            <h2 className="text-xl font-medium text-slate-700 dark:text-slate-200">
+            <h2 className="text-xl font-medium text-zinc-700 dark:text-zinc-200">
               {isSearchMode ? "Không tìm thấy kết quả phù hợp" : "Hiện chưa có sản phẩm nào"}
             </h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">
+            <p className="text-zinc-500 dark:text-zinc-400 mt-2">
               {isSearchMode
                 ? "Hãy thử từ khóa khác hoặc kiểm tra lại chính tả."
                 : "Vui lòng quay lại sau."}
@@ -134,19 +134,19 @@ export default function ProductBrowser({ searchTerm = "" }) {
             <button
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="px-6 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
+              className="px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
             >
               Trước
             </button>
 
-            <div className="px-6 py-2.5 bg-sky-50 dark:bg-sky-900/40 text-sky-800 dark:text-sky-200 rounded-full font-bold shadow-inner border border-sky-100 dark:border-sky-800">
+            <div className="rounded-full bg-violet-600 text-white text-sm font-semibold px-3 py-1.5">
               {currentPage} / {totalPages}
             </div>
 
             <button
               onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
-              className="px-6 py-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
+              className="px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
             >
               Sau
             </button>
