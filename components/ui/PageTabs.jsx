@@ -26,11 +26,11 @@ export default function PageTabs({ className = "" }) {
             key={tab.href}
             href={tab.href}
             className={cn(
-              "rounded-full border px-4 py-2 text-sm font-semibold transition",
+              "rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200",
               ui.ring,
               active
-                ? "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700/80"
+                ? "bg-violet-600 text-white border border-violet-600"
+                : "bg-transparent text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700"
             )}
           >
             {tab.label}
