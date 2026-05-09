@@ -45,7 +45,6 @@ export default function ProductItem({ params }) {
         try {
             const response = await axios.post("/api/wishlist", {
                 productId: product.id,
-                userId: null,
             });
             if (response.status === 201 || response.status === 200) {
                 setIsInWishlist(true);
@@ -61,7 +60,7 @@ export default function ProductItem({ params }) {
     const removeFromWishlist = async () => {
         if (!product?.id) return;
         try {
-            await axios.delete("/api/wishlist", { data: { productId: product.id, userId: null } });
+            await axios.delete("/api/wishlist", { data: { productId: product.id } });
             setIsInWishlist(false);
             setWishlistMessage("Đã xóa khỏi wishlist.");
             setTimeout(() => setWishlistMessage(""), 3000);
@@ -100,7 +99,6 @@ export default function ProductItem({ params }) {
                 productId: product.id,
                 targetPrice: target,
                 note: alertNote.trim() || null,
-                userId: null,
             });
             if (response.status === 201) {
                 setWishlistMessage(`✓ Đã tạo alert: ${formatPrice(target)}`);

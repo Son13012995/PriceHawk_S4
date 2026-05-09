@@ -20,7 +20,7 @@ export default function AlertsPage() {
 
   // Auto-fetch alerts every 5 seconds
   const { data: alertsData, isLoading: alertsLoading } = useSWR(
-    "/api/price-alert?userId=null&status=all",
+    "/api/price-alert?status=all",
     fetcher,
     {
       refreshInterval: 5000, // Auto-refresh every 5 seconds
@@ -71,7 +71,6 @@ export default function AlertsPage() {
         productId: selectedProduct.id,
         targetPrice: target,
         note: note.trim() || null,
-        userId: null,
       });
 
       if (response.status === 201) {
@@ -82,7 +81,7 @@ export default function AlertsPage() {
         setTimeout(() => setMessage(""), 3000);
         
         // Revalidate both endpoints
-        mutate("/api/price-alert?userId=null&status=all");
+        mutate("/api/price-alert?status=all");
         mutate("/api/price-alert?action=check-triggers");
       }
     } catch (error) {
@@ -100,7 +99,7 @@ export default function AlertsPage() {
       });
       
       // Revalidate both endpoints
-      mutate("/api/price-alert?userId=null&status=all");
+      mutate("/api/price-alert?status=all");
       mutate("/api/price-alert?action=check-triggers");
     } catch (error) {
       setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
@@ -117,7 +116,7 @@ export default function AlertsPage() {
       setTimeout(() => setMessage(""), 3000);
       
       // Revalidate both endpoints
-      mutate("/api/price-alert?userId=null&status=all");
+      mutate("/api/price-alert?status=all");
       mutate("/api/price-alert?action=check-triggers");
     } catch (error) {
       setMessage("Không thể xóa alert. Vui lòng thử lại.");
@@ -132,7 +131,7 @@ export default function AlertsPage() {
   const handleCloseTriggeredModal = () => {
     setShowTriggeredModal(false);
     // Revalidate to update status
-    mutate("/api/price-alert?userId=null&status=all");
+    mutate("/api/price-alert?status=all");
     mutate("/api/price-alert?action=check-triggers");
   };
 
@@ -210,7 +209,7 @@ export default function AlertsPage() {
               <button
                 onClick={() => {
                   handleCloseTriggeredModal();
-                  mutate("/api/price-alert?userId=null&status=all");
+                  mutate("/api/price-alert?status=all");
                   mutate("/api/price-alert?action=check-triggers");
                 }}
                 className={cn(ui.primaryButton, "flex-1")}

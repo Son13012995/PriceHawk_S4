@@ -14,7 +14,7 @@ export default function WishlistPage() {
   const fetchWishlist = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/wishlist", { params: { userId: null } });
+      const response = await axios.get("/api/wishlist");
       setProducts(response.data.data || []);
     } catch (error) {
       setMessage("Không thể tải wishlist. Vui lòng thử lại.");
@@ -32,7 +32,6 @@ export default function WishlistPage() {
     try {
       const response = await axios.post("/api/wishlist", {
         productId: product.id,
-        userId: null,
       });
 
       if (response.status === 201 || response.status === 200) {
@@ -54,7 +53,7 @@ export default function WishlistPage() {
   const removeItem = async (productId) => {
     try {
       await axios.delete("/api/wishlist", {
-        data: { productId, userId: null },
+        data: { productId },
       });
       setMessage("Đã xóa khỏi wishlist.");
       setTimeout(() => setMessage(""), 3000);
