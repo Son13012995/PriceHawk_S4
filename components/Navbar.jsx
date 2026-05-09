@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
+import { useSession, signOut } from "next-auth/react";
 import AppSearchBar from "./ui/AppSearchBar";
 import PageTabs from "./ui/PageTabs";
 import { ThemeToggle } from "./ThemeToggle";
 
 export default function Navbar() {
     const { theme, systemTheme } = useTheme();
+    const { data: session, status } = useSession();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -16,6 +18,7 @@ export default function Navbar() {
     }, []);
 
     const isDark = mounted && (theme === "dark" || (theme === "system" && systemTheme === "dark"));
+    const isAuth = status === "authenticated";
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-zinc-200/50 dark:border-white/5 bg-white/70 dark:bg-[#0b0712]/70 backdrop-blur-xl transition-colors">
@@ -79,12 +82,34 @@ export default function Navbar() {
                         <div className="hidden md:flex items-center gap-3">
                             <div className="h-6 w-[1px] bg-zinc-200 dark:bg-white/10 mx-2" />
                             <ThemeToggle />
-                            <Link
-                                href="/product"
-                                className="ml-2 px-5 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold transition-all shadow-lg shadow-violet-600/20 hover:shadow-violet-600/40 active:scale-95"
-                            >
-                                Get Started
-                            </Link>
+                            {isAuth ? (
+                                <div className="flex items-center gap-3">
+                                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                                        {session.user?.email}
+                                    </span>
+                                    <button
+                                        onClick={() => signOut({ callbackUrl: "/" })}
+                                        className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-sm font-semibold transition-all"
+                                    >
+                                        Đăng xuất
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <Link
+                                        href="/login"
+                                        className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold transition-all shadow-lg shadow-violet-600/20 hover:shadow-violet-600/40 active:scale-95"
+                                    >
+                                        Đăng nhập
+                                    </Link>
+                                    <Link
+                                        href="/register"
+                                        className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-sm font-semibold transition-all"
+                                    >
+                                        Đăng ký
+                                    </Link>
+                                </div>
+                            )}
                         </div>
 
                         <div className="md:hidden">
@@ -99,4 +124,4 @@ export default function Navbar() {
             </div>
         </nav>
     );
-}
+}
