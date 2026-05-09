@@ -19,6 +19,7 @@ export default function Navbar() {
 
     const isDark = mounted && (theme === "dark" || (theme === "system" && systemTheme === "dark"));
     const isAuth = status === "authenticated";
+    const isLoading = status === "loading";
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-zinc-200/50 dark:border-white/5 bg-white/70 dark:bg-[#0b0712]/70 backdrop-blur-xl transition-colors">
@@ -81,10 +82,14 @@ export default function Navbar() {
                         
                         <div className="hidden md:flex items-center gap-3">
                             <div className="h-6 w-[1px] bg-zinc-200 dark:bg-white/10 mx-2" />
-                            <ThemeToggle />
-                            {isAuth ? (
+                            <div className="flex-shrink-0">
+                                <ThemeToggle />
+                            </div>
+                            {isLoading ? (
+                                <div className="w-24 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+                            ) : isAuth ? (
                                 <div className="flex items-center gap-3">
-                                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200 max-w-[180px] truncate overflow-hidden whitespace-nowrap">
                                         {session.user?.email}
                                     </span>
                                     <button
