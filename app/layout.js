@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import { ThemeProvider } from "../components/ThemeProvider";
+import AuthProvider from "../components/AuthProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,10 +17,12 @@ export default function RootLayout({ children }) {
         <html lang="vi" className="scroll-smooth" suppressHydrationWarning>
             <body className={`${inter.className} antialiased bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-50 min-h-screen flex flex-col transition-colors`}>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-                    <Navbar />
-                    <main className="flex-grow w-full">
-                        {children}
-                    </main>
+                    <AuthProvider>
+                        <Navbar />
+                        <main className="flex-grow w-full">
+                            {children}
+                        </main>
+                    </AuthProvider>
                 </ThemeProvider>
             </body>
         </html>
