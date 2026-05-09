@@ -22,13 +22,13 @@ export function ThemeToggle() {
     return (
         <button
             onClick={() => setTheme(currentTheme === "dark" ? "light" : "dark")}
-            className="relative flex items-center w-14 h-8 p-1 rounded-full bg-zinc-200 dark:bg-violet-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
+            className="relative flex items-center w-16 h-8 p-1 rounded-full bg-zinc-200 dark:bg-violet-600 transition-colors overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-950"
             aria-label="Toggle theme"
         >
             {/* Sliding background knob (Empty) */}
             <div
-                className={`absolute left-1 w-6 h-6 rounded-full transition-transform duration-200 ease-out shadow-sm ${currentTheme === "dark"
-                        ? 'translate-x-6 bg-zinc-900'
+                className={`absolute left-1 w-6 h-6 rounded-full transition-transform duration-200 ease-out shadow-sm z-0 ${currentTheme === "dark"
+                        ? 'translate-x-5 bg-zinc-900'
                         : 'translate-x-0 bg-white'
                     }`}
             />
