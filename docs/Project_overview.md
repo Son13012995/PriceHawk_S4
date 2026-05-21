@@ -1,6 +1,6 @@
 # PriceHawk S4 — CLAUDE.md
 
-**Cập nhật lần cuối:** 09/05/2026 — M12 User Auth hoàn thiện (NextAuth v4 + bcryptjs + RBAC).
+**Cập nhật lần cuối:** 21/05/2026 — M14 OAuth Social Login (GitHub + Google) tích hợp vào NextAuth.
 
 ---
 
@@ -36,6 +36,7 @@
 
 **Lưu ý môi trường:**
 - ⚠️ Phải có file `.env.local` hoặc `.env_product` với `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `NEXT_PUBLIC_API_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`
+- OAuth social login cần thêm: `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` — nếu bỏ trống thì provider đó tự động bị skip (không crash)
 - MySQL Docker expose port `3307:3306` (tránh conflict với local MySQL)
 - Crawler container dùng `TZ=Asia/Ho_Chi_Minh` và cron `*/5 * * * *`
 - Web container đọc env từ `.env_product`
@@ -278,6 +279,7 @@ price_alert:
 | M11 — Price History Chart | 🟡 In Progress | Trang /price-history/[id] tồn tại nhưng chưa rõ độ hoàn thiện |
 | M12 — User Auth | ✅ Done | NextAuth v4 + bcryptjs + RBAC 3 role (guest/user/admin) |
 | M13 — Relax Variant Matching | ❌ Backlog | ProductMatcher strict đang tách variant ra product riêng. Có thể relax để group theo model_key |
+| M14 — OAuth Social Login | ✅ Done | GitHub + Google OAuth qua NextAuth; tự động INSERT user mới, block email conflict với credential account |
 
 ### Roadmap ưu tiên tiếp theo
 1. **Price History Chart** — hoàn thiện UI biểu đồ giá theo thời gian (trang đã có nhưng cần verify)
@@ -321,6 +323,21 @@ price_alert:
 ---
 
 ## Session Log — Những gì đã làm gần đây
+
+### Session 21/05/2026 — M14 OAuth Social Login
+**Đã làm:**
+- `app/login/page.js`: thêm divider + nút "Tiếp tục với GitHub" và "Tiếp tục với Google" với SVG logo
+- `lib/auth.js`: import `GithubProvider` + `GoogleProvider`; thêm `signIn()` callback xử lý OAuth flow:
+  - Tìm user theo `provider + provider_id` → tái sử dụng account cũ
+  - Email conflict với credential user → redirect `/login?error=OAuthEmailConflict` (không merge tự động)
+  - Lần đầu login → INSERT user mới với `password_hash = NULL`
+  - Provider registration conditional (`&&` guard) — không crash khi env trống
+- `.env.local`: generate `NEXTAUTH_SECRET`, set `NEXTAUTH_URL`, điền GitHub credentials
+- **Debug:** `GITHUB_CLIENT_ID` nhập nhầm `0v23...` (số 0) thay vì `Ov23...` (chữ O) → GitHub 404
+
+**Cần làm tiếp:** Điền `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` từ Google Cloud Console
+
+**Migration cần chạy:** `mysql/migrations/002_add_oauth.sql` để thêm cột `provider`, `provider_id` vào bảng `users` và cho phép `password_hash = NULL`
 
 ### Session 09/05/2026 — M12 User Auth
 **Đã làm:** Tích hợp NextAuth v4, bcryptjs, RBAC 3 role, admin panel, seed script
