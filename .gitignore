@@ -50,3 +50,11 @@ dump-priceComparison-202312131918.sql
 price-hawk/data/
 *.jsonl
 *.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
