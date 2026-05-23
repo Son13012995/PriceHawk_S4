@@ -81,6 +81,7 @@ class DBAgent:
             "found": True,
             "products": grouped,
             "search_keyword": product_name,
+            "match_type": match_type,   # "exact" | "partial"
             "db_available": True,
         }
 
@@ -89,5 +90,6 @@ class DBAgent:
             "found": False,
             "products": [],
             "search_keyword": keyword,
+            "match_type": None,
             "db_available": db_available,
         }
