@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PriceHawk Scanner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="popup.css"/>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header>
+      <div class="logo">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2L18 6V14L10 18L2 14V6L10 2Z" stroke="#00c2ff" stroke-width="1.5" fill="none"/>
+          <path d="M10 6L14 8V12L10 14L6 12V8L10 6Z" fill="#00c2ff" opacity="0.4"/>
+          <circle cx="10" cy="10" r="2" fill="#00c2ff"/>
+        </svg>
+        <span>PriceHawk</span>
+      </div>
+      <div id="status-dot" class="dot idle" title="Idle"></div>
+    </header>
+
+    <!-- Step 1: Scan controls -->
+    <section id="scan-section" class="section">
+      <div class="section-label">SCAN PRODUCT</div>
+
+      <div class="field-row" id="name-row">
+        <div class="field-info">
+          <div class="field-label">Product Name</div>
+          <div id="name-display" class="field-value empty">Not selected</div>
+        </div>
+        <button id="btn-pick-name" class="pick-btn" title="Click to pick name from page">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 4-5 1-1 5-4-10z" fill="currentColor"/></svg>
+          Pick
+        </button>
+      </div>
+
+      <div class="field-row" id="price-row">
+        <div class="field-info">
+          <div class="field-label">Product Price</div>
+          <div id="price-display" class="field-value empty">Not selected</div>
+        </div>
+        <button id="btn-pick-price" class="pick-btn" title="Click to pick price from page">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 4-5 1-1 5-4-10z" fill="currentColor"/></svg>
+          Pick
+        </button>
+      </div>
+
+      <div class="field-row" id="category-row">
+        <div class="field-info">
+          <div class="field-label">Category</div>
+        </div>
+        <select id="category-select" class="category-select">
+          <option value="dien-thoai">📱 Điện thoại</option>
+          <option value="tablet">📟 Máy tính bảng</option>
+          <option value="laptop">💻 Laptop</option>
+        </select>
+      </div>
+
+      <div id="picker-hint" class="hint hidden">
+        <span id="hint-text">Hover over an element and click to select</span>
+        <button id="btn-cancel-pick" class="cancel-btn">✕ Cancel</button>
+      </div>
+
+      <button id="btn-compare" class="primary-btn" disabled>
+        <span id="compare-label">Compare</span>
+        <span id="compare-spinner" class="spinner hidden"></span>
+      </button>
+    </section>
+
+    <!-- Step 2: Compare result -->
+    <section id="result-section" class="section hidden">
+      <div class="section-label">RESULT</div>
+      <div id="result-box"></div>
+
+      <div id="save-actions" class="action-row hidden">
+        <button id="btn-save" class="primary-btn green">Save to Database</button>
+        <button id="btn-skip" class="ghost-btn">Skip</button>
+      </div>
+
+      <div id="save-status" class="save-status hidden"></div>
+
+      <button id="btn-reset" class="ghost-btn small">← Scan another</button>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
