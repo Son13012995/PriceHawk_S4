@@ -74,8 +74,8 @@ class InternetAgent:
         query = f"{keyword} giá thông số đánh giá Việt Nam"
         print(f"[InternetAgent] Querying SearxNG: {query}")
         
-        # Lấy cấu hình SEARXNG_URL (trong docker có thể là http://searxng:8080)
-        searxng_url = os.getenv("SEARXNG_URL", "http://localhost:8080")
+        # Lấy cấu hình SEARXNG_URL (trong docker mặc định là http://searxng:8080)
+        searxng_url = os.getenv("SEARXNG_URL", "http://searxng:8080")
         
         for attempt in range(3):
             try:

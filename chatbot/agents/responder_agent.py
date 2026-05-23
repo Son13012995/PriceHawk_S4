@@ -76,21 +76,30 @@ class ResponderAgent:
         if intent == "compare":
             instruction = (
                 "Hãy vẽ BẢNG SO SÁNH (Markdown Table) side-by-side chi tiết cho các sản phẩm tìm được. "
-                "Bảng nên có các tiêu chí cơ bản (như RAM, Camera, Pin...) và Giá ở từng cửa hàng. "
+                "Bảng nên có các tiêu chí cơ bản (như RAM, Camera, Pin...) và Giá ở từng cửa hàng (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url) - TUYỆT ĐỐI KHÔNG CÓ DẤU CÁCH giữa ] và (). "
                 "Dưới bảng, thêm 2-3 dòng nhận xét ngắn gọn (VD: ưu/nhược điểm của từng máy, máy nào phù hợp với ai)."
             )
         else:
             instruction = (
                 "1. Tóm tắt sản phẩm tìm được\n"
-                "2. Bảng giá từ các cửa hàng (rẻ đến đắt)\n"
-                "3. Gợi ý cửa hàng rẻ nhất\n"
+                "2. Bảng giá từ các cửa hàng (rẻ đến đắt), BẮT BUỘC chèn kèm link mua hàng (định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url) - TUYỆT ĐỐI KHÔNG CÓ DẤU CÁCH giữa ] và (). Ví dụ: [FPT Shop](https://...)\n"
+                "3. Gợi ý cửa hàng rẻ nhất và chèn lại link của sản phẩm rẻ nhất đó.\n"
                 "Nếu nhiều sản phẩm tương tự, hiển thị tối đa 3 cái phù hợp nhất."
+            )
+
+        partial_notice = ""
+        if db_result.get("partial_fallback"):
+            partial_notice = (
+                f"\n\nLƯU Ý QUAN TRỌNG CHO BẠN: Hệ thống KHÔNG tìm thấy chính xác sản phẩm '{db_result.get('search_keyword')}' "
+                f"mà người dùng yêu cầu, mà chỉ tìm thấy các sản phẩm có tên tương tự dưới đây. "
+                f"Hãy LỊCH SỰ XIN LỖI người dùng vì không tìm thấy sản phẩm chính xác, "
+                f"sau đó mới đề xuất các sản phẩm tương tự này."
             )
 
         prompt = (
             f"Bạn là trợ lý so sánh giá của PriceHawk — website so sánh giá điện thoại, laptop, tablet tại Việt Nam.\n\n"
             f"Người dùng hỏi: \"{user_message}\"\n\n"
-            f"Thông tin giá từ hệ thống:\n{product_data_text}\n\n"
+            f"Thông tin giá từ hệ thống:\n{product_data_text}{partial_notice}\n\n"
             f"Hãy viết câu trả lời tiếng Việt thân thiện, bao gồm:\n"
             f"{instruction}"
         )
@@ -137,7 +146,7 @@ class ResponderAgent:
             f"Người dùng hỏi: \"{user_message}\"\n\n"
             f"Thông tin tìm được từ internet (nguồn: {source_url}):\n{summary}\n\n"
             f"Hãy viết câu trả lời tiếng Việt thân thiện dựa trên thông tin trên. "
-            f"Ghi rõ nguồn thông tin."
+            f"Ghi rõ nguồn thông tin ở cuối câu trả lời, BẮT BUỘC định dạng nguồn bằng chuẩn Markdown: [Nguồn tham khảo]({source_url}) - TUYỆT ĐỐI KHÔNG CÓ DẤU CÁCH giữa ] và ()."
         )
 
         models_to_try = [MODEL_PRIMARY, MODEL_FALLBACK] if client else []
@@ -161,7 +170,7 @@ class ResponderAgent:
                 print(f"[ResponderAgent] LLM error ({model_name}): {e}")
                 reply_text = (
                     f"Tôi tìm được thông tin về **{internet_result.get('keyword')}** từ web:\n\n"
-                    f"{summary}\n\n*(Nguồn: {source_url})*"
+                    f"{summary}\n\n[Nguồn tham khảo]({source_url})"
                 )
                 break
 
