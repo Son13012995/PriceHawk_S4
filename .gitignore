@@ -60,3 +60,9 @@ __pycache__/
 .venv/
 venv/
 env/
+
+# Temp test files & reports
+*.pdf
+test_*.py
+*.log
+commit.ps1

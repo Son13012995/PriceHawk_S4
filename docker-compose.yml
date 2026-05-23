@@ -50,18 +50,12 @@ services:
   chatbot:
     container_name: pricehawk_chatbot
     build:
-      context: ./price-hawk
-      dockerfile: docker/Dockerfile.chatbot
+      context: ./chatbot
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     env_file:
-      - ./price-hawk/.env_product
-    environment:
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=rootpassword
-      - MYSQL_DB=pricecomparison
+      - ./chatbot/.env.docker
     depends_on:
       - mysql
       - searxng
