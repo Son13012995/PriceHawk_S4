@@ -76,7 +76,7 @@ class ResponderAgent:
         if intent == "compare":
             instruction = (
                 "Hãy vẽ BẢNG SO SÁNH (Markdown Table) side-by-side chi tiết cho các sản phẩm tìm được. "
-                "Bảng nên có các tiêu chí cơ bản (như RAM, Camera, Pin...) và Giá ở từng cửa hàng (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url) - TUYỆT ĐỐI KHÔNG CÓ DẤU CÁCH giữa ] và (). "
+                "Bảng BẮT BUỘC có các tiêu chí cơ bản (RAM, Camera, Pin, Chipset). VÌ DỮ LIỆU HỆ THỐNG CHỈ CÓ GIÁ, HÃY TỰ DÙNG KIẾN THỨC SẴN CÓ CỦA BẠN ĐỂ ĐIỀN THÔNG SỐ KỸ THUẬT, nhưng MỨC GIÁ thì bắt buộc phải lấy từ dữ liệu hệ thống (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url) - KHÔNG DẤU CÁCH giữa ] và ()). "
                 "Dưới bảng, thêm 2-3 dòng nhận xét ngắn gọn (VD: ưu/nhược điểm của từng máy, máy nào phù hợp với ai)."
             )
         else:
