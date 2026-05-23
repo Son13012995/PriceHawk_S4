@@ -200,6 +200,7 @@ const styles = {
     fontFamily: "inherit",
     lineHeight: "1.4",
     background: "#f8f9fc",
+    color: "#1a1a2e",
     transition: "border-color 0.2s",
   },
   sendBtn: (disabled) => ({
@@ -331,16 +332,32 @@ export default function ChatWidget() {
     }
   };
 
-  // Render message content (basic markdown: **bold**)
+  // Render message content (basic markdown: **bold** and [text](url))
   const renderContent = (content) => {
-    const parts = content.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) =>
-      part.startsWith("**") && part.endsWith("**") ? (
-        <strong key={i}>{part.slice(2, -2)}</strong>
-      ) : (
-        <span key={i}>{part}</span>
-      )
-    );
+    const regex = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
+    const parts = content.split(regex);
+    return parts.map((part, i) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      if (part.startsWith("[") && part.includes("](")) {
+        const match = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
+        if (match) {
+          return (
+            <a
+              key={i}
+              href={match[2]}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#667eea", textDecoration: "underline", fontWeight: "bold" }}
+            >
+              {match[1]}
+            </a>
+          );
+        }
+      }
+      return <span key={i}>{part}</span>;
+    });
   };
 
   return (
