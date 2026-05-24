@@ -27,6 +27,8 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env_product
+chatbot/.env.docker
 
 # vercel
 .vercel
@@ -51,3 +53,16 @@ price-hawk/data/
 *.jsonl
 *.json
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Temp test files & reports
+*.pdf
+test_*.py
+*.log
+commit.ps1

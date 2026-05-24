@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
 import { ThemeProvider } from "../components/ThemeProvider";
+import ChatWidget from "../components/ChatWidget";
 import AuthProvider from "../components/AuthProvider";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
                         <main className="flex-grow w-full">
                             {children}
                         </main>
+                        <ChatWidget />
                     </AuthProvider>
                 </ThemeProvider>
             </body>

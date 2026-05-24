@@ -33,7 +33,7 @@ class BatchDBProcessor:
             self.cursor = self.conn.cursor()
             print("✅ DB connection established")
         except Exception as e:
-            print(f"❌ DB connection failed: {e}")
+            print(f"DB connection failed: {e}")
             raise
     
     def add_item(self, item: Dict) -> bool:
@@ -66,7 +66,7 @@ class BatchDBProcessor:
             return True
             
         except Exception as e:
-            print(f"❌ Flush failed: {e}")
+            print(f"Flush failed: {e}")
             self.conn.rollback()
             return False
     
@@ -87,7 +87,7 @@ class BatchDBProcessor:
             
             # Generate identity_key from brand + model + variant
             if not (brand and model and variant):
-                print(f"⚠️ Skip product (incomplete identity): {name}")
+                print(f"Skip product (incomplete identity): {name}")
                 return
             
             identity_key = f"{brand}_{model}_{variant}"
