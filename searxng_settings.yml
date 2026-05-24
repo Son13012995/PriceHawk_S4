@@ -1,0 +1,22 @@
+# SearXNG Settings
+# Minimal overrides for internal Docker usage
+
+use_default_settings: true
+
+server:
+  secret_key: "pricehawk-secret-key-2026"
+
+search:
+  default_lang: "all"
+  formats:
+    - html
+    - json
+
+ui:
+  default_locale: "vi"
+
+limiter:
+  enabled: false
+
+botdetection:
+  enabled: false

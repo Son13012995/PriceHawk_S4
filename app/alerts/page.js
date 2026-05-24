@@ -20,7 +20,7 @@ export default function AlertsPage() {
 
   // Auto-fetch alerts every 5 seconds
   const { data: alertsData, isLoading: alertsLoading } = useSWR(
-    "/api/price-alert?userId=null&status=all",
+    "/api/price-alert?status=all",
     fetcher,
     {
       refreshInterval: 5000, // Auto-refresh every 5 seconds
@@ -71,7 +71,6 @@ export default function AlertsPage() {
         productId: selectedProduct.id,
         targetPrice: target,
         note: note.trim() || null,
-        userId: null,
       });
 
       if (response.status === 201) {
@@ -82,7 +81,7 @@ export default function AlertsPage() {
         setTimeout(() => setMessage(""), 3000);
         
         // Revalidate both endpoints
-        mutate("/api/price-alert?userId=null&status=all");
+        mutate("/api/price-alert?status=all");
         mutate("/api/price-alert?action=check-triggers");
       }
     } catch (error) {
@@ -100,7 +99,7 @@ export default function AlertsPage() {
       });
       
       // Revalidate both endpoints
-      mutate("/api/price-alert?userId=null&status=all");
+      mutate("/api/price-alert?status=all");
       mutate("/api/price-alert?action=check-triggers");
     } catch (error) {
       setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
@@ -117,7 +116,7 @@ export default function AlertsPage() {
       setTimeout(() => setMessage(""), 3000);
       
       // Revalidate both endpoints
-      mutate("/api/price-alert?userId=null&status=all");
+      mutate("/api/price-alert?status=all");
       mutate("/api/price-alert?action=check-triggers");
     } catch (error) {
       setMessage("Không thể xóa alert. Vui lòng thử lại.");
@@ -132,7 +131,7 @@ export default function AlertsPage() {
   const handleCloseTriggeredModal = () => {
     setShowTriggeredModal(false);
     // Revalidate to update status
-    mutate("/api/price-alert?userId=null&status=all");
+    mutate("/api/price-alert?status=all");
     mutate("/api/price-alert?action=check-triggers");
   };
 
@@ -156,7 +155,7 @@ export default function AlertsPage() {
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent dark:via-slate-700" />
+            <div className="h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-zinc-700" />
 
             {/* Triggered Products List */}
             <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -168,7 +167,7 @@ export default function AlertsPage() {
                     setShowTriggeredModal(false);
                   }}
                   className={cn(
-                    "group w-full rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-50/50 p-4 text-left transition-all hover:border-emerald-300 hover:shadow-lg dark:border-emerald-900/40 dark:from-emerald-900/20 dark:to-emerald-900/10 dark:hover:shadow-emerald-900/30"
+                    "group w-full rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-violet-50/50 p-4 text-left transition-all hover:border-emerald-300 hover:shadow-lg dark:border-emerald-900/40 dark:from-emerald-900/20 dark:to-violet-900/10 dark:hover:shadow-emerald-900/30"
                   )}
                 >
                   <div className="flex items-center gap-4">
@@ -176,7 +175,7 @@ export default function AlertsPage() {
                       {index + 1}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-900 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
+                      <p className="font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition">
                         {alert.productName}
                       </p>
                       <p className={cn(ui.mutedText, "text-sm")}>
@@ -187,7 +186,7 @@ export default function AlertsPage() {
                       <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                         Triggered
                       </span>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
                         Mục tiêu: {formatPrice(alert.targetPrice)}
                       </p>
                     </div>
@@ -197,7 +196,7 @@ export default function AlertsPage() {
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent dark:via-slate-700" />
+            <div className="h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent dark:via-zinc-700" />
 
             {/* Actions */}
             <div className="flex gap-3">
@@ -210,7 +209,7 @@ export default function AlertsPage() {
               <button
                 onClick={() => {
                   handleCloseTriggeredModal();
-                  mutate("/api/price-alert?userId=null&status=all");
+                  mutate("/api/price-alert?status=all");
                   mutate("/api/price-alert?action=check-triggers");
                 }}
                 className={cn(ui.primaryButton, "flex-1")}
@@ -224,7 +223,7 @@ export default function AlertsPage() {
 
       <div className={cn(ui.container, "space-y-6")}>
         <header className={cn(ui.card, "p-6 md:p-8")}>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">Alert Center</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Alert Center</p>
           <h1 className={cn(ui.heading, "mt-3 text-3xl font-black sm:text-4xl")}>Set Price Alert</h1>
           <p className={cn(ui.mutedText, "mt-3")}>Tạo cảnh báo khi giá sản phẩm giảm về mức bạn mong muốn.</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -242,10 +241,10 @@ export default function AlertsPage() {
         <section className={cn(ui.card, "grid gap-6 p-6 md:grid-cols-5 md:p-8")}>
           <form onSubmit={submitAlert} className="space-y-4 md:col-span-3">
             <div>
-              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Chọn sản phẩm</label>
+              <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Chọn sản phẩm</label>
               <ProductSearch onSelectProduct={setSelectedProduct} placeholder="Tìm kiếm tên sản phẩm..." />
               {selectedProduct && (
-                <div className="mt-2 flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 p-3 dark:border-cyan-800 dark:bg-cyan-900/20">
+                <div className="mt-2 flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 p-3 dark:border-violet-800 dark:bg-violet-900/20">
                   {selectedProduct.image_url && (
                     <img
                       src={selectedProduct.image_url}
@@ -254,13 +253,13 @@ export default function AlertsPage() {
                     />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-200">{selectedProduct.name}</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400">{selectedProduct.brand || "N/A"}</p>
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-200">{selectedProduct.name}</p>
+                    <p className="text-xs text-zinc-600 dark:text-zinc-400">{selectedProduct.brand || "N/A"}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedProduct(null)}
-                    className="text-slate-400 hover:text-slate-600"
+                    className="text-zinc-400 hover:text-zinc-600"
                   >
                     ✕
                   </button>
@@ -269,7 +268,7 @@ export default function AlertsPage() {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Giá mong muốn (đ)</label>
+              <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Giá mong muốn (đ)</label>
               <input
                 type="text"
                 inputMode="numeric"
@@ -277,25 +276,25 @@ export default function AlertsPage() {
                 onChange={(e) => setTargetPrice(formatPriceInput(e.target.value))}
                 placeholder="Ví dụ: 1.000.000 đ"
                 className={cn(
-                  "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500",
+                  "w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500",
                   ui.ring
                 )}
               />
               {targetPrice && parsePriceInput(targetPrice) > 0 ? (
-                <p className="mt-2 text-xs font-medium text-slate-500 dark:text-slate-400">
+                <p className="mt-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
                   Giá mục tiêu: {formatPrice(parsePriceInput(targetPrice))}
                 </p>
               ) : null}
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300">Ghi chú (tuỳ chọn)</label>
+              <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Ghi chú (tuỳ chọn)</label>
               <input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Tai nghe cho đi làm"
                 className={cn(
-                  "w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500",
+                  "w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500",
                   ui.ring
                 )}
               />
@@ -304,13 +303,13 @@ export default function AlertsPage() {
               <button type="submit" className={cn(ui.primaryButton, ui.ring)}>
                 Tạo alert
               </button>
-              {message && <span className="text-sm font-medium text-slate-500">{message}</span>}
+              {message && <span className="text-sm font-medium text-zinc-500">{message}</span>}
             </div>
           </form>
 
-          <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-5 dark:border-slate-700 dark:bg-slate-800/50 md:col-span-2">
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">Cách hoạt động</h2>
-            <ul className="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-400">
+          <aside className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-800/50 md:col-span-2">
+            <h2 className="text-base font-bold text-zinc-800 dark:text-zinc-200">Cách hoạt động</h2>
+            <ul className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
               <li>1. Tìm kiếm tên sản phẩm chọn từ kết quả.</li>
               <li>2. Nhập giá mục tiêu và lưu alert.</li>
               <li>3. Khi giá thấp hơn ngưỡng, alert sẽ được đánh dấu.</li>
@@ -319,11 +318,11 @@ export default function AlertsPage() {
         </section>
 
         <section className={cn(ui.card, "p-6 md:p-8")}>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Danh sách alerts</h2>
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Danh sách alerts</h2>
           {loading ? (
             <div className="mt-4 space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+                <div key={i} className="h-20 animate-pulse rounded-2xl bg-zinc-100" />
               ))}
             </div>
           ) : alerts.length === 0 ? (
@@ -338,24 +337,24 @@ export default function AlertsPage() {
                     item.status === "triggered"
                       ? "border-emerald-200 bg-emerald-50 dark:border-emerald-900/40 dark:bg-emerald-900/10"
                       : item.status === "active"
-                      ? "border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800/80"
-                      : "border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/40"
+                      ? "border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-800/80"
+                      : "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/40"
                   )}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-slate-900 dark:text-slate-200">
+                        <p className="text-sm font-bold text-zinc-900 dark:text-zinc-200">
                           {item.name || `Product #${item.product_id}`}
                         </p>
                         {item.status === "triggered" && (
                           <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
                         )}
                       </div>
-                      <p className={cn("text-sm", item.status === "triggered" ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-slate-600 dark:text-slate-400")}>
+                      <p className={cn("text-sm", item.status === "triggered" ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-zinc-600 dark:text-zinc-400")}>
                         Target: {formatPrice(item.target_price)} {item.status === "triggered" && "✓ Đã đạt"}
                       </p>
-                      {item.note ? <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">{item.note}</p> : null}
+                      {item.note ? <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-500">{item.note}</p> : null}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -366,7 +365,7 @@ export default function AlertsPage() {
                             ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:hover:bg-emerald-900/50"
                             : item.status === "triggered"
                             ? "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:hover:bg-amber-900/50"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600"
+                            : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-600"
                         )}
                       >
                         {item.status === "active" ? "Active" : item.status === "triggered" ? "Triggered" : "Paused"}

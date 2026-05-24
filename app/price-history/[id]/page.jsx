@@ -59,25 +59,25 @@ export default function MinPriceBox({ productId }) {
   }, [comparison]);
 
   if (loading) {
-    return <div className="h-24 bg-slate-100 animate-pulse rounded-xl" />;
+    return <div className="h-24 bg-zinc-100 animate-pulse rounded-xl" />;
   }
 
   if (!minPriceRecord) {
     return (
-      <div className="p-4 border rounded-xl text-slate-500">
+      <div className="p-4 border rounded-xl text-zinc-500">
         Chưa có dữ liệu
       </div>
     );
   }
 
   return (
-    <div className="p-4 border rounded-xl bg-cyan-50">
-      <p className="text-xs text-slate-500">Min Price</p>
+    <div className="p-4 border rounded-xl bg-violet-50">
+      <p className="text-xs text-zinc-500">Min Price</p>
       <p className="text-xl font-bold">
         {formatPrice(minPriceRecord.min_price)}₫
       </p>
 
-      <p className="text-xs text-slate-500 mt-2">Cập nhật lúc</p>
+      <p className="text-xs text-zinc-500 mt-2">Cập nhật lúc</p>
       <p className="text-sm font-semibold">
         {formatDateTime(minPriceRecord.min_price_at)}
       </p>

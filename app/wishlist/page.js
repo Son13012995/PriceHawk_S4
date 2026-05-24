@@ -14,7 +14,7 @@ export default function WishlistPage() {
   const fetchWishlist = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/wishlist", { params: { userId: null } });
+      const response = await axios.get("/api/wishlist");
       setProducts(response.data.data || []);
     } catch (error) {
       setMessage("Không thể tải wishlist. Vui lòng thử lại.");
@@ -32,7 +32,6 @@ export default function WishlistPage() {
     try {
       const response = await axios.post("/api/wishlist", {
         productId: product.id,
-        userId: null,
       });
 
       if (response.status === 201 || response.status === 200) {
@@ -54,7 +53,7 @@ export default function WishlistPage() {
   const removeItem = async (productId) => {
     try {
       await axios.delete("/api/wishlist", {
-        data: { productId, userId: null },
+        data: { productId },
       });
       setMessage("Đã xóa khỏi wishlist.");
       setTimeout(() => setMessage(""), 3000);
@@ -70,7 +69,7 @@ export default function WishlistPage() {
     <div className={cn(ui.pageWrap, "py-10")}> 
       <div className={cn(ui.container, "space-y-6")}> 
         <header className={cn(ui.card, "p-6 md:p-8")}> 
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">Saved Items</p>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Saved Items</p>
           <h1 className={cn(ui.heading, "mt-3 text-3xl font-black sm:text-4xl")}>Wishlist</h1>
           <p className={cn(ui.mutedText, "mt-3")}>Danh sách sản phẩm bạn đã lưu.</p>
         </header>
@@ -81,7 +80,7 @@ export default function WishlistPage() {
               onSelectProduct={addToWishlist}
               placeholder="Tìm kiếm sản phẩm để thêm..."
             />
-            {message ? <p className="mt-2 text-sm text-slate-500">{message}</p> : null}
+            {message ? <p className="mt-2 text-sm text-zinc-500">{message}</p> : null}
           </div>
         </section>
 
@@ -89,7 +88,7 @@ export default function WishlistPage() {
           {loading ? (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-72 animate-pulse rounded-2xl border border-slate-200 bg-slate-100" />
+                <div key={index} className="h-72 animate-pulse rounded-2xl border border-zinc-200 bg-zinc-100" />
               ))}
             </div>
           ) : products.length > 0 ? (
@@ -112,9 +111,9 @@ export default function WishlistPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center">
-              <p className="text-lg font-semibold text-slate-700">Wishlist đang trống</p>
-              <p className="mt-2 text-sm text-slate-500">Thêm sản phẩm từ Product ID hoặc từ trang chi tiết sản phẩm.</p>
+            <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center">
+              <p className="text-lg font-semibold text-zinc-700">Wishlist đang trống</p>
+              <p className="mt-2 text-sm text-zinc-500">Thêm sản phẩm từ Product ID hoặc từ trang chi tiết sản phẩm.</p>
             </div>
           )}
         </section>

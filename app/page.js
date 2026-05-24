@@ -1,112 +1,153 @@
 import Link from "next/link";
 import Image from "next/image";
+import HeroSearch from "@/components/HeroSearch";
+import TrendingDeals from "@/components/TrendingDeals";
 
 export default function Home() {
     return (
-        <div className="w-full">
+        <div className="w-full flex flex-col min-h-screen bg-zinc-50 dark:bg-[#09090b]">
             {/* Hero Section */}
-            <section className="relative pt-20 pb-24 lg:pt-32 lg:pb-32 overflow-hidden">
-                {/* Background Gradient */}
-                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-slate-50 to-slate-50 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950"></div>
+            <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden flex flex-col items-center justify-center text-center px-4">
+                {/* Background Gradient / Blobs */}
+                <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-100/50 via-zinc-50 to-zinc-50 dark:from-violet-900/20 dark:via-[#09090b] dark:to-[#09090b]"></div>
+                
+                <h1 className="text-4xl sm:text-5xl lg:text-[4rem] font-extrabold text-zinc-900 dark:text-white tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+                    Săn giá thông minh với <br className="hidden sm:block" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-violet-400 dark:from-violet-500 dark:to-violet-300">
+                        PriceHawk Intelligence
+                    </span>
+                </h1>
+                
+                <p className="text-lg sm:text-xl text-zinc-600 dark:text-zinc-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+                    Hệ thống theo dõi giá thời gian thực giúp bạn luôn chốt đơn với mức giá tối ưu nhất trên mọi sàn thương mại điện tử.
+                </p>
 
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl relative">
-                    <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-                        {/* Text Content */}
-                        <div className="max-w-2xl">
-                            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50/80 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 font-semibold text-xs tracking-wide uppercase mb-6 border border-teal-200 dark:border-teal-800 shadow-sm dark:shadow-none">
-                                <span className="flex h-2 w-2 rounded-full bg-teal-500 dark:bg-teal-400 animate-pulse shadow-[0_0_8px_rgba(20,184,166,0.8)]"></span>
-                                VNU IT Project - K68
+                {/* Big Search Bar */}
+                <div className="w-full max-w-2xl mx-auto relative z-20 flex justify-center">
+                    <div className="w-full shadow-2xl shadow-violet-500/10 rounded-[18px] bg-white dark:bg-[#18181b] p-1 flex gap-2 border border-zinc-200 dark:border-zinc-800">
+                        <HeroSearch />
+                    </div>
+                </div>
+            </section>
+
+            {/* Features Section */}
+            <section className="py-12 relative z-10 px-4">
+                <div className="container mx-auto max-w-6xl">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Feature 1 */}
+                        <div className="bg-white dark:bg-[#18181b] p-8 rounded-[24px] border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                            <div className="h-12 w-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40 transition-all">
+                                <svg className="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                                </svg>
                             </div>
-                            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-6 leading-[1.15]">
-                                So sánh giá <br className="hidden sm:block" />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-600 to-emerald-500 dark:from-teal-400 dark:to-emerald-400">
-                                    Đồ Điện Tử
-                                </span> thông minh
-                            </h1>
-                            <p className="text-lg text-slate-600 dark:text-slate-300 mb-8 leading-relaxed max-w-xl">
-                                PriceHawk giúp bạn dễ dàng tìm kiếm mức giá tốt nhất cho tai nghe và các thiết bị công nghệ từ những sàn thương mại điện tử hàng đầu.
+                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Price Tracking</h3>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                Biểu đồ biến động giá chi tiết trong 7 ngày, giúp bạn nhận diện đâu là đợt giảm giá ảo.
                             </p>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <Link href="/product" className="inline-flex justify-center items-center px-8 py-3.5 text-base font-semibold text-white bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 rounded-2xl shadow-lg shadow-teal-500/20 hover:shadow-xl hover:shadow-teal-500/30 hover:-translate-y-0.5 transition-all duration-300">
-                                    Xem tất cả sản phẩm
-                                </Link>
-                                <Link href="#brands" className="inline-flex justify-center items-center px-8 py-3.5 text-base font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 rounded-xl transition-all duration-300">
-                                    Khám phá thương hiệu
-                                </Link>
+                        </div>
+                        
+                        {/* Feature 2 */}
+                        <div className="bg-white dark:bg-[#18181b] p-8 rounded-[24px] border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                            <div className="h-12 w-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40 transition-all">
+                                <svg className="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
                             </div>
+                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Instant Alerts</h3>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                Nhận thông báo ngay lập tức khi sản phẩm chạm mức giá bạn mong đợi.
+                            </p>
                         </div>
 
-                        {/* Image/Visual */}
-                        <div className="relative mx-auto w-full max-w-lg lg:max-w-none z-10">
-                            {/* Decorative Blobs */}
-                            <div className="absolute top-0 -left-4 w-72 h-72 bg-indigo-300 dark:bg-indigo-500 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-30 animate-blob"></div>
-                            <div className="absolute top-0 -right-4 w-72 h-72 bg-violet-300 dark:bg-violet-500 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
-                            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 dark:bg-pink-500 rounded-full mix-blend-multiply dark:mix-blend-lighten filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
-
-                            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-slate-200/50 dark:shadow-none border border-white/60 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm p-2">
-                                <Image
-                                    src="/people.jpg"
-                                    alt="Budspot Banner"
-                                    width={800}
-                                    height={600}
-                                    className="object-cover rounded-xl w-full h-auto transform hover:scale-[1.02] transition-transform duration-700 ease-out"
-                                    priority
-                                />
+                        {/* Feature 3 */}
+                        <div className="bg-white dark:bg-[#18181b] p-8 rounded-[24px] border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                            <div className="h-12 w-12 bg-violet-50 dark:bg-violet-900/20 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-violet-100 dark:group-hover:bg-violet-900/40 transition-all">
+                                <svg className="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
                             </div>
+                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Multi-store Comparison</h3>
+                            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                So sánh giá tự động giữa FPT Shop, Thế Giới Di Động, CellphoneS và các hệ thống bán lẻ hàng đầu.
+                            </p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Brands Section */}
-            <section id="brands" className="py-24 bg-white dark:bg-slate-900 border-y border-slate-100 dark:border-slate-800 scroll-mt-16">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-                    <div className="text-center max-w-2xl mx-auto mb-14">
-                        <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">Thương hiệu nổi bật</h2>
-                        <p className="text-slate-500 dark:text-slate-400">Giá luôn được cập nhật liên tục từ các nguồn phân phối uy tín nhất</p>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
-                        {["Apple", "Sony", "Samsung", "Beats", "Jbl", "Bose", "Google", "Aukey", "Jaybird", "Belkin"].map((brand) => (
-                            <Link key={brand} href={`/search/${brand.toLowerCase()}`} className="group flex items-center justify-center h-24 w-full bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl hover:bg-white dark:hover:bg-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-50 dark:hover:shadow-none hover:-translate-y-1 transition-all duration-300">
-                                <span className="font-bold text-slate-600 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 text-lg transition-colors">
-                                    {brand}
-                                </span>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Demo Products Section */}
-            <section className="py-24 bg-slate-50 dark:bg-slate-900">
-                <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
-                    <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
+            {/* Trending Deals */}
+            <section className="py-20 px-4">
+                <div className="container mx-auto max-w-6xl">
+                    <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">Trải nghiệm nhanh</h2>
-                            <p className="text-slate-500 dark:text-slate-400">Xem ngay các sản phẩm đang được tự động so sánh giá</p>
+                            <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest block mb-1">Live Updates</span>
+                            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Trending Deals</h2>
                         </div>
-                        <Link href="/product" className="text-teal-600 dark:text-teal-400 font-semibold hover:text-teal-700 dark:hover:text-teal-300 flex items-center gap-1 transition-colors">
-                            Xem tất cả danh mục <span aria-hidden="true">&rarr;</span>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                            <button className="w-10 h-10 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                            </button>
+                            <button className="w-10 h-10 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </button>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6">
-                        {[147, 149, 150, 192, 193].map((id) => (
-                            <Link key={id} href={`/product/${id}`} className="group relative bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-teal-500/10 dark:hover:shadow-none hover:border-teal-200 dark:hover:border-teal-800 hover:-translate-y-1 transition-all duration-300">
-                                <div className="absolute top-4 right-4 h-2.5 w-2.5 rounded-full bg-orange-400 ring-4 ring-orange-50 dark:ring-slate-900"></div>
-                                <div className="h-14 w-14 bg-teal-50/50 dark:bg-teal-900/40 rounded-2xl flex items-center justify-center mb-5 group-hover:scale-110 group-hover:bg-teal-100 dark:group-hover:bg-teal-900/60 transition-all duration-300">
-                                    {/* Thay icon svg mặc định cho sinh động hơn */}
-                                    <svg className="w-7 h-7 text-teal-600 dark:text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2zM21 16c-1.105 0-2 .895-2 2s.895 2 2 2 2-.895 2-2-.895-2-2-2z" />
-                                    </svg>
-                                </div>
-                                <div className="text-lg font-bold text-slate-900 dark:text-white mb-1">ID #{id}</div>
-                                <div className="text-sm font-medium text-slate-500 dark:text-slate-400">Sản phẩm mẫu</div>
-                            </Link>
-                        ))}
+                    
+                    <TrendingDeals />
+                </div>
+            </section>
+
+            {/* Partners Section */}
+            <section className="py-12 px-4">
+                <div className="container mx-auto max-w-6xl text-center">
+                    <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-8">
+                        ĐỐI TÁC TIN CẬY TỪ HƠN 50+ NHÀ BÁN LẺ
+                    </p>
+                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                        {/* Only Crawled Partners */}
+                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
+                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">F</div>
+                            FPT Shop
+                        </span>
+                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
+                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">TG</div>
+                            Thế Giới Di Động
+                        </span>
+                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
+                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">CP</div>
+                            CellphoneS
+                        </span>
+                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
+                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">HH</div>
+                            Hoàng Hà
+                        </span>
                     </div>
                 </div>
             </section>
 
+            {/* CTA Section */}
+            <section className="py-20 px-4">
+                <div className="container mx-auto max-w-5xl">
+                    <div className="bg-violet-600 rounded-[2.5rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-violet-500/20">
+                        {/* Decorative background elements */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+                        
+                        <div className="relative z-10">
+                            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
+                                Sẵn sàng để mua sắm thông minh hơn?
+                            </h2>
+                            <p className="text-violet-100 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
+                                Tham gia cùng hơn 100,000 người dùng PriceHawk để tiết kiệm hàng triệu đồng mỗi tháng. Miễn phí hoàn toàn cho người dùng cá nhân.
+                            </p>
+                            <Link href="/product" className="inline-flex justify-center items-center px-10 py-4 text-lg font-bold text-violet-700 bg-white hover:bg-zinc-50 rounded-xl shadow-xl transition-transform hover:-translate-y-1">
+                                Bắt đầu ngay
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 }

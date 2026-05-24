@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn, pageTabs, ui } from "./designSystem";
+import { ShoppingBag, Bell, Heart } from "lucide-react";
+
+const icons = {
+  "/product": ShoppingBag,
+  "/alerts": Bell,
+  "/wishlist": Heart,
+};
 
 function isActive(pathname, href) {
   if (pathname === href) {
@@ -18,22 +25,34 @@ export default function PageTabs({ className = "" }) {
   const pathname = usePathname();
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div className={cn("flex items-center gap-1.5", className)}>
       {pageTabs.map((tab) => {
         const active = isActive(pathname, tab.href);
+        const Icon = icons[tab.href] || ShoppingBag;
+        
         return (
           <Link
             key={tab.href}
             href={tab.href}
             className={cn(
-              "rounded-full border px-4 py-2 text-sm font-semibold transition",
+              "group relative flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-300",
               ui.ring,
               active
-                ? "border-cyan-200 bg-cyan-50 text-cyan-700 dark:border-cyan-800 dark:bg-cyan-900/40 dark:text-cyan-300"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:bg-slate-700/80"
+                ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
+                : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5"
             )}
           >
-            {tab.label}
+            <Icon className={cn(
+              "h-4 w-4 transition-transform duration-300 group-hover:scale-110",
+              active ? "text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-violet-500"
+            )} />
+            <span>{tab.label}</span>
+            
+            {/* Subtle active indicator for desktop if we want something extra, but the solid background is already good. 
+                Let's add a tiny dot or underline for a "premium" feel. */}
+            {active && (
+              <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-violet-400 blur-[1px]" />
+            )}
           </Link>
         );
       })}

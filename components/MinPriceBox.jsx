@@ -2,10 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-
-function formatPrice(price) {
-  return new Intl.NumberFormat("vi-VN").format(price);
-}
+import { formatPrice } from "@/app/utils/format";
 
 function formatDateTime(value) {
   if (!value) return "Chưa có dữ liệu";
@@ -45,41 +42,41 @@ export default function MinPriceBox({ productId }) {
 
   const minPriceRecord = useMemo(() => {
     const candidates = comparison.filter((item) => {
-      const value = Number(item?.min_price);
+      const value = Number(item?.price);
       return Number.isFinite(value) && value > 0;
     });
 
     if (!candidates.length) return null;
 
     return candidates.reduce((best, current) =>
-      Number(current.min_price) < Number(best.min_price)
+      Number(current.price) < Number(best.price)
         ? current
         : best
     );
   }, [comparison]);
 
   if (loading) {
-    return <div className="px-6 py-4 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-[1.25rem] h-[116px] animate-pulse" />;
+    return <div className="px-6 py-4 border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-xl h-[116px] animate-pulse" />;
   }
 
   if (!minPriceRecord) {
     return (
-      <div className="px-6 py-4 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-[1.25rem] font-bold">
+      <div className="px-6 py-4 border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-500 dark:text-zinc-400 rounded-xl font-bold">
         Chưa có dữ liệu
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-4 border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-[1.25rem] hover:border-teal-500 dark:hover:border-teal-500 transition-all shadow-sm">
-      <p className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest">Min Price</p>
-      <p className="text-lg font-bold text-slate-900 dark:text-white mt-1 leading-tight truncate">
-        {formatPrice(minPriceRecord.min_price)}₫
+    <div className="px-6 py-4 border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-xl hover:border-violet-500 dark:hover:border-violet-500 transition-all shadow-sm">
+      <p className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest">Min Price</p>
+      <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50 mt-1 leading-tight truncate">
+        {formatPrice(minPriceRecord.price)}₫
       </p>
 
-      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-2 mb-1">Cập nhật lúc</p>
-      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 leading-tight truncate">
-        {formatDateTime(minPriceRecord.min_price_at)}
+      <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-2 mb-1">Cập nhật lúc</p>
+      <p className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 leading-tight truncate">
+        {formatDateTime(minPriceRecord.current_price_at)}
       </p>
     </div>
   );

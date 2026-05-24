@@ -2,3 +2,6 @@ scrapy>=2.11,<3.0
 itemadapter>=0.8
 pymysql>=1.1.1
 python-dotenv>=1.0
+fastapi>=0.104,<1.0
+uvicorn>=0.24,<1.0
+requests>=2.31

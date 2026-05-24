@@ -1,9 +1,52 @@
 import db from "./database";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
+/**
+ * @swagger
+ * /api/wishlist:
+ *   get:
+ *     summary: Get user wishlist
+ *     responses:
+ *       200:
+ *         description: Success
+ *   post:
+ *     summary: Add product to wishlist
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Added
+ *   delete:
+ *     summary: Remove product from wishlist
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Removed
+ */
 export default async function handler(req, res) {
+  const session = await getServerSession(req, res, authOptions);
+  const userId = session?.user?.id ? Number(session.user.id) : null;
+  console.log(`[WISHLIST] ${req.method} — userId=${userId}`);
+
   if (req.method === "POST") {
     // Add to wishlist
-    const { productId, userId = null } = req.body;
+    const { productId } = req.body;
 
     if (!productId) {
       return res.status(400).json({ error: "productId is required" });
@@ -31,8 +74,6 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "GET") {
     // Get wishlist
-    const { userId = null } = req.query;
-
     try {
       const result = await db.query(
         `SELECT 
@@ -56,7 +97,7 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "DELETE") {
     // Remove from wishlist
-    const { productId, userId = null } = req.body;
+    const { productId } = req.body;
 
     if (!productId) {
       return res.status(400).json({ error: "productId is required" });

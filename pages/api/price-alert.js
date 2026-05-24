@@ -1,4 +1,6 @@
 import db from "./database";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 /**
  * Check all active price alerts and trigger them if current_price <= target_price
@@ -105,6 +107,35 @@ async function checkAndTriggerPriceAlerts() {
   }
 }
 
+/**
+ * @swagger
+ * /api/price-alert:
+ *   post:
+ *     summary: Create a new price alert
+ *     description: Creates a price alert for a product
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *               targetPrice:
+ *                 type: integer
+ *               note:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created successfully
+ *   get:
+ *     summary: Get user price alerts
+ *     description: Fetch all price alerts for the current user
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 export default async function handler(req, res) {
   // Handle cron check trigger
   const { action } = req.query;
@@ -123,9 +154,15 @@ export default async function handler(req, res) {
     }
   }
 
+  const session = await getServerSession(req, res, authOptions);
+  const userId = session?.user?.id ? Number(session.user.id) : null;
+  if (action !== "check-triggers") {
+    console.log(`[PRICE_ALERT] ${req.method} — userId=${userId}`);
+  }
+
   if (req.method === "POST") {
     // Create price alert
-    const { productId, targetPrice, note = null, userId = null } = req.body;
+    const { productId, targetPrice, note = null } = req.body;
 
     if (!productId || targetPrice === undefined) {
       return res.status(400).json({ error: "productId and targetPrice are required" });
@@ -170,7 +207,7 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "GET") {
     // Get price alerts
-    const { userId = null, status = "active" } = req.query;
+    const { status = "active" } = req.query;
 
     try {
       let query = `SELECT 
