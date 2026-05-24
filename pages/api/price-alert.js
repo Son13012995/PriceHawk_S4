@@ -107,6 +107,35 @@ async function checkAndTriggerPriceAlerts() {
   }
 }
 
+/**
+ * @swagger
+ * /api/price-alert:
+ *   post:
+ *     summary: Create a new price alert
+ *     description: Creates a price alert for a product
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *               targetPrice:
+ *                 type: integer
+ *               note:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created successfully
+ *   get:
+ *     summary: Get user price alerts
+ *     description: Fetch all price alerts for the current user
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 export default async function handler(req, res) {
   // Handle cron check trigger
   const { action } = req.query;
