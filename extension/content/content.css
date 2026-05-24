@@ -1,0 +1,39 @@
+/* content/content.css */
+
+/* ── Picker cursor ──────────────────────────────────────────────────────────── */
+html.__ph_picker__ * {
+  cursor: crosshair !important;
+}
+
+/* ── Hover highlight ─────────────────────────────────────────────────────────── */
+.__ph_hover__ {
+  outline: 2px solid #00c2ff !important;
+  outline-offset: 1px !important;
+  background-color: rgba(0, 194, 255, 0.08) !important;
+  transition: outline 0.08s ease, background-color 0.08s ease;
+}
+
+/* ── Tooltip ─────────────────────────────────────────────────────────────────── */
+#__ph_tooltip__ {
+  position: fixed;
+  z-index: 2147483647;
+  max-width: 320px;
+  padding: 6px 10px;
+  background: #0d0d0d;
+  color: #e2e8f0;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  border-radius: 6px;
+  border: 1px solid #00c2ff55;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#__ph_tooltip__ .ph-tag {
+  color: #00c2ff;
+  font-weight: 600;
+}

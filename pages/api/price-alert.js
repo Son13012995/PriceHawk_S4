@@ -1,4 +1,6 @@
 import db from "./database";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 /**
  * Check all active price alerts and trigger them if current_price <= target_price
@@ -123,9 +125,15 @@ export default async function handler(req, res) {
     }
   }
 
+  const session = await getServerSession(req, res, authOptions);
+  const userId = session?.user?.id ? Number(session.user.id) : null;
+  if (action !== "check-triggers") {
+    console.log(`[PRICE_ALERT] ${req.method} — userId=${userId}`);
+  }
+
   if (req.method === "POST") {
     // Create price alert
-    const { productId, targetPrice, note = null, userId = null } = req.body;
+    const { productId, targetPrice, note = null } = req.body;
 
     if (!productId || targetPrice === undefined) {
       return res.status(400).json({ error: "productId and targetPrice are required" });
@@ -170,7 +178,7 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "GET") {
     // Get price alerts
-    const { userId = null, status = "active" } = req.query;
+    const { status = "active" } = req.query;
 
     try {
       let query = `SELECT 
