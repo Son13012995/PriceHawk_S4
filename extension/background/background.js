@@ -3,7 +3,7 @@
  * Service worker: relays messages between popup ↔ content script, calls API
  */
 
-const API_BASE = "http://localhost:3000/api/extension"; // Change to your deployed URL
+const API_BASE = "http://160.187.229.3:3000/api/extension"; // Change to your deployed URL
 
 // ── Open side panel on toolbar icon click ──────────────────────────────────
 chrome.sidePanel
