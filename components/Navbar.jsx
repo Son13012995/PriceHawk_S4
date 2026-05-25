@@ -6,9 +6,9 @@ import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import useSWR from "swr";
 import { checkTriggeredAlerts, getWishlist } from "@/lib/apiClient";
-import AppSearchBar from "./ui/AppSearchBar";
 import PageTabs from "./ui/PageTabs";
 import { ThemeToggle } from "./ThemeToggle";
+import { Download } from "lucide-react";
 
 const triggersFetcher = () => checkTriggeredAlerts().then((res) => res.data);
 
@@ -93,12 +93,19 @@ export default function Navbar() {
 
                     {/* Search & Actions Section */}
                     <div className="flex flex-1 items-center justify-end gap-4 max-w-2xl">
-                        <div className="w-full max-w-sm xl:max-w-md">
-                            <AppSearchBar compact />
-                        </div>
                         
                         <div className="hidden md:flex items-center gap-3">
                             <div className="h-6 w-[1px] bg-zinc-200 dark:bg-white/10 mx-2" />
+                            <div className="flex-shrink-0">
+                                <a 
+                                    href="/pricehawk-extension.zip" 
+                                    download="PriceHawk_Extension.zip"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 dark:text-violet-400 text-sm font-bold transition-colors"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Tải Extension
+                                </a>
+                            </div>
                             <div className="flex-shrink-0">
                                 <ThemeToggle />
                             </div>

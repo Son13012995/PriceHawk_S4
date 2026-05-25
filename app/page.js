@@ -127,31 +127,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* CTA Section */}
-            <section className="py-12 px-4">
-                <div className="container mx-auto max-w-5xl">
-                    <div className="bg-violet-600 rounded-3xl p-8 md:px-12 md:py-10 flex flex-col md:flex-row items-center justify-between relative overflow-hidden shadow-xl shadow-violet-500/10">
-                        {/* Decorative background elements */}
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3"></div>
-                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/3"></div>
-                        
-                        <div className="relative z-10 text-center md:text-left md:mr-8 mb-6 md:mb-0">
-                            <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-tight">
-                                Mua sắm thông minh cùng PriceHawk
-                            </h2>
-                            <p className="text-violet-100 text-sm md:text-base font-medium">
-                                Theo dõi lịch sử giá, so sánh đa nền tảng và chốt đơn lúc giá tốt nhất.
-                            </p>
-                        </div>
-                        
-                        <div className="relative z-10 shrink-0">
-                            <Link href="/product" className="inline-flex justify-center items-center px-6 py-3 text-sm font-bold text-violet-700 bg-white hover:bg-violet-50 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5">
-                                Bắt đầu ngay
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }
