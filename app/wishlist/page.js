@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/apiClient";
 import SearchCard from "../../components/SearchCard";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
@@ -14,7 +14,7 @@ export default function WishlistPage() {
   const fetchWishlist = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/wishlist");
+      const response = await getWishlist();
       setProducts(response.data.data || []);
     } catch (error) {
       setMessage("Không thể tải wishlist. Vui lòng thử lại.");
@@ -28,16 +28,13 @@ export default function WishlistPage() {
     fetchWishlist();
   }, []);
 
-  const addToWishlist = async (product) => {
+  const handleAddToWishlist = async (product) => {
     try {
-      const response = await axios.post("/api/wishlist", {
-        productId: product.id,
-      });
+      const response = await addToWishlist(product.id);
 
       if (response.status === 201 || response.status === 200) {
         setMessage("Đã thêm sản phẩm vào wishlist.");
         setTimeout(() => setMessage(""), 3000);
-        // Reload wishlist
         fetchWishlist();
       }
     } catch (error) {
@@ -52,12 +49,9 @@ export default function WishlistPage() {
 
   const removeItem = async (productId) => {
     try {
-      await axios.delete("/api/wishlist", {
-        data: { productId },
-      });
+      await removeFromWishlist(productId);
       setMessage("Đã xóa khỏi wishlist.");
       setTimeout(() => setMessage(""), 3000);
-      // Reload wishlist
       fetchWishlist();
     } catch (error) {
       setMessage("Không thể xóa sản phẩm. Vui lòng thử lại.");
@@ -77,7 +71,7 @@ export default function WishlistPage() {
         <section className={cn(ui.card, "p-6 md:p-8")}> 
           <div className="max-w-md">
             <ProductSearch
-              onSelectProduct={addToWishlist}
+              onSelectProduct={handleAddToWishlist}
               placeholder="Tìm kiếm sản phẩm để thêm..."
             />
             {message ? <p className="mt-2 text-sm text-zinc-500">{message}</p> : null}

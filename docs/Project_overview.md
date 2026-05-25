@@ -1,6 +1,6 @@
 # PriceHawk S4 — CLAUDE.md
 
-**Cập nhật lần cuối:** 21/05/2026 — M14 OAuth Social Login (GitHub + Google) tích hợp vào NextAuth.
+**Cập nhật lần cuối:** 25/05/2026 — Refactor API Service Layer: tập trung toàn bộ API call vào `lib/apiClient.js`.
 
 ---
 
@@ -83,7 +83,11 @@ PriceHawk_S4/
 │   └── wishlist.js               # ✅ POST/GET/DELETE wishlist
 │
 ├── lib/                          # ⚠️ Utilities (MỘT SỐ FILE TRỐNG — cần kiểm tra)
-│   ├── apiClient.js              # ✅ Axios wrapper: getProducts, searchProducts
+│   ├── apiClient.js              # ✅ Centralized API Service Layer — SINGLE SOURCE OF TRUTH cho mọi HTTP call từ client
+│   │                             #    Products: getProducts, searchProducts, getProductDetail, getPriceHistory
+│   │                             #    Wishlist: getWishlist, addToWishlist, removeFromWishlist
+│   │                             #    Alerts:   getAlerts, checkTriggeredAlerts, createAlert, updateAlertStatus, deleteAlert
+│   │                             #    Auth:     registerUser
 │   ├── swagger.js                # ✅ Swagger spec generator
 │   ├── checkPriceAlerts.js       # ❌ TRỐNG — logic nằm trong pages/api/price-alert.js
 │   └── cronJobs.js               # ❌ TRỐNG — cron nằm trong Docker container
@@ -324,6 +328,20 @@ price_alert:
 
 ## Session Log — Những gì đã làm gần đây
 
+### Session 25/05/2026 — API Service Layer Refactor
+**Đã làm:**
+- `lib/apiClient.js`: Mở rộng từ 2 hàm thành **12 hàm** bao phủ toàn bộ API — chia nhóm Products / Wishlist / Alerts / Auth
+- `app/wishlist/page.js`: Thay 3 axios call hardcode → `getWishlist`, `addToWishlist`, `removeFromWishlist`
+- `app/alerts/page.js`: Thay 4 axios call hardcode + SWR URL key → `createAlert`, `updateAlertStatus`, `deleteAlert`, `getAlerts`, `checkTriggeredAlerts`; SWR key đổi thành string mô tả (`"alerts"`, `"alerts-triggers"`)
+- `app/product/[id]/page.jsx`: Thay 4 axios call hardcode → `getProductDetail`, `getWishlist`, `addToWishlist`, `removeFromWishlist`, `createAlert`, `getPriceHistory`
+- `app/register/page.js`: Thay `axios.post("/api/auth/register")` → `registerUser`
+- `components/TrendingDeals.jsx`: Thay `axios.get("/api/product")` → `getProducts`
+- `components/MinPriceBox.jsx`: Thay `axios.get("/api/compare")` → `getProductDetail`
+- `components/ui/ProductSearch.jsx`: Thay `axios.get("/api/pagination")` → `searchProducts`
+- `components/ui/AppSearchBar.jsx`: Thay `axios.get("/api/pagination")` → `searchProducts`
+**Kết quả:** Không còn URL `/api/*` hardcode trong bất kỳ component nào. Mọi thay đổi endpoint chỉ cần sửa 1 chỗ trong `apiClient.js`.
+**Anti-pattern mới cần tránh:** `❌ KHÔNG` gọi `axios.get("/api/...")` trực tiếp trong component — luôn dùng hàm từ `apiClient.js`.
+
 ### Session 21/05/2026 — M14 OAuth Social Login
 **Đã làm:**
 - `app/login/page.js`: thêm divider + nút "Tiếp tục với GitHub" và "Tiếp tục với Google" với SVG logo
@@ -373,7 +391,7 @@ price_alert:
 
 ## ⛔ Anti-patterns — KHÔNG làm những điều này
 
-- ❌ **KHÔNG** tạo MySQL connection mới trong API route → luôn import từ `database.js`
+- ❌ **KHÔNG** gọi `axios.get/post/put/delete("/api/...")` trực tiếp trong component → luôn import hàm từ `lib/apiClient.js`
 - ❌ **KHÔNG** dùng `localStorage` để lưu wishlist/alerts → dùng API `/api/wishlist`, `/api/price-alert`
 - ❌ **KHÔNG** hardcode tailwind class dài dòng trong JSX → dùng tokens từ `designSystem.js`
 - ❌ **KHÔNG** thay đổi `DOWNLOAD_DELAY` hoặc `CONCURRENT_REQUESTS` spider quá cao → dễ bị block IP
@@ -389,14 +407,35 @@ price_alert:
 
 ## 📌 Code snippets chuẩn phải dùng
 
-### Pattern gọi API product listing:
+### Pattern gọi API (Centralized Service Layer):
 ```js
+// ✅ ĐÚNG — luôn import hàm có tên từ apiClient, KHÔNG gọi axios trực tiếp
 import { getProducts, searchProducts } from "@/lib/apiClient";
+import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/apiClient";
+import { getAlerts, createAlert, deleteAlert } from "@/lib/apiClient";
+import { getProductDetail, getPriceHistory } from "@/lib/apiClient";
+
 // Dùng AbortController để cancel request khi unmount
 const controller = new AbortController();
 const res = isSearchMode
   ? await searchProducts(q, page, pageSize, controller.signal)
   : await getProducts(page, pageSize, controller.signal);
+
+// ❌ SAI — KHÔNG hardcode URL axios trong component
+// const res = await axios.get("/api/product", { params: { page, pageSize } });
+```
+
+### Pattern SWR với apiClient:
+```js
+import { getAlerts, checkTriggeredAlerts } from "@/lib/apiClient";
+import useSWR, { mutate } from "swr";
+
+// Fetcher dùng hàm có tên, key SWR là string mô tả (không phải URL)
+const alertsFetcher = () => getAlerts().then(res => res.data);
+const { data } = useSWR("alerts", alertsFetcher, { refreshInterval: 5000 });
+
+// Revalidate bằng key string, không phải URL
+mutate("alerts");
 ```
 
 ### Pattern query DB trong API route:

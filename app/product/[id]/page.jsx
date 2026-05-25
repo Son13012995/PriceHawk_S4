@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import axios from "axios";
+import {
+  getProductDetail,
+  getPriceHistory,
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist,
+  createAlert,
+} from "@/lib/apiClient";
 import { useRouter } from "next/navigation";
 import MinPriceBox from "@/components/MinPriceBox";
 import PriceHistoryChart from "@/components/PriceHistoryChart";
@@ -46,10 +53,10 @@ export default function ProductItem({ params }) {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
-  const addToWishlist = async () => {
+  const addToWishlistFn = async () => {
     if (!product?.id) return;
     try {
-      const response = await axios.post("/api/wishlist", { productId: product.id });
+      const response = await addToWishlist(product.id);
       if (response.status === 201 || response.status === 200) {
         setIsInWishlist(true);
         setWishlistMessage("✓ Đã thêm vào wishlist.");
@@ -61,10 +68,10 @@ export default function ProductItem({ params }) {
     }
   };
 
-  const removeFromWishlist = async () => {
+  const removeFromWishlistFn = async () => {
     if (!product?.id) return;
     try {
-      await axios.delete("/api/wishlist", { data: { productId: product.id } });
+      await removeFromWishlist(product.id);
       setIsInWishlist(false);
       setWishlistMessage("Đã xóa khỏi wishlist.");
       setTimeout(() => setWishlistMessage(""), 3000);
@@ -77,7 +84,7 @@ export default function ProductItem({ params }) {
 
   const handleWishlistClick = () => {
     if (isInWishlist) setShowRemoveConfirm(true);
-    else addToWishlist();
+    else addToWishlistFn();
   };
 
   const handlePriceAlertSubmit = async (e) => {
@@ -94,11 +101,11 @@ export default function ProductItem({ params }) {
       return;
     }
     try {
-      const response = await axios.post("/api/price-alert", {
-        productId: product.id,
-        targetPrice: target,
-        note: alertNote.trim() || null,
-      });
+      const response = await createAlert(
+        product.id,
+        target,
+        alertNote.trim() || null
+      );
       if (response.status === 201) {
         setWishlistMessage(`✓ Đã tạo alert: ${formatPrice(target)}`);
         setTimeout(() => setWishlistMessage(""), 3000);
@@ -115,10 +122,9 @@ export default function ProductItem({ params }) {
     async function fetchData() {
       setLoading(true);
       try {
-        // Fetch compare + wishlist (critical — nếu lỗi thì báo lỗi trang)
         const [compareRes, wlRes] = await Promise.all([
-          axios.get(`/api/compare?id=${params.id}`),
-          axios.get("/api/wishlist").catch(() => ({ data: { data: [] } })),
+          getProductDetail(params.id),
+          getWishlist().catch(() => ({ data: { data: [] } })),
         ]);
         setProduct(compareRes.data?.product[0]);
         setComparison(compareRes.data?.comparison);
@@ -130,13 +136,11 @@ export default function ProductItem({ params }) {
         return;
       }
 
-      // Fetch price history riêng — lỗi không ảnh hưởng phần còn lại
       try {
-        const historyRes = await axios.get(`/api/price-history?id=${params.id}`);
+        const historyRes = await getPriceHistory(params.id);
         setPriceHistory(historyRes.data);
       } catch (e) {
         console.warn("Price history unavailable:", e.message);
-        // Giữ priceHistory = null, component sẽ hiện empty state
       } finally {
         setLoading(false);
       }
@@ -417,7 +421,7 @@ export default function ProductItem({ params }) {
             <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-5">Bạn có chắc chắn muốn bỏ lưu sản phẩm này?</p>
             <div className="flex gap-3">
               <button onClick={() => setShowRemoveConfirm(false)} className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Không</button>
-              <button onClick={removeFromWishlist} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-colors">Xóa</button>
+              <button onClick={removeFromWishlistFn} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-colors">Xóa</button>
             </div>
           </div>
         </div>

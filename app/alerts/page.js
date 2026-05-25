@@ -1,14 +1,21 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import axios from "axios";
+import {
+  getAlerts,
+  checkTriggeredAlerts,
+  createAlert,
+  updateAlertStatus,
+  deleteAlert,
+} from "@/lib/apiClient";
 import { useRouter } from "next/navigation";
 import useSWR, { mutate } from "swr";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
 import { formatPrice, formatPriceInput, parsePriceInput } from "../utils/format";
 
-const fetcher = (url) => axios.get(url).then((res) => res.data);
+const alertsFetcher = () => getAlerts().then((res) => res.data);
+const triggersFetcher = () => checkTriggeredAlerts().then((res) => res.data);
 
 export default function AlertsPage() {
   const router = useRouter();
@@ -20,10 +27,10 @@ export default function AlertsPage() {
 
   // Auto-fetch alerts every 5 seconds
   const { data: alertsData, isLoading: alertsLoading } = useSWR(
-    "/api/price-alert?status=all",
-    fetcher,
+    "alerts",
+    alertsFetcher,
     {
-      refreshInterval: 5000, // Auto-refresh every 5 seconds
+      refreshInterval: 5000,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
       dedupingInterval: 2000,
@@ -32,10 +39,10 @@ export default function AlertsPage() {
 
   // Auto-fetch triggered alerts every 5 seconds
   const { data: triggeredData } = useSWR(
-    "/api/price-alert?action=check-triggers",
-    fetcher,
+    "alerts-triggers",
+    triggersFetcher,
     {
-      refreshInterval: 5000, // Auto-refresh every 5 seconds
+      refreshInterval: 5000,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
       dedupingInterval: 2000,
@@ -67,11 +74,11 @@ export default function AlertsPage() {
     }
 
     try {
-      const response = await axios.post("/api/price-alert", {
-        productId: selectedProduct.id,
-        targetPrice: target,
-        note: note.trim() || null,
-      });
+      const response = await createAlert(
+        selectedProduct.id,
+        target,
+        note.trim() || null
+      );
 
       if (response.status === 201) {
         setMessage("Đã tạo price alert mới.");
@@ -79,10 +86,8 @@ export default function AlertsPage() {
         setTargetPrice("");
         setNote("");
         setTimeout(() => setMessage(""), 3000);
-        
-        // Revalidate both endpoints
-        mutate("/api/price-alert?status=all");
-        mutate("/api/price-alert?action=check-triggers");
+        mutate("alerts");
+        mutate("alerts-triggers");
       }
     } catch (error) {
       setMessage(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
@@ -93,14 +98,9 @@ export default function AlertsPage() {
   const toggleAlert = async (id, currentStatus) => {
     const newStatus = currentStatus === "active" ? "inactive" : "active";
     try {
-      await axios.put("/api/price-alert", {
-        alertId: id,
-        status: newStatus,
-      });
-      
-      // Revalidate both endpoints
-      mutate("/api/price-alert?status=all");
-      mutate("/api/price-alert?action=check-triggers");
+      await updateAlertStatus(id, newStatus);
+      mutate("alerts");
+      mutate("alerts-triggers");
     } catch (error) {
       setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
       setTimeout(() => setMessage(""), 3000);
@@ -109,15 +109,11 @@ export default function AlertsPage() {
 
   const removeAlert = async (id) => {
     try {
-      await axios.delete("/api/price-alert", {
-        data: { alertId: id },
-      });
+      await deleteAlert(id);
       setMessage("Đã xóa alert.");
       setTimeout(() => setMessage(""), 3000);
-      
-      // Revalidate both endpoints
-      mutate("/api/price-alert?status=all");
-      mutate("/api/price-alert?action=check-triggers");
+      mutate("alerts");
+      mutate("alerts-triggers");
     } catch (error) {
       setMessage("Không thể xóa alert. Vui lòng thử lại.");
       setTimeout(() => setMessage(""), 3000);
@@ -130,9 +126,8 @@ export default function AlertsPage() {
 
   const handleCloseTriggeredModal = () => {
     setShowTriggeredModal(false);
-    // Revalidate to update status
-    mutate("/api/price-alert?status=all");
-    mutate("/api/price-alert?action=check-triggers");
+    mutate("alerts");
+    mutate("alerts-triggers");
   };
 
   return (
@@ -209,8 +204,8 @@ export default function AlertsPage() {
               <button
                 onClick={() => {
                   handleCloseTriggeredModal();
-                  mutate("/api/price-alert?status=all");
-                  mutate("/api/price-alert?action=check-triggers");
+                  mutate("alerts");
+                  mutate("alerts-triggers");
                 }}
                 className={cn(ui.primaryButton, "flex-1")}
               >
