@@ -255,10 +255,11 @@ export default async function handler(req, res) {
 
       // Validate target price is lower than current price
       if (targetPrice >= currentPrice) {
+        const formattedPrice = new Intl.NumberFormat('vi-VN').format(currentPrice);
         return res
           .status(400)
           .json({
-            error: `Target price must be lower than current price (£${currentPrice})`,
+            error: `Giá mục tiêu phải thấp hơn giá hiện tại (${formattedPrice} đ). Giá của sản phẩm hiện tại đã thấp hơn hoặc bằng giá trị bạn mong đợi, hãy xem và mua ngay!`,
           });
       }
 
