@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { getProducts, searchProducts } from "../lib/apiClient";
 import axios from "axios";
 import SearchCard from "./SearchCard";
+import AppSearchBar from "./ui/AppSearchBar";
 import { cn, ui } from "./ui/designSystem";
 import { Search, Package } from "lucide-react";
 
@@ -97,9 +98,12 @@ export default function ProductBrowser({ searchTerm = "" }) {
                 "Khám phá sản phẩm"
               )}
             </h1>
-            <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
+            <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base mb-6")}>
               Tìm kiếm và so sánh hàng ngàn sản phẩm từ các nhà bán lẻ uy tín. Tìm giá tốt nhất trong chớp mắt.
             </p>
+            <div className="w-full max-w-xl">
+              <AppSearchBar placeholder="Tìm kiếm sản phẩm bạn muốn so sánh giá..." initialValue={isSearchMode ? decodeURIComponent(searchTerm) : ""} />
+            </div>
           </div>
           
           {/* Statistics */}
