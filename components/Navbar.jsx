@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
 import useSWR from "swr";
-import { checkTriggeredAlerts } from "@/lib/apiClient";
+import { checkTriggeredAlerts, getWishlist } from "@/lib/apiClient";
 import AppSearchBar from "./ui/AppSearchBar";
 import PageTabs from "./ui/PageTabs";
 import { ThemeToggle } from "./ThemeToggle";
@@ -31,6 +31,12 @@ export default function Navbar() {
     });
     const triggeredCount =
         triggeredData?.details?.filter((item) => item.triggered)?.length ?? 0;
+
+    const { data: wishlistData } = useSWR(isAuth ? "wishlist-nav" : null, () => getWishlist().then(res => res.data), {
+        refreshInterval: 10000,
+        dedupingInterval: 5000,
+    });
+    const wishlistCount = wishlistData?.data?.length ?? 0;
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-zinc-200/50 dark:border-white/5 bg-white/70 dark:bg-[#0b0712]/70 backdrop-blur-xl transition-colors">
@@ -82,7 +88,7 @@ export default function Navbar() {
                     </div>
 
                     <div className="hidden lg:block">
-                        <PageTabs badgeCounts={{ "/alerts": triggeredCount }} />
+                        <PageTabs badgeCounts={{ "/alerts": triggeredCount, "/wishlist": wishlistCount }} />
                     </div>
 
                     {/* Search & Actions Section */}
@@ -135,7 +141,7 @@ export default function Navbar() {
 
                 </div>
                 <div className="lg:hidden pb-4 overflow-x-auto">
-                    <PageTabs className="flex-nowrap justify-start" badgeCounts={{ "/alerts": triggeredCount }} />
+                    <PageTabs className="flex-nowrap justify-start" badgeCounts={{ "/alerts": triggeredCount, "/wishlist": wishlistCount }} />
                 </div>
             </div>
         </nav>

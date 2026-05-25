@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn, pageTabs, ui } from "./designSystem";
-import { ShoppingBag, Bell, Heart } from "lucide-react";
+import { ShoppingBag, Bell, ShoppingBasket } from "lucide-react";
 
 const icons = {
   "/product": ShoppingBag,
   "/alerts": Bell,
-  "/wishlist": Heart,
+  "/wishlist": ShoppingBasket,
 };
 
 function isActive(pathname, href) {
@@ -48,8 +48,9 @@ export default function PageTabs({ className = "", badgeCounts = {} }) {
                 active ? "text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-violet-500"
               )} />
               {badgeCounts[tab.href] > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-rose-500 ring-1 ring-white dark:ring-[#0b0712]">
-                  <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-75" />
+                <span className="absolute -top-2 -right-2 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-extrabold text-white ring-2 ring-white dark:ring-[#0b0712] shadow-sm leading-none">
+                  {badgeCounts[tab.href] > 99 ? '99+' : badgeCounts[tab.href]}
+                  {tab.href === "/alerts" && <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-75 -z-10" />}
                 </span>
               )}
             </span>

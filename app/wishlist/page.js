@@ -1,41 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/apiClient";
 import SearchCard from "../../components/SearchCard";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
+import { ShoppingBasket, Package, Tags, Trash2 } from "lucide-react";
+import { formatPrice } from "@/app/utils/format";
 
 export default function WishlistPage() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
-  const fetchWishlist = async () => {
-    setLoading(true);
-    try {
-      const response = await getWishlist();
-      setProducts(response.data.data || []);
-    } catch (error) {
-      setMessage("Không thể tải wishlist. Vui lòng thử lại.");
-      console.error("Error fetching wishlist:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchWishlist();
-  }, []);
-
+  const { data, mutate, isLoading } = useSWR("wishlist-nav", () => getWishlist().then(res => res.data));
+  const products = data?.data || [];
+  
   const handleAddToWishlist = async (product) => {
     try {
       const response = await addToWishlist(product.id);
-
       if (response.status === 201 || response.status === 200) {
-        setMessage("Đã thêm sản phẩm vào wishlist.");
+        setMessage("✓ Đã thêm sản phẩm vào wishlist.");
         setTimeout(() => setMessage(""), 3000);
-        fetchWishlist();
+        mutate();
       }
     } catch (error) {
       if (error.response?.status === 409) {
@@ -52,44 +38,97 @@ export default function WishlistPage() {
       await removeFromWishlist(productId);
       setMessage("Đã xóa khỏi wishlist.");
       setTimeout(() => setMessage(""), 3000);
-      fetchWishlist();
+      mutate();
     } catch (error) {
       setMessage("Không thể xóa sản phẩm. Vui lòng thử lại.");
       setTimeout(() => setMessage(""), 3000);
     }
   };
 
+  // Calculate statistics
+  const totalProducts = products.length;
+  const totalPrice = products.reduce((sum, item) => sum + (item.current_price || 0), 0);
+
   return (
     <div className={cn(ui.pageWrap, "py-10")}> 
       <div className={cn(ui.container, "space-y-6")}> 
-        <header className={cn(ui.card, "p-6 md:p-8")}> 
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Saved Items</p>
-          <h1 className={cn(ui.heading, "mt-3 text-3xl font-black sm:text-4xl")}>Wishlist</h1>
-          <p className={cn(ui.mutedText, "mt-3")}>Danh sách sản phẩm bạn đã lưu.</p>
+        
+        {/* Header Section */}
+        <header className={cn(ui.card, "p-8 md:p-10 relative overflow-hidden")}>
+          {/* Decorative Background */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                  <ShoppingBasket className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">
+                  Bộ sưu tập
+                </p>
+              </div>
+              <h1 className={cn(ui.heading, "text-3xl font-black sm:text-5xl tracking-tight")}>
+                Wishlist
+              </h1>
+              <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
+                Danh sách những sản phẩm bạn đang theo dõi. Cập nhật và lưu lại để mua sắm thông minh hơn.
+              </p>
+            </div>
+            
+            {/* Statistics */}
+            <div className="flex gap-4">
+              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[120px]">
+                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
+                  <Package className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Số lượng</span>
+                </div>
+                <p className="text-2xl font-black text-zinc-900 dark:text-white">
+                  {isLoading ? "-" : totalProducts}
+                </p>
+              </div>
+              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[140px]">
+                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
+                  <Tags className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Tổng giá trị</span>
+                </div>
+                <p className="text-xl font-black text-violet-600 dark:text-violet-400 mt-1 truncate">
+                  {isLoading ? "-" : formatPrice(totalPrice)}
+                </p>
+              </div>
+            </div>
+          </div>
         </header>
 
-        <section className={cn(ui.card, "p-6 md:p-8")}> 
-          <div className="max-w-md">
+        {/* Add Product Section */}
+        <section className={cn(ui.card, "p-6 md:p-8 flex flex-col md:flex-row gap-6 items-start md:items-center")}>
+          <div className="flex-1 w-full max-w-md">
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-3">Thêm sản phẩm mới</h3>
             <ProductSearch
               onSelectProduct={handleAddToWishlist}
-              placeholder="Tìm kiếm sản phẩm để thêm..."
+              placeholder="Tìm kiếm theo tên sản phẩm..."
             />
-            {message ? <p className="mt-2 text-sm text-zinc-500">{message}</p> : null}
+            {message && <p className="mt-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">{message}</p>}
           </div>
+          <div className="hidden md:block w-px h-16 bg-zinc-200 dark:bg-zinc-800 mx-4"></div>
+          <p className="flex-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Bạn có thể tìm kiếm sản phẩm đang có trên hệ thống để thêm nhanh vào danh sách theo dõi.
+          </p>
         </section>
 
+        {/* Product Grid */}
         <section className={cn(ui.card, "p-6 md:p-8")}> 
-          {loading ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {Array.from({ length: 4 }).map((_, index) => (
-                <div key={index} className="h-72 animate-pulse rounded-2xl border border-zinc-200 bg-zinc-100" />
+                <div key={index} className="h-[340px] animate-pulse rounded-3xl border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900" />
               ))}
             </div>
           ) : products.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {products.map((item) => (
-                <div key={item.product_id} className="flex flex-col gap-3 h-full">
-                  <div className="flex-1">
+                <div key={item.product_id} className="flex flex-col h-full bg-white dark:bg-zinc-900/40 rounded-3xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-violet-300 dark:hover:border-violet-700/50 transition-all shadow-sm hover:shadow-xl group">
+                  <div className="flex-1 p-1">
                     <SearchCard
                       id={item.product_id}
                       name={item.name}
@@ -98,25 +137,30 @@ export default function WishlistPage() {
                       currentPrice={item.current_price}
                     />
                   </div>
-                  <button
-                    onClick={() => removeItem(item.product_id)}
-                    className={cn(
-                      "w-full flex items-center justify-center gap-2 rounded-xl border border-rose-200 bg-white dark:bg-rose-950/20 px-3 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/40 transition-colors",
-                      ui.ring
-                    )}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
-                    Xóa
-                  </button>
+                  <div className="p-3 border-t border-zinc-100 dark:border-zinc-800/60 bg-zinc-50 dark:bg-[#0b0712]/50">
+                    <button
+                      onClick={() => removeItem(item.product_id)}
+                      className={cn(
+                        "w-full flex items-center justify-center gap-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-4 py-2.5 text-sm font-semibold text-rose-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:hover:bg-rose-950/30 dark:hover:border-rose-900/50 transition-all",
+                        ui.ring
+                      )}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Bỏ lưu
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50 p-10 text-center">
-              <p className="text-lg font-semibold text-zinc-700">Wishlist đang trống</p>
-              <p className="mt-2 text-sm text-zinc-500">Thêm sản phẩm từ Product ID hoặc từ trang chi tiết sản phẩm.</p>
+            <div className="rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/20 py-16 text-center flex flex-col items-center">
+              <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+                <ShoppingBasket className="w-8 h-8 text-zinc-400 dark:text-zinc-500" />
+              </div>
+              <p className="text-xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">Wishlist đang trống</p>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
+                Hãy tìm kiếm và thêm các sản phẩm bạn quan tâm vào đây để dễ dàng theo dõi biến động giá nhé.
+              </p>
             </div>
           )}
         </section>

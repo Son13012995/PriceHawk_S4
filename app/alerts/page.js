@@ -13,6 +13,7 @@ import useSWR, { mutate } from "swr";
 import ProductSearch from "../../components/ui/ProductSearch";
 import { cn, ui } from "../../components/ui/designSystem";
 import { formatPrice, formatPriceInput, parsePriceInput } from "../utils/format";
+import { Bell, Activity, Flame } from "lucide-react";
 
 const alertsFetcher = () => getAlerts().then((res) => res.data);
 const triggersFetcher = () => checkTriggeredAlerts().then((res) => res.data);
@@ -253,19 +254,53 @@ export default function AlertsPage() {
       )}
 
       <div className={cn(ui.container, "space-y-6")}>
-        <header className={cn(ui.card, "p-6 md:p-8")}>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600">Alert Center</p>
-          <h1 className={cn(ui.heading, "mt-3 text-3xl font-black sm:text-4xl")}>Set Price Alert</h1>
-          <p className={cn(ui.mutedText, "mt-3")}>Tạo cảnh báo khi giá sản phẩm giảm về mức bạn mong muốn.</p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-              {alerts.filter((item) => item.status === "active").length} alert đang bật
-            </span>
-            {triggeredAlerts.length > 0 && (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 animate-pulse">
-                🔔 {triggeredAlerts.length} có thay đổi giá
-              </span>
-            )}
+        {/* Header Section */}
+        <header className={cn(ui.card, "p-8 md:p-10 relative overflow-hidden")}>
+          {/* Decorative Background */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                  <Bell className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">
+                  Alert Center
+                </p>
+              </div>
+              <h1 className={cn(ui.heading, "text-3xl font-black sm:text-5xl tracking-tight")}>
+                Price Alerts
+              </h1>
+              <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
+                Tạo cảnh báo tự động khi giá sản phẩm giảm về mức bạn mong muốn. Không bao giờ bỏ lỡ deal tốt.
+              </p>
+            </div>
+            
+            {/* Statistics */}
+            <div className="flex gap-4">
+              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[120px]">
+                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
+                  <Activity className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Đang bật</span>
+                </div>
+                <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                  {loading ? "-" : activeCount}
+                </p>
+              </div>
+              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[140px] relative overflow-hidden group">
+                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
+                  <Flame className="w-4 h-4 group-hover:text-amber-500 transition-colors" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Đạt mục tiêu</span>
+                </div>
+                <p className={cn("text-2xl font-black", triggeredAlerts.length > 0 ? "text-amber-500" : "text-zinc-900 dark:text-white")}>
+                  {loading ? "-" : triggeredAlerts.length}
+                </p>
+                {triggeredAlerts.length > 0 && (
+                  <span className="absolute -bottom-4 -right-4 text-6xl opacity-10">🔥</span>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 

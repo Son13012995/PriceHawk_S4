@@ -14,6 +14,8 @@ import { useRouter } from "next/navigation";
 import MinPriceBox from "@/components/MinPriceBox";
 import PriceHistoryChart from "@/components/PriceHistoryChart";
 import { formatPrice, formatPriceInput, formatPriceUpdateTime, parsePriceInput } from "@/app/utils/format";
+import { ShoppingBasket } from "lucide-react";
+import { mutate } from "swr";
 
 const DetailSkeleton = () => (
   <div className="animate-pulse w-full max-w-6xl mx-auto space-y-8">
@@ -61,6 +63,7 @@ export default function ProductItem({ params }) {
         setIsInWishlist(true);
         setWishlistMessage("✓ Đã thêm vào wishlist.");
         setTimeout(() => setWishlistMessage(""), 3000);
+        mutate("wishlist-nav");
       }
     } catch {
       setWishlistMessage("Lỗi khi thêm vào wishlist.");
@@ -76,6 +79,7 @@ export default function ProductItem({ params }) {
       setWishlistMessage("Đã xóa khỏi wishlist.");
       setTimeout(() => setWishlistMessage(""), 3000);
       setShowRemoveConfirm(false);
+      mutate("wishlist-nav");
     } catch {
       setWishlistMessage("Lỗi khi xóa khỏi wishlist.");
       setTimeout(() => setWishlistMessage(""), 3000);
@@ -256,9 +260,7 @@ export default function ProductItem({ params }) {
                         : "bg-violet-600 text-white border-transparent hover:bg-violet-700 shadow-lg shadow-violet-900/30"
                     }`}
                   >
-                    <svg className={`w-4 h-4 shrink-0 ${isInWishlist ? "text-rose-400" : "text-red-300"}`} fill={isInWishlist ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={isInWishlist ? 0 : 2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    </svg>
+                    <ShoppingBasket className={`w-4 h-4 shrink-0 ${isInWishlist ? "text-rose-400" : "text-red-300"}`} fill={isInWishlist ? "currentColor" : "none"} strokeWidth={isInWishlist ? 1 : 2} />
                     <span className="whitespace-nowrap">{isInWishlist ? "Đã lưu" : "Wishlist"}</span>
                   </button>
                 </div>

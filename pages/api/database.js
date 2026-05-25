@@ -3,14 +3,18 @@ require('dotenv').config();
 const mysql = require("mysql2");
 
 // Creating a MySQL connection pool
-const pool = mysql.createPool({
+const pool = global._mysqlPool || mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   port: parseInt(process.env.DB_PORT || '3306', 10),
   database: process.env.DB_NAME || 'pricecomparison',
-  connectionLimit: 10,
+  connectionLimit: 50,
 });
+
+if (process.env.NODE_ENV !== "production") {
+  global._mysqlPool = pool;
+}
 
 /**
  * Execute a parameterized SQL query using a connection from the pool.
