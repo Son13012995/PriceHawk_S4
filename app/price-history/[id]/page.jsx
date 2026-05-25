@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { getProductDetail } from "@/lib/apiClient";
 
 function formatPrice(price) {
   return new Intl.NumberFormat("vi-VN").format(price);
@@ -28,9 +28,7 @@ export default function MinPriceBox({ productId }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const res = await axios.get(`/api/compare`, {
-          params: { id: productId },
-        });
+        const res = await getProductDetail(productId);
 
         setComparison(res.data?.comparison || []);
       } catch (e) {

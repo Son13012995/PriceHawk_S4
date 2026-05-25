@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import { searchProducts } from "@/lib/apiClient";
 import { formatPrice } from "@/app/utils/format";
 import { cn, ui } from "./designSystem";
 import { Search, Command } from "lucide-react";
@@ -39,18 +39,16 @@ export default function AppSearchBar({
     }
 
     const timer = setTimeout(() => {
-      searchProducts();
+      searchProductsFn();
     }, 300);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const searchProducts = async () => {
+  const searchProductsFn = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/pagination`, {
-        params: { q: searchTerm, pageSize: 5, page: 1 },
-      });
+      const response = await searchProducts(searchTerm, 1, 5);
       setResults(response.data.data || []);
       setIsOpen(true);
     } catch (error) {

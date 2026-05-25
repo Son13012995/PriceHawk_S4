@@ -102,46 +102,50 @@ export default function Home() {
             <section className="py-12 px-4">
                 <div className="container mx-auto max-w-6xl text-center">
                     <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest mb-8">
-                        ĐỐI TÁC TIN CẬY TỪ HƠN 50+ NHÀ BÁN LẺ
+                        ĐỐI TÁC TIN CẬY
                     </p>
-                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-                        {/* Only Crawled Partners */}
-                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
-                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">F</div>
-                            FPT Shop
-                        </span>
-                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
-                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">TG</div>
-                            Thế Giới Di Động
-                        </span>
-                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
-                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">CP</div>
-                            CellphoneS
-                        </span>
-                        <span className="flex items-center gap-2 font-bold text-zinc-700 dark:text-zinc-300 text-lg">
-                            <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center text-xs border border-zinc-300 dark:border-zinc-700">HH</div>
-                            Hoàng Hà
-                        </span>
+                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+                        {/* CSS Styled Logos */}
+                        <div className="text-2xl font-black tracking-tighter cursor-default">
+                            <span className="text-red-600 italic">FPT</span>
+                            <span className="text-black dark:text-white italic">Shop</span>
+                        </div>
+                        
+                        <div className="bg-[#ffd400] text-black px-3 py-1.5 font-bold text-xl rounded-lg flex items-center leading-none cursor-default shadow-sm">
+                            thegioididong<span className="font-medium text-sm ml-0.5 mt-1">.com</span>
+                        </div>
+                        
+                        <div className="text-2xl font-black tracking-tight cursor-default">
+                            <span className="text-[#e00000]">Cellphone</span>
+                            <span className="text-black dark:text-white">S</span>
+                        </div>
+                        
+                        <div className="text-[#00995c] font-black uppercase text-xl tracking-tight cursor-default">
+                            Hoàng Hà Mobile
+                        </div>
                     </div>
                 </div>
             </section>
 
             {/* CTA Section */}
-            <section className="py-20 px-4">
+            <section className="py-12 px-4">
                 <div className="container mx-auto max-w-5xl">
-                    <div className="bg-violet-600 rounded-[2.5rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-violet-500/20">
+                    <div className="bg-violet-600 rounded-3xl p-8 md:px-12 md:py-10 flex flex-col md:flex-row items-center justify-between relative overflow-hidden shadow-xl shadow-violet-500/10">
                         {/* Decorative background elements */}
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
-                        <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3"></div>
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/3"></div>
+                        <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/3"></div>
                         
-                        <div className="relative z-10">
-                            <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
-                                Sẵn sàng để mua sắm thông minh hơn?
+                        <div className="relative z-10 text-center md:text-left md:mr-8 mb-6 md:mb-0">
+                            <h2 className="text-2xl md:text-3xl font-extrabold text-white mb-2 tracking-tight">
+                                Mua sắm thông minh cùng PriceHawk
                             </h2>
-                            <p className="text-violet-100 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed font-medium">
-                                Tham gia cùng hơn 100,000 người dùng PriceHawk để tiết kiệm hàng triệu đồng mỗi tháng. Miễn phí hoàn toàn cho người dùng cá nhân.
+                            <p className="text-violet-100 text-sm md:text-base font-medium">
+                                Theo dõi lịch sử giá, so sánh đa nền tảng và chốt đơn lúc giá tốt nhất.
                             </p>
-                            <Link href="/product" className="inline-flex justify-center items-center px-10 py-4 text-lg font-bold text-violet-700 bg-white hover:bg-zinc-50 rounded-xl shadow-xl transition-transform hover:-translate-y-1">
+                        </div>
+                        
+                        <div className="relative z-10 shrink-0">
+                            <Link href="/product" className="inline-flex justify-center items-center px-6 py-3 text-sm font-bold text-violet-700 bg-white hover:bg-violet-50 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5">
                                 Bắt đầu ngay
                             </Link>
                         </div>

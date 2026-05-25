@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import { registerUser } from "@/lib/apiClient";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -19,7 +19,7 @@ export default function RegisterPage() {
     console.log(`[REGISTER] Submitting: ${email}`);
 
     try {
-      const res = await axios.post("/api/auth/register", { email, password });
+      const res = await registerUser(email, password);
       console.log("[REGISTER] Response:", res.data);
       router.push("/login");
     } catch (err) {

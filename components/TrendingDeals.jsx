@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { getProducts } from "@/lib/apiClient";
 import SearchCard from "./SearchCard";
 
 export default function TrendingDeals() {
@@ -12,9 +12,7 @@ export default function TrendingDeals() {
         async function fetchTrending() {
             try {
                 // Fetch latest 4 products
-                const response = await axios.get("/api/product", {
-                    params: { page: 1, pageSize: 4 }
-                });
+                const response = await getProducts(1, 4);
                 if (response.data && response.data.data) {
                     setProducts(response.data.data);
                 }

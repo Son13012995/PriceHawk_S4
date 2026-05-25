@@ -2,8 +2,10 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { getProducts, searchProducts } from "../lib/apiClient";
-import axios from "axios"; // Keeping this for error checking IsCancel, but replacing requests
+import axios from "axios";
 import SearchCard from "./SearchCard";
+import { cn, ui } from "./ui/designSystem";
+import { Search, Package } from "lucide-react";
 
 const SkeletonLoader = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
@@ -69,11 +71,23 @@ export default function ProductBrowser({ searchTerm = "" }) {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / pageSize)), [totalItems]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#09090b] pb-16 text-zinc-800 dark:text-zinc-200">
-      <header className="sticky top-0 z-20 bg-white/70 dark:bg-[#09090b]/70 backdrop-blur-xl border-b border-zinc-200/50 dark:border-zinc-800/50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6 md:py-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className={cn(ui.pageWrap, "py-10")}>
+      <div className={cn(ui.container, "space-y-6")}>
+      <header className={cn(ui.card, "p-8 md:p-10 relative overflow-hidden")}>
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-zinc-900 dark:text-white">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                <Search className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              </div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">
+                Sản phẩm
+              </p>
+            </div>
+            <h1 className={cn(ui.heading, "text-3xl font-black sm:text-5xl tracking-tight")}>
               {isSearchMode ? (
                 <>
                   Kết quả cho
@@ -83,20 +97,21 @@ export default function ProductBrowser({ searchTerm = "" }) {
                 "Khám phá sản phẩm"
               )}
             </h1>
-            {!loading && !error ? (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 font-medium">
-                Hiển thị <span className="text-zinc-900 dark:text-zinc-200">{items.length}</span> trên tổng số{" "}
-                <span className="text-zinc-900 dark:text-zinc-200">{totalItems}</span> kết quả
-              </p>
-            ) : null}
+            <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
+              Tìm kiếm và so sánh hàng ngàn sản phẩm từ các nhà bán lẻ uy tín. Tìm giá tốt nhất trong chớp mắt.
+            </p>
           </div>
           
-          {/* Optional: Add a subtle decoration or action area here if needed later */}
-          <div className="hidden sm:block">
-            <div className="h-10 w-10 rounded-full bg-violet-100 dark:bg-violet-900/20 flex items-center justify-center">
-                <svg className="w-5 h-5 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
+          {/* Statistics */}
+          <div className="flex gap-4">
+            <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[120px]">
+              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
+                <Package className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">Tổng cộng</span>
+              </div>
+              <p className="text-2xl font-black text-zinc-900 dark:text-white">
+                {loading ? "-" : totalItems}
+              </p>
             </div>
           </div>
         </div>
@@ -164,6 +179,7 @@ export default function ProductBrowser({ searchTerm = "" }) {
           </div>
         ) : null}
       </main>
+      </div>
     </div>
   );
 }

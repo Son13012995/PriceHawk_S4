@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { searchProducts } from "@/lib/apiClient";
 import { formatPrice } from "@/app/utils/format";
 import { cn, ui } from "./designSystem";
 
@@ -19,18 +19,16 @@ export default function ProductSearch({ onSelectProduct, placeholder = "TÃ¬m kiá
     }
 
     const timer = setTimeout(() => {
-      searchProducts();
+      searchProductsFn();
     }, 300);
 
     return () => clearTimeout(timer);
   }, [query]);
 
-  const searchProducts = async () => {
+  const searchProductsFn = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`/api/pagination`, {
-        params: { q: query, pageSize: 5, page: 1 },
-      });
+      const response = await searchProducts(query, 1, 5);
       setResults(response.data.data || []);
       setIsOpen(true);
     } catch (error) {
