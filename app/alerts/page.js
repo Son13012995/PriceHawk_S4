@@ -49,16 +49,35 @@ export default function AlertsPage() {
     }
   );
 
-  const alerts = alertsData?.data || [];
+  const STATUS_ORDER = { triggered: 0, active: 1, inactive: 2 };
+  const alerts = useMemo(() => {
+    const raw = alertsData?.data || [];
+    return [...raw].sort(
+      (a, b) => (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9)
+    );
+  }, [alertsData]);
   const triggeredAlerts = triggeredData?.details?.filter((item) => item.triggered) || [];
   const loading = alertsLoading;
 
-  // Auto-show modal when alerts are triggered
+  // ─── Modal: chỉ hiện 1 lần cho mỗi tập alert triggered mới ───────────────
+  // Dùng sessionStorage để nhớ các alertId đã bị dismiss trong session này
+  const getDismissedIds = () => {
+    try {
+      return new Set(JSON.parse(sessionStorage.getItem("dismissedTriggeredAlerts") || "[]"));
+    } catch {
+      return new Set();
+    }
+  };
+
+  // Auto-show modal chỉ khi có alert triggered MỚI (chưa từng dismiss)
   useEffect(() => {
-    if (triggeredAlerts.length > 0) {
+    if (triggeredAlerts.length === 0) return;
+    const dismissed = getDismissedIds();
+    const hasNew = triggeredAlerts.some((a) => !dismissed.has(a.alertId));
+    if (hasNew) {
       setShowTriggeredModal(true);
     }
-  }, [triggeredAlerts]);
+  }, [triggeredAlerts.map((a) => a.alertId).join(",")]);
 
   const activeCount = useMemo(() => {
     return alerts.filter((item) => item.status === "active").length;
@@ -125,6 +144,12 @@ export default function AlertsPage() {
   };
 
   const handleCloseTriggeredModal = () => {
+    // Ghi nhớ các alertId đã dismiss để không pop lại
+    const currentIds = triggeredAlerts.map((a) => a.alertId);
+    const dismissed = getDismissedIds();
+    currentIds.forEach((id) => dismissed.add(id));
+    sessionStorage.setItem("dismissedTriggeredAlerts", JSON.stringify([...dismissed]));
+
     setShowTriggeredModal(false);
     mutate("alerts");
     mutate("alerts-triggers");
