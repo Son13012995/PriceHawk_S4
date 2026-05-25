@@ -13,10 +13,10 @@ const pool = mysql.createPool({
 });
 
 /**
- * Function to execute SQL queries using a connection from the pool.
- * @param {string} sql - The SQL query to be executed.
- * @param {Array} params - An array of parameters to be used in the SQL query.
- * @returns {Promise} - A promise that resolves with the query results or rejects with an error.
+ * Execute a parameterized SQL query using a connection from the pool.
+ * @param {string} sql - SQL string with ? placeholders
+ * @param {any[]} params - Bound parameters corresponding to each ?
+ * @returns {Promise<any[]>} Resolves with rows array (SELECT) or ResultSetHeader (INSERT/UPDATE/DELETE)
  */
 function query(sql, params) {
   return new Promise((resolve, reject) => {
@@ -33,6 +33,8 @@ function query(sql, params) {
           return reject(queryErr);
         }
 
+        // Resolve thẳng results — KHÔNG wrap tuple [results, fields]
+        // Xem JSDoc trên hàm query() để biết anti-pattern cần tránh
         resolve(results);
       });
     });
