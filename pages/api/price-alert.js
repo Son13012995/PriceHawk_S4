@@ -3,7 +3,71 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 /**
- * Check all active price alerts and trigger them if current_price <= target_price
+ * READ-ONLY check — so sánh current_price vs target_price mà KHÔNG UPDATE DB.
+ * Dùng cho Navbar polling: trả về đúng trạng thái thực tế bất kể status trong DB.
+ * Bao gồm cả alerts đã 'triggered' để badge không biến mất sau lần poll đầu.
+ */
+async function checkTriggeredAlertsReadOnly() {
+  const timestamp = new Date().toISOString();
+  try {
+    // Lấy tất cả alerts (active + triggered) để so sánh giá thực tế
+    const alerts = await db.query(
+      `SELECT 
+        pa.\`id\`,
+        pa.\`product_id\`,
+        pa.\`target_price\`,
+        pa.\`status\`,
+        p.\`current_price\` as latest_price,
+        p.\`name\`,
+        p.\`brand\`
+      FROM \`price_alert\` pa
+      JOIN \`product\` p ON pa.\`product_id\` = p.\`id\`
+      WHERE pa.\`status\` IN ('active', 'triggered')`
+    );
+
+    if (!alerts || alerts.length === 0) {
+      return { success: true, checked: 0, triggered: 0, triggeredIds: [], details: [], timestamp };
+    }
+
+    const checkDetails = [];
+    const triggeredIds = [];
+
+    for (const alert of alerts) {
+      const { id, product_id, target_price, latest_price, name, brand, status } = alert;
+      // Triggered nếu: giá hiện tại <= giá mục tiêu (real-time, không phụ thuộc DB status)
+      const isTriggered = latest_price <= target_price;
+
+      if (isTriggered) triggeredIds.push(id);
+
+      checkDetails.push({
+        alertId: id,
+        productId: product_id,
+        productName: name,
+        brand,
+        targetPrice: target_price,
+        currentPrice: latest_price,
+        dbStatus: status,
+        triggered: isTriggered,
+      });
+    }
+
+    return {
+      success: true,
+      checked: alerts.length,
+      triggered: triggeredIds.length,
+      triggeredIds,
+      details: checkDetails,
+      timestamp,
+    };
+  } catch (error) {
+    console.error(`[checkTriggeredAlertsReadOnly] Error:`, error);
+    return { success: false, error: error.message, triggered: 0, checked: 0, details: [] };
+  }
+}
+
+/**
+ * Check all ACTIVE price alerts and UPDATE status to 'triggered' in DB if met.
+ * Dùng cho nút bấm tay / cron job.
  */
 async function checkAndTriggerPriceAlerts() {
   const timestamp = new Date().toISOString();
@@ -107,27 +171,64 @@ async function checkAndTriggerPriceAlerts() {
   }
 }
 
+/**
+ * @swagger
+ * /api/price-alert:
+ *   post:
+ *     summary: Create a new price alert
+ *     description: Creates a price alert for a product
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               productId:
+ *                 type: integer
+ *               targetPrice:
+ *                 type: integer
+ *               note:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created successfully
+ *   get:
+ *     summary: Get user price alerts
+ *     description: Fetch all price alerts for the current user
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 export default async function handler(req, res) {
   // Handle cron check trigger
   const { action } = req.query;
   
   if (action === "check-triggers" && req.method === "GET") {
     try {
+      // READ-ONLY: dùng cho Navbar polling, không UPDATE DB
+      const result = await checkTriggeredAlertsReadOnly();
+      return res.status(200).json(result);
+    } catch (error) {
+      console.error("API Error:", error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  }
+
+  if (action === "run-triggers" && req.method === "GET") {
+    try {
       console.log("📡 Manual trigger of price alert check via API");
       const result = await checkAndTriggerPriceAlerts();
       return res.status(200).json(result);
     } catch (error) {
       console.error("API Error:", error);
-      return res.status(500).json({
-        success: false,
-        error: error.message
-      });
+      return res.status(500).json({ success: false, error: error.message });
     }
   }
 
   const session = await getServerSession(req, res, authOptions);
   const userId = session?.user?.id ? Number(session.user.id) : null;
-  if (action !== "check-triggers") {
+  if (action !== "check-triggers" && action !== "run-triggers") {
     console.log(`[PRICE_ALERT] ${req.method} — userId=${userId}`);
   }
 
@@ -154,10 +255,11 @@ export default async function handler(req, res) {
 
       // Validate target price is lower than current price
       if (targetPrice >= currentPrice) {
+        const formattedPrice = new Intl.NumberFormat('vi-VN').format(currentPrice);
         return res
           .status(400)
           .json({
-            error: `Target price must be lower than current price (£${currentPrice})`,
+            error: `Giá mục tiêu phải thấp hơn giá hiện tại (${formattedPrice} đ). Giá của sản phẩm hiện tại đã thấp hơn hoặc bằng giá trị bạn mong đợi, hãy xem và mua ngay!`,
           });
       }
 

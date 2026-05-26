@@ -1,5 +1,28 @@
 import db from "./database";
 
+/**
+ * @swagger
+ * /api/product:
+ *   get:
+ *     summary: Get products or a single product
+ *     description: Fetch a list of products or a single product by ID
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "Method Not Allowed" });

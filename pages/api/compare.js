@@ -1,5 +1,21 @@
 import db from "./database";
 
+/**
+ * @swagger
+ * /api/compare:
+ *   get:
+ *     summary: Get price comparisons for a product
+ *     description: Returns the product details and all competitor prices
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Success
+ */
 export default async function handler(req, res) {
     if (req.method !== "GET") return res.status(405).json({ error: "Method Not Allowed" });
 

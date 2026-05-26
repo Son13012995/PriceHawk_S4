@@ -2,8 +2,11 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { getProducts, searchProducts } from "../lib/apiClient";
-import axios from "axios"; // Keeping this for error checking IsCancel, but replacing requests
+import axios from "axios";
 import SearchCard from "./SearchCard";
+import AppSearchBar from "./ui/AppSearchBar";
+import { cn, ui } from "./ui/designSystem";
+import { Search, Package } from "lucide-react";
 
 const SkeletonLoader = () => (
   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse">
@@ -69,26 +72,52 @@ export default function ProductBrowser({ searchTerm = "" }) {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / pageSize)), [totalItems]);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-16 text-zinc-800 dark:text-zinc-200">
-      <header className="bg-white dark:bg-zinc-900/50 border-b border-zinc-100 dark:border-zinc-800 shadow-sm sticky top-0 z-20">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            {isSearchMode ? (
-              <>
-                Kết quả cho
-                <span className="font-bold text-violet-700 dark:text-violet-400"> "{decodeURIComponent(searchTerm)}"</span>
-              </>
-            ) : (
-              "Khám phá sản phẩm"
-            )}
-          </h1>
-
-          {!loading && !error ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-              Hiển thị <span className="font-semibold text-zinc-700 dark:text-zinc-300">{items.length}</span> trên tổng số{" "}
-              <span className="font-semibold text-zinc-700 dark:text-zinc-300">{totalItems}</span> kết quả
+    <div className={cn(ui.pageWrap, "py-10")}>
+      <div className={cn(ui.container, "space-y-6")}>
+      <header className={cn(ui.card, "p-8 md:p-10 relative overflow-hidden")}>
+        {/* Decorative Background */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                <Search className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+              </div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">
+                Sản phẩm
+              </p>
+            </div>
+            <h1 className={cn(ui.heading, "text-3xl font-black sm:text-5xl tracking-tight")}>
+              {isSearchMode ? (
+                <>
+                  Kết quả cho
+                  <span className="text-violet-600 dark:text-violet-500"> "{decodeURIComponent(searchTerm)}"</span>
+                </>
+              ) : (
+                "Khám phá sản phẩm"
+              )}
+            </h1>
+            <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base mb-6")}>
+              Tìm kiếm và so sánh hàng ngàn sản phẩm từ các nhà bán lẻ uy tín. Tìm giá tốt nhất trong chớp mắt.
             </p>
-          ) : null}
+            <div className="w-full max-w-xl">
+              <AppSearchBar placeholder="Tìm kiếm sản phẩm bạn muốn so sánh giá..." initialValue={isSearchMode ? decodeURIComponent(searchTerm) : ""} />
+            </div>
+          </div>
+          
+          {/* Statistics */}
+          <div className="flex gap-4">
+            <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[120px]">
+              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
+                <Package className="w-4 h-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">Tổng cộng</span>
+              </div>
+              <p className="text-2xl font-black text-zinc-900 dark:text-white">
+                {loading ? "-" : totalItems}
+              </p>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -110,6 +139,7 @@ export default function ProductBrowser({ searchTerm = "" }) {
                 name={item?.name}
                 brand={item?.brand}
                 imageUrl={item?.image_url}
+                currentPrice={item?.current_price || item?.min_price}
               />
             ))}
           </div>
@@ -153,6 +183,7 @@ export default function ProductBrowser({ searchTerm = "" }) {
           </div>
         ) : null}
       </main>
+      </div>
     </div>
   );
 }
