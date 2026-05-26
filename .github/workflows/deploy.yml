@@ -22,4 +22,7 @@ jobs:
             git fetch origin
             git reset --hard origin/main
 
+            # Tạo file .env.product từ GitHub Secret
+            echo "${{ secrets.ENV_PRODUCT }}" > .env.product
+
             docker compose up -d --build --remove-orphans
