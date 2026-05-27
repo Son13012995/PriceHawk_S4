@@ -1,41 +1,32 @@
-FROM python:3.12-slim
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    cron \
-    git \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set working directory
+# ── Stage 1: Build deps ───────────────────────────────────────────────
+FROM python:3.12-slim AS builder
 WORKDIR /app/price-hawk
 
-# Copy requirements đúng path
 COPY price-hawk/requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install \
+    scrapy pymysql python-dotenv && \
+    if [ -f requirements.txt ]; then pip install --no-cache-dir --prefix=/install -r requirements.txt; fi
 
-# Install Python dependencies
-RUN pip install --no-cache-dir scrapy pymysql python-dotenv && \
-    if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
+# ── Stage 2: Production ──────────────────────────────────────────────
+FROM python:3.12-slim AS runner
 
-# Copy project đúng thư mục
+RUN apt-get update && apt-get install -y cron git --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /install /usr/local
+
+WORKDIR /app/price-hawk
+
 COPY price-hawk/ .
 
-COPY price-hawk/run_crawler.sh /app/price-hawk/run_crawler.sh
+RUN mkdir -p logs data && \
+    chmod +x /app/price-hawk/run_crawler.sh
 
-# Create logs directory
-RUN mkdir -p logs data
-
-# Make run script executable
-RUN chmod +x /app/price-hawk/run_crawler.sh
-
-# Setup cron
 RUN echo "*/30 * * * * cd /app/price-hawk && ./run_crawler.sh >> /app/price-hawk/logs/cron.log 2>&1" > /etc/cron.d/crawler-cron && \
     chmod 0644 /etc/cron.d/crawler-cron && \
     crontab /etc/cron.d/crawler-cron
 
-# Health check
 HEALTHCHECK --interval=5m --timeout=30s --start-period=10s --retries=3 \
     CMD ["sh", "-c", "test -f /app/price-hawk/logs/cron.log || test -n \"$(ls -A /app/price-hawk/logs/crawler_*.log 2>/dev/null)\""]
 
-# Start cron
 CMD ["sh", "-c", "printenv > /etc/environment && cd /app/price-hawk && ./run_crawler.sh && cron -f"]
