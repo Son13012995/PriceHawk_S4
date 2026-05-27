@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn, pageTabs, ui } from "./designSystem";
-import { ShoppingBag, Bell, Heart } from "lucide-react";
+import { ShoppingBag, Bell, ShoppingBasket } from "lucide-react";
 
 const icons = {
   "/product": ShoppingBag,
   "/alerts": Bell,
-  "/wishlist": Heart,
+  "/wishlist": ShoppingBasket,
 };
 
 function isActive(pathname, href) {
@@ -21,7 +21,7 @@ function isActive(pathname, href) {
   return false;
 }
 
-export default function PageTabs({ className = "" }) {
+export default function PageTabs({ className = "", badgeCounts = {} }) {
   const pathname = usePathname();
 
   return (
@@ -42,12 +42,20 @@ export default function PageTabs({ className = "" }) {
                 : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-white/5"
             )}
           >
-            <Icon className={cn(
-              "h-4 w-4 transition-transform duration-300 group-hover:scale-110",
-              active ? "text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-violet-500"
-            )} />
+            <span className="relative">
+              <Icon className={cn(
+                "h-4 w-4 transition-transform duration-300 group-hover:scale-110",
+                active ? "text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-violet-500"
+              )} />
+              {badgeCounts[tab.href] > 0 && (
+                <span className="absolute -top-2 -right-2 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-extrabold text-white ring-2 ring-white dark:ring-[#0b0712] shadow-sm leading-none">
+                  {badgeCounts[tab.href] > 99 ? '99+' : badgeCounts[tab.href]}
+                  {tab.href === "/alerts" && <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-75 -z-10" />}
+                </span>
+              )}
+            </span>
             <span>{tab.label}</span>
-            
+
             {/* Subtle active indicator for desktop if we want something extra, but the solid background is already good. 
                 Let's add a tiny dot or underline for a "premium" feel. */}
             {active && (

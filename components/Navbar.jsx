@@ -4,9 +4,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useSession, signOut } from "next-auth/react";
-import AppSearchBar from "./ui/AppSearchBar";
+import useSWR from "swr";
+import { checkTriggeredAlerts, getWishlist } from "@/lib/apiClient";
 import PageTabs from "./ui/PageTabs";
 import { ThemeToggle } from "./ThemeToggle";
+import { Download } from "lucide-react";
+
+const triggersFetcher = () => checkTriggeredAlerts().then((res) => res.data);
 
 export default function Navbar() {
     const { theme, systemTheme } = useTheme();
@@ -20,6 +24,19 @@ export default function Navbar() {
     const isDark = mounted && (theme === "dark" || (theme === "system" && systemTheme === "dark"));
     const isAuth = status === "authenticated";
     const isLoading = status === "loading";
+
+    const { data: triggeredData } = useSWR("alerts-triggers", triggersFetcher, {
+        refreshInterval: 5000,
+        dedupingInterval: 2000,
+    });
+    const triggeredCount =
+        triggeredData?.details?.filter((item) => item.triggered)?.length ?? 0;
+
+    const { data: wishlistData } = useSWR(isAuth ? "wishlist-nav" : null, () => getWishlist().then(res => res.data), {
+        refreshInterval: 10000,
+        dedupingInterval: 5000,
+    });
+    const wishlistCount = wishlistData?.data?.length ?? 0;
 
     return (
         <nav className="sticky top-0 z-50 w-full border-b border-zinc-200/50 dark:border-white/5 bg-white/70 dark:bg-[#0b0712]/70 backdrop-blur-xl transition-colors">
@@ -71,17 +88,24 @@ export default function Navbar() {
                     </div>
 
                     <div className="hidden lg:block">
-                        <PageTabs />
+                        <PageTabs badgeCounts={{ "/alerts": triggeredCount, "/wishlist": wishlistCount }} />
                     </div>
 
                     {/* Search & Actions Section */}
                     <div className="flex flex-1 items-center justify-end gap-4 max-w-2xl">
-                        <div className="w-full max-w-sm xl:max-w-md">
-                            <AppSearchBar compact />
-                        </div>
                         
                         <div className="hidden md:flex items-center gap-3">
                             <div className="h-6 w-[1px] bg-zinc-200 dark:bg-white/10 mx-2" />
+                            <div className="flex-shrink-0">
+                                <a 
+                                    href="/pricehawk-extension.zip" 
+                                    download="PriceHawk_Extension.zip"
+                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 dark:text-violet-400 text-sm font-bold transition-colors"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    Tải Extension
+                                </a>
+                            </div>
                             <div className="flex-shrink-0">
                                 <ThemeToggle />
                             </div>
@@ -100,16 +124,16 @@ export default function Navbar() {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1.5">
                                     <Link
                                         href="/login"
-                                        className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-bold transition-all shadow-lg shadow-violet-600/20 hover:shadow-violet-600/40 active:scale-95"
+                                        className="whitespace-nowrap px-4 py-2 rounded-xl text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/50 text-sm font-semibold transition-all"
                                     >
                                         Đăng nhập
                                     </Link>
                                     <Link
                                         href="/register"
-                                        className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-sm font-semibold transition-all"
+                                        className="whitespace-nowrap px-5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(124,58,237,0.39)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.23)] hover:-translate-y-0.5 active:scale-95"
                                     >
                                         Đăng ký
                                     </Link>
@@ -124,7 +148,7 @@ export default function Navbar() {
 
                 </div>
                 <div className="lg:hidden pb-4 overflow-x-auto">
-                    <PageTabs className="flex-nowrap justify-start" />
+                    <PageTabs className="flex-nowrap justify-start" badgeCounts={{ "/alerts": triggeredCount, "/wishlist": wishlistCount }} />
                 </div>
             </div>
         </nav>
