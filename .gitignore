@@ -27,13 +27,16 @@ yarn-error.log*
 
 # local env files
 .env*.local
-.env.*
-.env_product
-chatbot/.env.docker
+.env.local
+.env
+.env.product
+.env.docker
+chatbot/.env
+chatbot/.env.product
+price-hawk/.env
 
 # vercel
 .vercel
-.env
 
 # typescript
 *.tsbuildinfo

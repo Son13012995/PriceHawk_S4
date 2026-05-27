@@ -12,6 +12,11 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - mynetwork
 
@@ -38,7 +43,7 @@ services:
       - ./price-hawk:/app/price-hawk
       - ./price-hawk/logs:/app/price-hawk/logs
     env_file:
-      - ./price-hawk/.env_product
+      - ./price-hawk/.env.product
     environment:
       - TZ=Asia/Ho_Chi_Minh
     depends_on:
@@ -55,10 +60,12 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - ./chatbot/.env.docker
+      - ./chatbot/.env.product
     depends_on:
-      - mysql
-      - searxng
+      mysql:
+        condition: service_healthy
+      searxng:
+        condition: service_started
     restart: unless-stopped
     networks:
       - mynetwork
@@ -67,10 +74,10 @@ services:
     image: searxng/searxng:latest
     container_name: searxng
     ports:
-      - "8083:8083"
+      - "8083:8080"          # host:8083 → container:8080 (SearxNG default, không đổi được)
     environment:
       - SEARXNG_SECRET_KEY=pricehawk-secret-key-2026
-      - SEARXNG_BIND_ADDRESS=0.0.0.0:8083
+      - SEARXNG_BIND_ADDRESS=0.0.0.0:8080
       - SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml
       - SEARXNG_UWSGI_WORKERS=4
     volumes:
