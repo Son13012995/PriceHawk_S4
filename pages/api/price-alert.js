@@ -7,10 +7,10 @@ import { authOptions } from "@/lib/auth";
  * Dùng cho Navbar polling: trả về đúng trạng thái thực tế bất kể status trong DB.
  * Bao gồm cả alerts đã 'triggered' để badge không biến mất sau lần poll đầu.
  */
-async function checkTriggeredAlertsReadOnly() {
+async function checkTriggeredAlertsReadOnly(userId = null) {
   const timestamp = new Date().toISOString();
   try {
-    // Lấy tất cả alerts (active + triggered) để so sánh giá thực tế
+    // Chỉ lấy alerts của user hiện tại (NULL-safe) — tránh lộ data giữa users
     const alerts = await db.query(
       `SELECT 
         pa.\`id\`,
@@ -22,7 +22,9 @@ async function checkTriggeredAlertsReadOnly() {
         p.\`brand\`
       FROM \`price_alert\` pa
       JOIN \`product\` p ON pa.\`product_id\` = p.\`id\`
-      WHERE pa.\`status\` IN ('active', 'triggered')`
+      WHERE pa.\`status\` IN ('active', 'triggered')
+        AND pa.\`user_id\` <=> ?`,
+      [userId]
     );
 
     if (!alerts || alerts.length === 0) {
@@ -107,7 +109,7 @@ async function checkAndTriggerPriceAlerts() {
     // Check each alert and trigger if necessary
     for (const alert of activeAlerts) {
       const { id, product_id, target_price, latest_price, name, brand } = alert;
-      
+
       const detail = {
         alertId: id,
         productId: product_id,
@@ -201,13 +203,16 @@ async function checkAndTriggerPriceAlerts() {
  *         description: Success
  */
 export default async function handler(req, res) {
-  // Handle cron check trigger
+  // Lấy session trước mọi thứ — dùng cho cả check-triggers lắn các action khác
+  const session = await getServerSession(req, res, authOptions);
+  const userId = session?.user?.id ? Number(session.user.id) : null;
+
   const { action } = req.query;
-  
+
   if (action === "check-triggers" && req.method === "GET") {
     try {
-      // READ-ONLY: dùng cho Navbar polling, không UPDATE DB
-      const result = await checkTriggeredAlertsReadOnly();
+      // READ-ONLY: chỉ lấy alerts của user hiện tại, không UPDATE DB
+      const result = await checkTriggeredAlertsReadOnly(userId);
       return res.status(200).json(result);
     } catch (error) {
       console.error("API Error:", error);
@@ -226,13 +231,16 @@ export default async function handler(req, res) {
     }
   }
 
-  const session = await getServerSession(req, res, authOptions);
-  const userId = session?.user?.id ? Number(session.user.id) : null;
   if (action !== "check-triggers" && action !== "run-triggers") {
     console.log(`[PRICE_ALERT] ${req.method} — userId=${userId}`);
   }
 
   if (req.method === "POST") {
+    // Create price alert — yêu cầu đăng nhập
+    if (!userId) {
+      return res.status(401).json({ error: "Bạn cần đăng nhập để tạo price alert" });
+    }
+
     // Create price alert
     const { productId, targetPrice, note = null } = req.body;
 
@@ -298,7 +306,7 @@ export default async function handler(req, res) {
         p.\`current_price\` as latest_price
       FROM \`price_alert\` pa
       JOIN \`product\` p ON pa.\`product_id\` = p.\`id\`
-      WHERE pa.\`user_id\` IS NULL OR pa.\`user_id\` = ?`;
+      WHERE pa.\`user_id\` <=> ?`;
 
       const params = [userId];
 
@@ -317,6 +325,10 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "PUT") {
     // Update price alert status
+    if (!userId) {
+      return res.status(401).json({ error: "Bạn cần đăng nhập để cập nhật alert" });
+    }
+
     const { alertId, status } = req.body;
 
     if (!alertId || !status) {
@@ -335,6 +347,10 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "DELETE") {
     // Delete price alert
+    if (!userId) {
+      return res.status(401).json({ error: "Bạn cần đăng nhập để xóa alert" });
+    }
+
     const { alertId } = req.body;
 
     if (!alertId) {

@@ -11,6 +11,7 @@ import {
 import { useRouter } from "next/navigation";
 import useSWR, { mutate } from "swr";
 import ProductSearch from "../../components/ui/ProductSearch";
+import AuthGuard from "../../components/ui/AuthGuard";
 import { cn, ui } from "../../components/ui/designSystem";
 import { formatPrice, formatPriceInput, parsePriceInput } from "../utils/format";
 import { Bell, Activity, Flame } from "lucide-react";
@@ -19,6 +20,14 @@ const alertsFetcher = () => getAlerts().then((res) => res.data);
 const triggersFetcher = () => checkTriggeredAlerts().then((res) => res.data);
 
 export default function AlertsPage() {
+  return (
+    <AuthGuard featureName="Price Alerts">
+      <AlertsContent />
+    </AuthGuard>
+  );
+}
+
+function AlertsContent() {
   const router = useRouter();
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [targetPrice, setTargetPrice] = useState("");
@@ -121,8 +130,12 @@ export default function AlertsPage() {
         mutate("alerts-triggers");
       }
     } catch (error) {
-      setMessage(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
-      setTimeout(() => setMessage(""), 3000);
+      if (error.response?.status === 401) {
+        setMessage("⚠️ Bạn cần đăng nhập để tạo price alert.");
+      } else {
+        setMessage(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
+      }
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 
@@ -133,8 +146,12 @@ export default function AlertsPage() {
       mutate("alerts");
       mutate("alerts-triggers");
     } catch (error) {
-      setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
-      setTimeout(() => setMessage(""), 3000);
+      if (error.response?.status === 401) {
+        setMessage("⚠️ Bạn cần đăng nhập để cập nhật alert.");
+      } else {
+        setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
+      }
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 
@@ -146,8 +163,12 @@ export default function AlertsPage() {
       mutate("alerts");
       mutate("alerts-triggers");
     } catch (error) {
-      setMessage("Không thể xóa alert. Vui lòng thử lại.");
-      setTimeout(() => setMessage(""), 3000);
+      if (error.response?.status === 401) {
+        setMessage("⚠️ Bạn cần đăng nhập để xóa alert.");
+      } else {
+        setMessage("Không thể xóa alert. Vui lòng thử lại.");
+      }
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 

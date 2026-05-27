@@ -5,11 +5,20 @@ import useSWR from "swr";
 import { getWishlist, addToWishlist, removeFromWishlist } from "@/lib/apiClient";
 import SearchCard from "../../components/SearchCard";
 import ProductSearch from "../../components/ui/ProductSearch";
+import AuthGuard from "../../components/ui/AuthGuard";
 import { cn, ui } from "../../components/ui/designSystem";
 import { ShoppingBasket, Package, Tags, Trash2 } from "lucide-react";
 import { formatPrice } from "@/app/utils/format";
 
 export default function WishlistPage() {
+  return (
+    <AuthGuard featureName="Wishlist">
+      <WishlistContent />
+    </AuthGuard>
+  );
+}
+
+function WishlistContent() {
   const [message, setMessage] = useState("");
 
   const { data, mutate, isLoading } = useSWR("wishlist-nav", () => getWishlist().then(res => res.data));
@@ -24,12 +33,14 @@ export default function WishlistPage() {
         mutate();
       }
     } catch (error) {
-      if (error.response?.status === 409) {
+      if (error.response?.status === 401) {
+        setMessage("⚠️ Bạn cần đăng nhập để sử dụng wishlist.");
+      } else if (error.response?.status === 409) {
         setMessage("Sản phẩm này đã có trong wishlist.");
       } else {
         setMessage("Không thể thêm sản phẩm. Vui lòng thử lại.");
       }
-      setTimeout(() => setMessage(""), 3000);
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 
@@ -40,8 +51,12 @@ export default function WishlistPage() {
       setTimeout(() => setMessage(""), 3000);
       mutate();
     } catch (error) {
-      setMessage("Không thể xóa sản phẩm. Vui lòng thử lại.");
-      setTimeout(() => setMessage(""), 3000);
+      if (error.response?.status === 401) {
+        setMessage("⚠️ Bạn cần đăng nhập để thực hiện thao tác này.");
+      } else {
+        setMessage("Không thể xóa sản phẩm. Vui lòng thử lại.");
+      }
+      setTimeout(() => setMessage(""), 4000);
     }
   };
 

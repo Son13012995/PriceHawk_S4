@@ -46,6 +46,10 @@ export default async function handler(req, res) {
 
   if (req.method === "POST") {
     // Add to wishlist
+    if (!userId) {
+      return res.status(401).json({ error: "Bạn cần đăng nhập để thêm vào wishlist" });
+    }
+
     const { productId } = req.body;
 
     if (!productId) {
@@ -97,6 +101,10 @@ export default async function handler(req, res) {
     }
   } else if (req.method === "DELETE") {
     // Remove from wishlist
+    if (!userId) {
+      return res.status(401).json({ error: "Bạn cần đăng nhập để xóa khỏi wishlist" });
+    }
+
     const { productId } = req.body;
 
     if (!productId) {
