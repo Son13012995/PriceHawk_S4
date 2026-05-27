@@ -11,6 +11,7 @@ export default function AppSearchBar({
   placeholder = "Tìm kiếm sản phẩm...",
   initialValue = "",
   compact = false,
+  onOpenChange,
 }) {
   const [searchTerm, setSearchTerm] = useState(initialValue);
   const [results, setResults] = useState([]);
@@ -30,6 +31,13 @@ export default function AppSearchBar({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  // Notify parent of dropdown visibility
+  useEffect(() => {
+    if (onOpenChange) {
+      onOpenChange(isOpen && (results.length > 0 || loading));
+    }
+  }, [isOpen, results.length, loading, onOpenChange]);
 
   useEffect(() => {
     if (!searchTerm.trim()) {

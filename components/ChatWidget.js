@@ -8,34 +8,48 @@
  */
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Origami } from "lucide-react";
 
 // ── Inline styles (tránh conflict với CSS hiện tại) ──────────────────────────
 const styles = {
   // Floating button
-  fab: {
+  fab: (isOpen, expanded) => ({
     position: "fixed",
     bottom: "24px",
     right: "24px",
-    width: "56px",
+    width: isOpen ? "56px" : expanded ? "230px" : "56px",
+    padding: expanded && !isOpen ? "0 20px" : "0",
     height: "56px",
-    borderRadius: "50%",
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    borderRadius: "28px",
+    background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
     border: "none",
     cursor: "pointer",
-    boxShadow: "0 4px 20px rgba(102, 126, 234, 0.5)",
+    boxShadow: "0 4px 20px rgba(124, 58, 237, 0.4)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    gap: expanded && !isOpen ? "12px" : "0",
     zIndex: 9999,
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    fontSize: "24px",
-  },
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+    color: "#ffffff",
+    overflow: "hidden",
+  }),
+  fabText: (expanded) => ({
+    fontSize: "15px",
+    fontWeight: "700",
+    whiteSpace: "nowrap",
+    opacity: expanded ? 1 : 0,
+    maxWidth: expanded ? "150px" : "0px",
+    transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  }),
   // Popup window
   popup: {
     position: "fixed",
     bottom: "92px",
     right: "24px",
-    width: "380px",
+    width: "min(380px, calc(100vw - 32px))",
     height: "560px",
     background: "#ffffff",
     borderRadius: "16px",
@@ -44,12 +58,11 @@ const styles = {
     flexDirection: "column",
     overflow: "hidden",
     zIndex: 9998,
-    border: "1px solid rgba(0,0,0,0.08)",
     animation: "slideUp 0.25s ease",
   },
   // Header
   header: {
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
     padding: "16px 20px",
     display: "flex",
     alignItems: "center",
@@ -108,25 +121,27 @@ const styles = {
     gap: "8px",
   }),
   bubble: (isUser) => ({
-    maxWidth: "80%",
+    maxWidth: isUser ? "80%" : "98%",
+    minWidth: isUser ? undefined : "60%",
     padding: "10px 14px",
     borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
     background: isUser
-      ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      ? "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)"
       : "#ffffff",
     color: isUser ? "#ffffff" : "#1a1a2e",
     fontSize: "14px",
     lineHeight: "1.5",
     boxShadow: isUser ? "none" : "0 2px 8px rgba(0,0,0,0.06)",
-    whiteSpace: "pre-wrap",
     wordBreak: "break-word",
     border: isUser ? "none" : "1px solid rgba(0,0,0,0.06)",
+    whiteSpace: isUser ? "pre-wrap" : "normal",
+    overflow: "hidden",
   }),
   botAvatar: {
     width: "28px",
     height: "28px",
     borderRadius: "50%",
-    background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    background: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -210,7 +225,7 @@ const styles = {
     border: "none",
     background: disabled
       ? "#e0e0e0"
-      : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+      : "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
     color: "#ffffff",
     cursor: disabled ? "not-allowed" : "pointer",
     display: "flex",
@@ -235,6 +250,21 @@ const cssAnimation = `
   .chat-dot-1 { animation-delay: 0s; }
   .chat-dot-2 { animation-delay: 0.2s; }
   .chat-dot-3 { animation-delay: 0.4s; }
+
+  .pricehawk-chat-popup ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .pricehawk-chat-popup ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .pricehawk-chat-popup ::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 10px;
+  }
+  .pricehawk-chat-popup ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.3);
+  }
 `;
 
 // ── Initial welcome message ───────────────────────────────────────────────────
@@ -242,13 +272,14 @@ const WELCOME_MSG = {
   id: 0,
   role: "assistant",
   content:
-    "Xin chào! Tôi là **PriceHawk Assistant** 🦅\n\nTôi có thể giúp bạn:\n• Tìm giá điện thoại, laptop, tablet\n• So sánh giá từ nhiều cửa hàng\n• Tra cứu thông số kỹ thuật\n\nBạn muốn tìm sản phẩm nào?",
+    "Xin chào! Tôi là **PriceHawk Assistant** 🦅\n\nTôi có thể giúp bạn:\n- Tìm giá điện thoại, laptop, tablet\n- So sánh giá từ nhiều cửa hàng\n- Tra cứu thông số kỹ thuật\n\nBạn muốn tìm sản phẩm nào?",
   source: "system",
 };
 
 
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [messages, setMessages] = useState([WELCOME_MSG]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -332,32 +363,32 @@ export default function ChatWidget() {
     }
   };
 
-  // Render message content (basic markdown: **bold** and [text](url))
-  const renderContent = (content) => {
-    const regex = /(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
-    const parts = content.split(regex);
-    return parts.map((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return <strong key={i}>{part.slice(2, -2)}</strong>;
-      }
-      if (part.startsWith("[") && part.includes("](")) {
-        const match = part.match(/\[([^\]]+)\]\(([^)]+)\)/);
-        if (match) {
-          return (
-            <a
-              key={i}
-              href={match[2]}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#667eea", textDecoration: "underline", fontWeight: "bold" }}
-            >
-              {match[1]}
-            </a>
-          );
-        }
-      }
-      return <span key={i}>{part}</span>;
-    });
+  // Markdown components styling
+  const markdownComponents = {
+    p: ({ node, ...props }) => <p style={{ margin: "0 0 8px 0" }} {...props} />,
+    a: ({ node, ...props }) => (
+      <a
+        style={{ color: "#667eea", textDecoration: "underline", fontWeight: "bold" }}
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      />
+    ),
+    table: ({ node, ...props }) => (
+      <div style={{ overflowX: "auto", margin: "10px 0", width: "100%" }}>
+        <table style={{ borderCollapse: "collapse", minWidth: "100%", fontSize: "13px", tableLayout: "auto" }} {...props} />
+      </div>
+    ),
+    th: ({ node, ...props }) => (
+      <th style={{ border: "1px solid #e2e8f0", padding: "8px 12px", backgroundColor: "#f8f9fc", textAlign: "left", fontWeight: "600", whiteSpace: "nowrap", minWidth: "80px" }} {...props} />
+    ),
+    td: ({ node, ...props }) => (
+      <td style={{ border: "1px solid #e2e8f0", padding: "8px 12px", whiteSpace: "normal", minWidth: "80px", wordBreak: "break-word" }} {...props} />
+    ),
+    ul: ({ node, ...props }) => <ul style={{ margin: "0 0 8px 0", paddingLeft: "24px", listStyleType: "disc" }} {...props} />,
+    ol: ({ node, ...props }) => <ol style={{ margin: "0 0 8px 0", paddingLeft: "24px", listStyleType: "decimal" }} {...props} />,
+    li: ({ node, ...props }) => <li style={{ marginBottom: "4px" }} {...props} />,
+    strong: ({ node, ...props }) => <strong style={{ fontWeight: "700" }} {...props} />,
   };
 
   return (
@@ -365,27 +396,36 @@ export default function ChatWidget() {
       {/* Floating Action Button */}
       <button
         id="pricehawk-chat-fab"
-        style={styles.fab}
+        style={styles.fab(isOpen, isHovered)}
         onClick={() => setIsOpen((o) => !o)}
         title="Chat với PriceHawk AI"
         onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.1)";
-          e.currentTarget.style.boxShadow = "0 6px 24px rgba(102,126,234,0.6)";
+          setIsHovered(true);
+          e.currentTarget.style.transform = "scale(1.05)";
+          e.currentTarget.style.boxShadow = "0 6px 24px rgba(124, 58, 237, 0.6)";
         }}
         onMouseLeave={(e) => {
+          setIsHovered(false);
           e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.boxShadow = "0 4px 20px rgba(102,126,234,0.5)";
+          e.currentTarget.style.boxShadow = "0 4px 20px rgba(124, 58, 237, 0.4)";
         }}
       >
-        {isOpen ? "✕" : "🦅"}
+        {isOpen ? (
+          <span style={{ fontSize: "24px" }}>✕</span>
+        ) : (
+          <>
+            <Origami size={24} color="#fff" style={{ flexShrink: 0 }} />
+            <span style={styles.fabText(isHovered)}>PriceHawk Assistant</span>
+          </>
+        )}
       </button>
 
       {/* Chat Popup */}
       {isOpen && (
-        <div style={styles.popup}>
+        <div style={styles.popup} className="pricehawk-chat-popup">
           {/* Header */}
           <div style={styles.header}>
-            <div style={styles.headerAvatar}>🦅</div>
+            <div style={styles.headerAvatar}><Origami size={20} color="#fff" /></div>
             <div style={styles.headerText}>
               <p style={styles.headerTitle}>PriceHawk AI</p>
               <p style={styles.headerSub}>So sánh giá thông minh</p>
@@ -401,10 +441,19 @@ export default function ChatWidget() {
               const isUser = msg.role === "user";
               return (
                 <div key={msg.id} style={styles.msgRow(isUser)}>
-                  {!isUser && <div style={styles.botAvatar}>🦅</div>}
+                  {!isUser && <div style={styles.botAvatar}><Origami size={16} color="#fff" /></div>}
                   <div>
                     <div style={styles.bubble(isUser)}>
-                      {renderContent(msg.content)}
+                      {isUser ? (
+                        <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
+                      ) : (
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          components={markdownComponents}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
+                      )}
                     </div>
                     {!isUser && msg.source && msg.source !== "system" && (
                       <div style={styles.sourceBadge(msg.source)}>
@@ -419,7 +468,7 @@ export default function ChatWidget() {
             {/* Typing indicator */}
             {isLoading && (
               <div style={styles.msgRow(false)}>
-                <div style={styles.botAvatar}>🦅</div>
+                <div style={styles.botAvatar}><Origami size={16} color="#fff" /></div>
                 <div style={styles.typing}>
                   <div style={styles.dot} className="chat-dot-1" />
                   <div style={styles.dot} className="chat-dot-2" />

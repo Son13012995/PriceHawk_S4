@@ -8,7 +8,7 @@ import useSWR from "swr";
 import { checkTriggeredAlerts, getWishlist } from "@/lib/apiClient";
 import PageTabs from "./ui/PageTabs";
 import { ThemeToggle } from "./ThemeToggle";
-import { Download } from "lucide-react";
+import { Download, Origami, User, LogOut } from "lucide-react";
 
 const triggersFetcher = () => checkTriggeredAlerts().then((res) => res.data);
 
@@ -51,29 +51,16 @@ export default function Navbar() {
                                 {isDark ? (
                                     <div className="relative">
                                         <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full animate-pulse" />
-                                        <svg
-                                            className="relative w-10 h-10 text-violet-500 group-hover:text-violet-400 transition-all duration-500 group-hover:scale-110"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9l3 3-3 3-3-3 3-3z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" strokeOpacity="0.3" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
-                                        </svg>
+                                        <Origami 
+                                            className="relative w-10 h-10 text-violet-500 group-hover:text-violet-400 transition-all duration-500 group-hover:scale-110" 
+                                            strokeWidth={1.5} 
+                                        />
                                     </div>
                                 ) : (
-                                    <svg
-                                        className="w-10 h-10 text-violet-600 group-hover:text-violet-500 transition-transform duration-300 group-hover:rotate-12"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
+                                    <Origami 
+                                        className="w-10 h-10 text-violet-600 group-hover:text-violet-500 transition-transform duration-300 group-hover:rotate-12" 
+                                        strokeWidth={1.5} 
+                                    />
                                 )}
                             </div>
                             <div className="flex flex-col">
@@ -94,9 +81,9 @@ export default function Navbar() {
                     {/* Search & Actions Section */}
                     <div className="flex flex-1 items-center justify-end gap-4 max-w-2xl">
                         
-                        <div className="hidden md:flex items-center gap-3">
-                            <div className="h-6 w-[1px] bg-zinc-200 dark:bg-white/10 mx-2" />
-                            <div className="flex-shrink-0">
+                        <div className="flex items-center gap-2 md:gap-3">
+                            <div className="hidden md:block h-6 w-[1px] bg-zinc-200 dark:bg-white/10 mx-2" />
+                            <div className="hidden md:block flex-shrink-0">
                                 <a 
                                     href="/pricehawk-extension.zip" 
                                     download="PriceHawk_Extension.zip"
@@ -110,39 +97,39 @@ export default function Navbar() {
                                 <ThemeToggle />
                             </div>
                             {isLoading ? (
-                                <div className="w-24 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+                                <div className="w-16 md:w-24 h-8 rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
                             ) : isAuth ? (
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-medium text-zinc-700 dark:text-zinc-200 max-w-[180px] truncate overflow-hidden whitespace-nowrap">
+                                <div className="flex items-center gap-2 md:gap-3">
+                                    <span className="hidden sm:block text-sm font-medium text-zinc-700 dark:text-zinc-200 max-w-[180px] truncate overflow-hidden whitespace-nowrap">
                                         {session.user?.email}
                                     </span>
                                     <button
                                         onClick={() => signOut({ callbackUrl: "/" })}
-                                        className="px-4 py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-sm font-semibold transition-all"
+                                        className="flex items-center justify-center gap-2 px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs md:text-sm font-semibold transition-all"
+                                        title="Đăng xuất"
                                     >
-                                        Đăng xuất
+                                        <LogOut className="w-4 h-4 md:hidden" />
+                                        <span className="hidden md:inline">Đăng xuất</span>
                                     </button>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-1.5">
                                     <Link
                                         href="/login"
-                                        className="whitespace-nowrap px-4 py-2 rounded-xl text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/50 text-sm font-semibold transition-all"
+                                        className="flex items-center justify-center gap-2 whitespace-nowrap px-2.5 py-1.5 md:px-4 md:py-2 rounded-xl text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800/50 text-xs md:text-sm font-semibold transition-all"
+                                        title="Đăng nhập"
                                     >
-                                        Đăng nhập
+                                        <User className="w-4 h-4 md:hidden" />
+                                        <span className="hidden md:inline">Đăng nhập</span>
                                     </Link>
                                     <Link
                                         href="/register"
-                                        className="whitespace-nowrap px-5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(124,58,237,0.39)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.23)] hover:-translate-y-0.5 active:scale-95"
+                                        className="hidden md:flex whitespace-nowrap px-5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white text-sm font-bold transition-all shadow-[0_4px_14px_0_rgba(124,58,237,0.39)] hover:shadow-[0_6px_20px_rgba(124,58,237,0.23)] hover:-translate-y-0.5 active:scale-95"
                                     >
                                         Đăng ký
                                     </Link>
                                 </div>
                             )}
-                        </div>
-
-                        <div className="md:hidden">
-                            <ThemeToggle />
                         </div>
                     </div>
 

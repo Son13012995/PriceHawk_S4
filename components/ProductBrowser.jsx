@@ -25,6 +25,7 @@ function ProductBrowserContent({ searchTerm = "" }) {
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -85,12 +86,14 @@ function ProductBrowserContent({ searchTerm = "" }) {
   return (
     <div className={cn(ui.pageWrap, "py-10")}>
       <div className={cn(ui.container, "space-y-6")}>
-      <header className={cn(ui.card, "p-8 md:p-10 relative overflow-hidden")}>
+      <header className={cn(ui.card, "p-5 md:p-6 relative")}>
         {/* Decorative Background */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute inset-0 overflow-hidden rounded-[inherit] pointer-events-none">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        </div>
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
                 <Search className="w-6 h-6 text-violet-600 dark:text-violet-400" />
@@ -109,24 +112,35 @@ function ProductBrowserContent({ searchTerm = "" }) {
                 "Khám phá sản phẩm"
               )}
             </h1>
-            <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base mb-6")}>
+            <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
               Tìm kiếm và so sánh hàng ngàn sản phẩm từ các nhà bán lẻ uy tín. Tìm giá tốt nhất trong chớp mắt.
             </p>
-            <div className="w-full max-w-xl">
-              <AppSearchBar placeholder="Tìm kiếm sản phẩm bạn muốn so sánh giá..." initialValue={isSearchMode ? decodeURIComponent(searchTerm) : ""} />
+            
+            {/* Statistics */}
+            <div className="flex gap-4 mt-8">
+              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[120px] shadow-sm">
+                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
+                  <Package className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Tổng cộng</span>
+                </div>
+                <p className="text-2xl font-black text-zinc-900 dark:text-white">
+                  {loading ? "-" : totalItems}
+                </p>
+              </div>
             </div>
           </div>
           
-          {/* Statistics */}
-          <div className="flex gap-4">
-            <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[120px]">
-              <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
-                <Package className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Tổng cộng</span>
-              </div>
-              <p className="text-2xl font-black text-zinc-900 dark:text-white">
-                {loading ? "-" : totalItems}
-              </p>
+          {/* Right side: Search */}
+          <div 
+            className="flex flex-col md:items-end w-full md:w-[380px] lg:w-[420px] mt-6 md:mt-0 relative z-20 transition-all duration-300 ease-in-out"
+            style={{ paddingBottom: isSearchDropdownOpen ? '350px' : '0px' }}
+          >
+            <div className="w-full">
+              <AppSearchBar 
+                placeholder="Tìm kiếm sản phẩm bạn muốn so sánh giá..." 
+                initialValue={isSearchMode ? decodeURIComponent(searchTerm) : ""} 
+                onOpenChange={setIsSearchDropdownOpen}
+              />
             </div>
           </div>
         </div>
