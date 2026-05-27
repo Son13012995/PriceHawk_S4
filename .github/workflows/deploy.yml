@@ -24,5 +24,7 @@ jobs:
 
             # Tạo file .env.product từ GitHub Secret
             echo "${{ secrets.ENV_PRODUCT }}" > .env.product
+            echo "${{ secrets.ENV_CHATBOT }}" > ./chatbot/.env.docker
+
 
             docker compose up -d --build --remove-orphans
