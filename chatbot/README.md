@@ -7,16 +7,18 @@ Module chatbot AI tách biệt cho PriceHawk — hoạt động theo kiến trú
 ```
 User Query
     ↓
-[Agent 1] Intent + Entity Detection (Gemini Flash)
+[Agent 1] IntentAgent  — Phân tích intent + tên sản phẩm (Groq Llama 3.3 70B)
     ↓
-[Agent 2] MySQL DB Search (search toàn bộ: điện thoại / laptop / tablet)
-    ↓ (nếu DB trống)
-[Agent 3] Internet Fallback: DuckDuckGo → LLM chọn URL → Crawl4AI → Summarize
+[Agent 2] DBAgent      — Tìm kiếm trong MySQL (exact → partial match)
+    ↓ (nếu DB không có hoặc partial match)
+[Agent 3] InternetAgent — SearxNG search → Crawl4AI → LLM summarize
     ↓
-[Agent 4] Responder: Tạo câu trả lời tiếng Việt
+[Agent 4] ResponderAgent — Tạo câu trả lời tiếng Việt (Markdown)
 ```
 
-## Cài đặt
+---
+
+## Cài đặt (Local Dev)
 
 ### 1. Tạo môi trường Python
 
@@ -48,21 +50,20 @@ cp .env.example .env
 
 Rồi điền vào `.env`:
 ```env
-GOOGLE_API_KEY=your_gemini_api_key_here
-DB_HOST=localhost
-DB_PORT=3307           # Docker expose port 3307
+GROQ_API_KEY=your_groq_api_key_here   # https://console.groq.com (miễn phí)
+DB_HOST=127.0.0.1
+DB_PORT=3307           # Docker expose MySQL ra port 3307
 DB_USER=root
 DB_PASSWORD=rootpassword
 DB_NAME=pricecomparison
+SEARXNG_URL=http://localhost:8080
 ```
 
-> **Lấy Gemini API Key miễn phí:** https://aistudio.google.com/app/apikey
-
-### 4. Đảm bảo Docker MySQL đang chạy
+### 4. Đảm bảo Docker MySQL và SearxNG đang chạy
 
 ```bash
 # Từ thư mục gốc PriceHawk_S4
-docker-compose up -d mysql
+docker compose up -d mysql searxng
 ```
 
 ### 5. Chạy Chatbot Service
@@ -73,6 +74,18 @@ uvicorn main:app --reload --port 8000
 ```
 
 Kiểm tra service: http://localhost:8000
+
+---
+
+## Chạy qua Docker Compose (Khuyến nghị)
+
+```bash
+# Từ thư mục gốc PriceHawk_S4
+cp chatbot/.env.docker.example chatbot/.env.docker
+# Điền GROQ_API_KEY vào chatbot/.env.docker
+
+docker compose up -d --build chatbot
+```
 
 ---
 
@@ -97,7 +110,7 @@ Chat widget 🦅 sẽ xuất hiện ở góc phải dưới màn hình trên m�
 ```bash
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "iPhone 15 Pro Max 256GB giá bao nhiêu?"}'
+  -d '{"message": "iPhone 16 128GB giá bao nhiêu?"}'
 ```
 
 ---
@@ -106,21 +119,31 @@ curl -X POST http://localhost:8000/chat \
 
 ```
 chatbot/
-├── .env.example          # Template biến môi trường
-├── requirements.txt      # Python dependencies
-├── main.py               # FastAPI entrypoint (port 8000)
-├── pipeline.py           # Orchestrator 4 agents
-├── db.py                 # Kết nối MySQL + search utils
+├── .env.example           # Template biến môi trường (local dev)
+├── .env.docker.example    # Template biến môi trường (Docker)
+├── requirements.txt       # Python dependencies
+├── main.py                # FastAPI entrypoint (port 8000)
+├── pipeline.py            # Orchestrator điều phối 4 agents
+├── db.py                  # Kết nối MySQL + search utils
 └── agents/
-    ├── intent_agent.py   # Agent 1: Phân tích intent + entity
-    ├── db_agent.py       # Agent 2: Tìm trong MySQL
-    ├── internet_agent.py # Agent 3: DDG + Crawl4AI fallback
-    └── responder_agent.py# Agent 4: Tạo câu trả lời tiếng Việt
+    ├── intent_agent.py    # Agent 1: Phân tích intent + entity (Groq)
+    ├── db_agent.py        # Agent 2: Tìm trong MySQL
+    ├── internet_agent.py  # Agent 3: SearxNG + Crawl4AI fallback
+    └── responder_agent.py # Agent 4: Tạo câu trả lời tiếng Việt
 ```
+
+---
 
 ## Categories hỗ trợ
 
 Chatbot tìm kiếm toàn bộ DB, hỗ trợ đúng theo các spider đã có:
-- **Điện thoại** (`dien-thoai`): TGDD, FPT Shop, Hoàng Hà Mobile
-- **Laptop** (`laptop`, `may-tinh-xach-tay`): TGDD, FPT Shop, Hoàng Hà Mobile
-- **Tablet** (`tablet`, `may-tinh-bang`): TGDD, FPT Shop, Hoàng Hà Mobile
+- **Điện thoại**: TGDD, FPT Shop, Hoàng Hà Mobile
+- **Laptop**: TGDD, FPT Shop, Hoàng Hà Mobile
+- **Tablet**: TGDD, FPT Shop, Hoàng Hà Mobile
+
+---
+
+## Tài liệu chi tiết
+
+Xem file `chatbot.MD` ở thư mục gốc để hiểu toàn bộ luồng hoạt động,
+edge cases, retry logic và cách debug logs.
