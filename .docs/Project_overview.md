@@ -113,6 +113,9 @@ PriceHawk_S4/
 ├── public/                       # ✅ Static assets (people.jpg, favicon...)
 ├── docker-compose.yml            # ✅ 3 services: mysql (3307), main (3000), crawler
 ├── Dockerfile                    # ✅ Web app Dockerfile (Next.js)
+├── middleware.js                  # ✅ Next.js Edge Middleware — bảo vệ /admin/* (RBAC)
+│                                 #    ⚠️ BẮT BUỘC đặt ở ROOT — KHÔNG được di chuyển vào bất kỳ folder nào
+│                                 #    Nếu di chuyển → middleware âm thầm không chạy, /admin mất bảo vệ
 ├── next.config.js                # ✅ Image domains + SWC minify + compress
 ├── tailwind.config.js            # ✅ darkMode: "class", content paths
 ├── package.json                  # ✅ Dependencies + scripts
@@ -249,6 +252,7 @@ price_alert:
 
 ### Architecture rules
 - ⚠️ `pages/api/database.js` là nơi DUY NHẤT được phép tạo MySQL connection pool
+- ⚠️ `middleware.js` BẮT BUỘC nằm ở **root project** (cạnh `app/` và `pages/`) — đây là hard constraint của Next.js, không phải convention. Di chuyển sang bất kỳ folder nào khác → middleware không chạy, không báo lỗi, `/admin` mất bảo vệ.
 - API route KHÔNG được import từ crawler Python và ngược lại
 - ProductMatcher STRICT: `brand_norm + model_key + variant_key` phải khớp mới group. Muốn relax → sửa `product_matcher.py`
 - `normalizer.py` là single source of truth cho việc trích xuất brand/model/ram/rom/color
@@ -401,6 +405,7 @@ price_alert:
 - ❌ **KHÔNG** lấy `userId` từ `req.body` → luôn lấy từ `getServerSession(req, res, authOptions)`
 - ❌ **KHÔNG** dùng `const [rows] = await db.query(...)` → `database.js` resolve thẳng array, không phải tuple
 - ❌ **KHÔNG** dùng `@/` alias trong `scripts/` → dùng relative path `require("../pages/api/...")`
+- ❌ **KHÔNG** di chuyển `middleware.js` ra khỏi root project → Next.js sẽ không nhận ra và toàn bộ middleware bị bỏ qua âm thầm
 - ❌ **KHÔNG** dùng `bcrypt` native → `bcryptjs` (lỗi Docker build Alpine)
 
 ---

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { getProducts, searchProducts } from "../lib/apiClient";
 import axios from "axios";
 import SearchCard from "./SearchCard";
@@ -19,19 +20,23 @@ const SkeletonLoader = () => (
   </div>
 );
 
-export default function ProductBrowser({ searchTerm = "" }) {
+function ProductBrowserContent({ searchTerm = "" }) {
   const [items, setItems] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const pageQuery = searchParams?.get("page");
+  const parsedPage = parseInt(pageQuery, 10);
+  const currentPage = !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+
   const pageSize = 12;
 
   const isSearchMode = Boolean(searchTerm);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -70,6 +75,12 @@ export default function ProductBrowser({ searchTerm = "" }) {
   }, [isSearchMode, searchTerm, currentPage]);
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(totalItems / pageSize)), [totalItems]);
+
+  const handlePageChange = (newPage) => {
+    const params = new URLSearchParams(searchParams?.toString() || "");
+    params.set("page", newPage.toString());
+    router.push(`${pathname}?${params.toString()}`, { scroll: true });
+  };
 
   return (
     <div className={cn(ui.pageWrap, "py-10")}>
@@ -162,7 +173,7 @@ export default function ProductBrowser({ searchTerm = "" }) {
         {!loading && totalItems > 0 && totalPages > 1 ? (
           <div className="flex justify-center items-center gap-3 mt-16 text-sm">
             <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
               className="px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
             >
@@ -174,7 +185,7 @@ export default function ProductBrowser({ searchTerm = "" }) {
             </div>
 
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="px-6 py-2.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm font-medium"
             >
@@ -185,5 +196,20 @@ export default function ProductBrowser({ searchTerm = "" }) {
       </main>
       </div>
     </div>
+  );
+}
+
+export default function ProductBrowser({ searchTerm = "" }) {
+  return (
+    <Suspense fallback={
+      <div className={cn(ui.pageWrap, "py-10")}>
+        <div className={cn(ui.container, "space-y-6")}>
+          <div className={cn(ui.card, "h-[200px] animate-pulse mb-10")} />
+          <SkeletonLoader />
+        </div>
+      </div>
+    }>
+      <ProductBrowserContent searchTerm={searchTerm} />
+    </Suspense>
   );
 }
