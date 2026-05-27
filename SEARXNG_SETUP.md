@@ -1,7 +1,9 @@
 # SearXNG Self-Hosted Integration
 
 ## Tổng quan
+
 Chatbot hiện tại hoạt động theo luồng:
+
 ```
 User Query
   ↓
@@ -19,10 +21,12 @@ User Query
 ## Cấu trúc mới
 
 ### docker-compose.yml
+
 - **searxng**: Self-hosted search engine trên port 8080
 - **chatbot**: FastAPI app trên port 8000 (gọi SearXNG qua internal network)
 
 ### Tệp mới
+
 - **search_cli.py**: Client để gọi SearXNG API
 - **chatbot_service.py**: Cập nhật fallback logic
 
@@ -41,11 +45,13 @@ docker ps
 ## Test
 
 ### 1. Test SearXNG trực tiếp
+
 ```bash
 curl "http://localhost:8080/search?q=iPhone+15&format=json" | jq '.results[0:2]'
 ```
 
 ### 2. Test Chatbot với DB data
+
 ```powershell
 $body = @{ message = "tìm iPhone"; history = @() } | ConvertTo-Json -Compress
 curl -s -X POST "http://localhost:8000/chat" -H "Content-Type: application/json" -d $body
@@ -54,6 +60,7 @@ curl -s -X POST "http://localhost:8000/chat" -H "Content-Type: application/json"
 Dự kiến: `"source": "database"` (nếu DB có iPhone)
 
 ### 3. Test Chatbot fallback to Web
+
 ```powershell
 $body = @{ message = "tìm Galaxy Z Fold 7"; history = @() } | ConvertTo-Json -Compress
 curl -s -X POST "http://localhost:8000/chat" -H "Content-Type: application/json" -d $body
@@ -62,6 +69,7 @@ curl -s -X POST "http://localhost:8000/chat" -H "Content-Type: application/json"
 Dự kiến: `"source": "web"` (nếu DB không có, nhưng web có thông tin)
 
 ### 4. Test qua Web UI
+
 ```
 http://localhost:3000
 # Click chatbot icon → Gõ câu hỏi → Xem response + source
@@ -86,7 +94,7 @@ docker logs mysql
 ✅ **Linh hoạt**: Tắt/bật web search bất kỳ lúc nào  
 ✅ **Nhanh**: Internal Docker network → zero latency  
 ✅ **Rẻ**: Không tốn API quota hay tiền  
-✅ **Kiểm soát**: Full control logs, settings  
+✅ **Kiểm soát**: Full control logs, settings
 
 ## Nếu cần config thêm
 
