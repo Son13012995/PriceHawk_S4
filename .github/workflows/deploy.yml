@@ -19,12 +19,13 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           command_timeout: 30m
           script: |
-            cd /root/pricecomparison/PriceHawk_S4
+            cd /root/pricehawk/PriceHawk_S4
             git fetch origin
             git reset --hard origin/main
 
             # Tạo file .env.product từ GitHub Secret
             echo "${{ secrets.ENV_PRODUCT }}" > .env.product
             echo "${{ secrets.ENV_CHATBOT }}" > ./chatbot/.env.docker
+            echo "${{ secrets.ENV_CRAWLER }}" > ./price-hawk/.env.docker
 
             docker compose up -d --build --remove-orphans
