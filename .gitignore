@@ -54,8 +54,8 @@ dump-priceComparison-202312131918.sql
 
 # Crawler data (don't push to repo)
 price-hawk/data/
-*.jsonl
-*.json
+# *.jsonl
+# *.json
 
 # Python
 __pycache__/
