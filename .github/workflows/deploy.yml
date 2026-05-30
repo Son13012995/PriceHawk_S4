@@ -28,5 +28,5 @@ jobs:
             echo "${{ secrets.ENV_CHATBOT }}" > ./chatbot/.env.product
             echo "${{ secrets.ENV_CRAWLER }}" > ./price-hawk/.env.product
 
-            docker compose build --parallel=1
+            docker compose build --no-cache --parallel=1 
             docker compose up -d --remove-orphans
