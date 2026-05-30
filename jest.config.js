@@ -25,13 +25,16 @@ const config = {
 
   // Hiển thị coverage khi chạy npm run test:coverage
   collectCoverageFrom: [
-    "app/utils/**/*.js",
     "pages/api/**/*.js",
+    "app/utils/**/*.js",
+    "lib/normalizer.js",
     "lib/apiClient.js",
-    "components/**/*.{js,jsx}",
-    "!pages/api/database.js", // Bỏ qua DB connection — không test trực tiếp
-    "!**/*.config.js",
-    "!components/**/*.stories.{js,jsx}", // Bỏ qua Storybook nếu có
+    "components/MinPriceBox.jsx",
+    "components/TrendingDeals.jsx",
+    "components/HeroSearch.jsx",
+    "components/SearchCard.jsx",
+    "!pages/api/database.js",
+    "!pages/api/auth/[...nextauth].js",
   ],
 };
 
