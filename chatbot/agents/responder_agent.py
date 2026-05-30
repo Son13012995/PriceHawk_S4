@@ -75,9 +75,9 @@ class ResponderAgent:
 
         if intent == "compare":
             instruction = (
-                /*"Hãy trình bày thông tin SO SÁNH chi tiết cho các sản phẩm tìm được dưới dạng DANH SÁCH (TUYỆT ĐỐI KHÔNG DÙNG BẢNG). "
+                "Hãy trình bày thông tin SO SÁNH chi tiết cho các sản phẩm tìm được dưới dạng DANH SÁCH (TUYỆT ĐỐI KHÔNG DÙNG BẢNG). "
                 "Mỗi sản phẩm hãy in đậm tên, sau đó gạch đầu dòng các tiêu chí cơ bản (Giá, RAM, Camera, Pin, Chipset). VÌ DỮ LIỆU HỆ THỐNG CHỈ CÓ GIÁ, HÃY TỰ DÙNG KIẾN THỨC SẴN CÓ CỦA BẠN ĐỂ ĐIỀN THÔNG SỐ KỸ THUẬT, nhưng MỨC GIÁ thì bắt buộc phải lấy từ dữ liệu hệ thống (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url)). "
-                "Sau khi liệt kê, thêm 2-3 dòng nhận xét ngắn gọn (VD: ưu/nhược điểm của từng máy, máy nào phù hợp với ai)."*/
+                "Sau khi liệt kê, thêm 2-3 dòng nhận xét ngắn gọn (VD: ưu/nhược điểm của từng máy, máy nào phù hợp với ai)."
             )
         else:
             instruction = (
