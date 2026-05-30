@@ -166,6 +166,30 @@ class BatchDBProcessor:
                         ELSE min_price_at
                     END
             """, (product_id, price, url, source, price))
+            
+            # Fetch the comparison ID to link the price_history record
+            self.cursor.execute("SELECT id FROM comparison WHERE url = %s", (url,))
+            comp_res = self.cursor.fetchone()
+            
+            if comp_res:
+                comparison_id = comp_res[0]
+                
+                # Only insert price_history when price actually changed (avoid duplicates
+                # when crawler runs multiple times per day with the same price)
+                self.cursor.execute("""
+                    SELECT price FROM price_history
+                    WHERE comparison_id = %s
+                    ORDER BY recorded_at DESC
+                    LIMIT 1
+                """, (comparison_id,))
+                last_row = self.cursor.fetchone()
+                last_price = last_row[0] if last_row else None
+                
+                if last_price is None or last_price != price:
+                    self.cursor.execute("""
+                        INSERT INTO price_history (product_id, comparison_id, price, retailer, recorded_at)
+                        VALUES (%s, %s, %s, %s, NOW())
+                    """, (product_id, comparison_id, price, source))
         
         except Exception as e:
             print(f"⚠️ Failed to insert comparison ({url}): {e}")

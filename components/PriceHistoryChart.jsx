@@ -383,11 +383,6 @@ export default function PriceHistoryChart({ productId }) {
         maxPrice={maxPrice}
       />
 
-      {data._mock && (
-        <p className="text-[10px] text-zinc-400 dark:text-zinc-600 text-right">
-          * Dữ liệu demo — sẽ tự cập nhật sau khi crawler chạy
-        </p>
-      )}
     </div>
   );
 }

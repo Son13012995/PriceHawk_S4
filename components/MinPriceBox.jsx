@@ -69,7 +69,7 @@ export default function MinPriceBox({ productId }) {
     <div className="px-6 py-4 border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-xl hover:border-violet-500 dark:hover:border-violet-500 transition-all shadow-sm">
       <p className="text-xs font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest">Min Price</p>
       <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50 mt-1 leading-tight truncate">
-        {formatPrice(minPriceRecord.price)}₫
+        {formatPrice(minPriceRecord.price)}
       </p>
 
       <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mt-2 mb-1">Cập nhật lúc</p>
