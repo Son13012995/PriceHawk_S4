@@ -1,0 +1,21 @@
+services:
+  k6:
+    image: grafana/k6
+    volumes:
+      - ./k6:/scripts
+      - ./k6/results:/results    # ← thêm dòng này
+    command: run --out json=/results/result.json /scripts/test.js
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 128M
+    networks:
+      mynetwork:
+        aliases:
+          - k6
+
+networks:
+  mynetwork:
+    external: true
+    name: pricehawk_s4_mynetwork
