@@ -5,88 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PriceHawk Scanner</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="popup.css"/>
 </head>
 <body>
   <div id="app">
+
     <!-- Header -->
     <header>
       <div class="logo">
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M10 2L18 6V14L10 18L2 14V6L10 2Z" stroke="#00c2ff" stroke-width="1.5" fill="none"/>
-          <path d="M10 6L14 8V12L10 14L6 12V8L10 6Z" fill="#00c2ff" opacity="0.4"/>
-          <circle cx="10" cy="10" r="2" fill="#00c2ff"/>
-        </svg>
-        <span>PriceHawk</span>
+        <div class="logo-icon">
+          <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2L18 6V14L10 18L2 14V6L10 2Z" stroke="#fff" stroke-width="1.5" fill="none"/>
+            <path d="M10 6L14 8V12L10 14L6 12V8L10 6Z" fill="#fff" opacity="0.5"/>
+            <circle cx="10" cy="10" r="2" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <div class="logo-name">PriceHawk</div>
+          <div class="logo-sub">Price Scanner</div>
+        </div>
       </div>
-      <div id="status-dot" class="dot idle" title="Idle"></div>
+      <div id="status-badge" class="status-badge idle">
+        <div class="dot"></div>
+        <span id="status-text">Ready</span>
+      </div>
     </header>
 
-    <!-- Step 1: Scan controls -->
+    <!-- Scan Section -->
     <section id="scan-section" class="section">
-      <div class="section-label">SCAN PRODUCT</div>
+      <div class="section-title">Scan Product</div>
 
-      <div class="field-row" id="name-row">
-        <div class="field-info">
+      <!-- Name field -->
+      <div class="field-card" id="name-row">
+        <div class="field-body">
           <div class="field-label">Product Name</div>
           <div id="name-display" class="field-value empty">Not selected</div>
         </div>
-        <button id="btn-pick-name" class="pick-btn" title="Click to pick name from page">
-          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 4-5 1-1 5-4-10z" fill="currentColor"/></svg>
+        <button id="btn-pick-name" class="pick-btn">
+          <svg width="11" height="11" viewBox="0 0 14 14"><path d="M2 2l10 4-5 1-1 5-4-10z" fill="currentColor"/></svg>
           Pick
         </button>
       </div>
 
-      <div class="field-row" id="price-row">
-        <div class="field-info">
-          <div class="field-label">Product Price</div>
+      <!-- Price field -->
+      <div class="field-card" id="price-row">
+        <div class="field-body">
+          <div class="field-label">Current Price</div>
           <div id="price-display" class="field-value empty">Not selected</div>
         </div>
-        <button id="btn-pick-price" class="pick-btn" title="Click to pick price from page">
-          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 2l10 4-5 1-1 5-4-10z" fill="currentColor"/></svg>
+        <button id="btn-pick-price" class="pick-btn">
+          <svg width="11" height="11" viewBox="0 0 14 14"><path d="M2 2l10 4-5 1-1 5-4-10z" fill="currentColor"/></svg>
           Pick
         </button>
       </div>
 
-      <div class="field-row" id="category-row">
-        <div class="field-info">
-          <div class="field-label">Category</div>
-        </div>
+      <!-- Category -->
+      <div class="cat-card">
+        <div class="cat-label">Category</div>
         <select id="category-select" class="category-select">
-          <option value="dien-thoai">📱 Điện thoại</option>
-          <option value="tablet">📟 Máy tính bảng</option>
-          <option value="laptop">💻 Laptop</option>
+          <option value="dien-thoai">Phone</option>
+          <option value="tablet">Tablet</option>
+          <option value="laptop">Laptop</option>
         </select>
       </div>
 
-      <div id="picker-hint" class="hint hidden">
-        <span id="hint-text">Hover over an element and click to select</span>
+      <!-- Picker hint -->
+      <div id="picker-hint" class="hint-bar hidden">
+        <span id="hint-text">Click an element on the page</span>
         <button id="btn-cancel-pick" class="cancel-btn">✕ Cancel</button>
       </div>
 
-      <button id="btn-compare" class="primary-btn" disabled>
-        <span id="compare-label">Compare</span>
+      <!-- Compare CTA -->
+      <button id="btn-compare" class="compare-btn" disabled>
+        <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+          <path d="M4 10h12M10 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span id="compare-label">Compare Price</span>
         <span id="compare-spinner" class="spinner hidden"></span>
       </button>
     </section>
 
-    <!-- Step 2: Compare result -->
-    <section id="result-section" class="section hidden">
-      <div class="section-label">RESULT</div>
-      <div id="result-box"></div>
+    <!-- Result Section -->
+    <section id="result-section" class="hidden">
 
-      <div id="save-actions" class="action-row hidden">
-        <button id="btn-save" class="primary-btn green">Save to Database</button>
-        <button id="btn-skip" class="ghost-btn">Skip</button>
+      <!-- Verdict -->
+      <div id="verdict-banner" class="verdict-banner">
+        <div id="verdict-icon" class="verdict-icon"></div>
+        <div class="verdict-text">
+          <div id="verdict-title" class="verdict-title"></div>
+          <div id="verdict-sub" class="verdict-sub"></div>
+        </div>
       </div>
 
-      <div id="save-status" class="save-status hidden"></div>
+      <!-- Price stats -->
+      <div id="stats-grid" class="stats-grid"></div>
 
-      <button id="btn-reset" class="ghost-btn small">← Scan another</button>
+      <!-- Details -->
+      <div id="detail-section" class="detail-section"></div>
+
+      <!-- Reset -->
+      <div class="result-actions">
+        <button id="btn-reset" class="reset-btn">← Scan another product</button>
+      </div>
+
     </section>
-  </div>
 
+  </div>
   <script src="popup.js"></script>
 </body>
 </html>

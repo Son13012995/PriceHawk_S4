@@ -1,10 +1,10 @@
 /**
- * popup/popup.js
- * Full state machine for PriceHawk Scanner popup.
+ * popup/popup.js — PriceHawk Scanner (compare-only, no save)
  */
 
 // ── DOM refs ────────────────────────────────────────────────────────────────
-const statusDot      = document.getElementById("status-dot");
+const statusBadge    = document.getElementById("status-badge");
+const statusText     = document.getElementById("status-text");
 const nameDisplay    = document.getElementById("name-display");
 const priceDisplay   = document.getElementById("price-display");
 const nameRow        = document.getElementById("name-row");
@@ -19,11 +19,12 @@ const hintText       = document.getElementById("hint-text");
 const btnCancelPick  = document.getElementById("btn-cancel-pick");
 const scanSection    = document.getElementById("scan-section");
 const resultSection  = document.getElementById("result-section");
-const resultBox      = document.getElementById("result-box");
-const saveActions    = document.getElementById("save-actions");
-const btnSave        = document.getElementById("btn-save");
-const btnSkip        = document.getElementById("btn-skip");
-const saveStatus     = document.getElementById("save-status");
+const verdictBanner  = document.getElementById("verdict-banner");
+const verdictIcon    = document.getElementById("verdict-icon");
+const verdictTitle   = document.getElementById("verdict-title");
+const verdictSub     = document.getElementById("verdict-sub");
+const statsGrid      = document.getElementById("stats-grid");
+const detailSection  = document.getElementById("detail-section");
 const btnReset       = document.getElementById("btn-reset");
 const categorySelect = document.getElementById("category-select");
 
@@ -32,33 +33,31 @@ let state = {
   rawName: null,
   price: null,
   priceRaw: null,
-  compareResult: null,
-  picking: null, // 'name' | 'price' | null
+  picking: null,
   sourceUrl: null,
   category: "dien-thoai",
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-function setDot(mode) {
-  statusDot.className = `dot ${mode}`;
+function setStatus(mode, label) {
+  statusBadge.className = `status-badge ${mode}`;
+  statusText.textContent = label;
 }
 
 function formatPrice(n) {
   if (n == null) return "—";
-  return new Intl.NumberFormat("vi-VN").format(n) + " ₫";
+  return new Intl.NumberFormat("en-US").format(n) + " ₫";
 }
 
 function formatDiff(diff) {
   if (diff == null) return "—";
   const sign = diff > 0 ? "+" : "";
-  return sign + new Intl.NumberFormat("vi-VN").format(diff) + " ₫";
+  return sign + new Intl.NumberFormat("en-US").format(diff) + " ₫";
 }
 
 function send(msg) {
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage(msg, (resp) => {
-      resolve(resp || {});
-    });
+    chrome.runtime.sendMessage(msg, (resp) => resolve(resp || {}));
   });
 }
 
@@ -70,11 +69,10 @@ function setPickerUI(mode) {
   state.picking = mode;
   if (mode) {
     pickerHint.classList.remove("hidden");
-    hintText.textContent =
-      mode === "name"
-        ? "Click the element containing the product name"
-        : "Click the element containing the price";
-    setDot("picking");
+    hintText.textContent = mode === "name"
+      ? "Click the product name on the page"
+      : "Click the price on the page";
+    setStatus("picking", "Picking…");
     btnPickName.disabled  = true;
     btnPickPrice.disabled = true;
     btnCompare.disabled   = true;
@@ -82,7 +80,7 @@ function setPickerUI(mode) {
     if (mode === "price") priceRow.classList.add("active");
   } else {
     pickerHint.classList.add("hidden");
-    setDot("idle");
+    setStatus("idle", "Ready");
     btnPickName.disabled  = false;
     btnPickPrice.disabled = false;
     nameRow.classList.remove("active");
@@ -91,72 +89,85 @@ function setPickerUI(mode) {
   }
 }
 
-function renderResult(data) {
-  resultBox.innerHTML = "";
-  resultBox.className = data.found ? "result-match" : "result-nomatch";
-
-  if (data.found) {
-    const diff = data.priceDiff;
-    const diffClass = diff > 0 ? "up" : diff < 0 ? "down" : "same";
-    const diffLabel = diff > 0 ? "↑ Đắt hơn" : diff < 0 ? "↓ Rẻ hơn" : "= Bằng giá";
-
-    resultBox.innerHTML = `
-      <div class="result-title ok">✓ Matched</div>
-      <div class="result-row">
-        <span class="result-key">DB Product</span>
-        <span class="result-val">${escapeHtml(data.matchedProduct.name)}</span>
-      </div>
-      <div class="result-row">
-        <span class="result-key">DB Price</span>
-        <span class="result-val">${formatPrice(data.matchedProduct.price)}</span>
-      </div>
-      <div class="result-row">
-        <span class="result-key">Current Price</span>
-        <span class="result-val">${formatPrice(data.currentPrice)}</span>
-      </div>
-      <div class="result-row">
-        <span class="result-key">Difference</span>
-        <span class="result-val ${diffClass}">${formatDiff(diff)} ${diffLabel}</span>
-      </div>
-      <div class="result-identity">identity_key: ${escapeHtml(data.identityKey)}</div>
-    `;
-    saveActions.classList.remove("hidden");
-  } else {
-    resultBox.innerHTML = `
-      <div class="result-title fail">✗ Not Found</div>
-      <div class="result-row">
-        <span class="result-key">Name scanned</span>
-        <span class="result-val">${escapeHtml(state.rawName)}</span>
-      </div>
-      <div class="result-row">
-        <span class="result-key">Identity key</span>
-        <span class="result-val">${escapeHtml(data.identityKey || "—")}</span>
-      </div>
-      <div class="result-row">
-        <span class="result-key">Confidence</span>
-        <span class="result-val">${((data.normalizedResult?.confidenceScore || 0) * 100).toFixed(0)}%</span>
-      </div>
-    `;
-    saveActions.classList.remove("hidden");
-  }
-}
-
 function escapeHtml(str) {
   if (!str) return "";
   return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-function showScanSection() {
-  scanSection.classList.remove("hidden");
-  resultSection.classList.add("hidden");
+function renderResult(data) {
+  // Verdict
+  if (data.found) {
+    const diff = data.priceDiff;
+    const diffClass = diff > 0 ? "up" : diff < 0 ? "down" : "same";
+    const diffLabel = diff > 0 ? "More expensive" : diff < 0 ? "Cheaper" : "Same price";
+
+    verdictBanner.className = "verdict-banner match";
+    verdictIcon.className   = "verdict-icon match";
+    verdictIcon.textContent = "✓";
+    verdictTitle.className  = "verdict-title match";
+    verdictTitle.textContent= "Matched";
+    verdictSub.textContent  = `Found in PriceHawk database`;
+
+    // Stats
+    statsGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">DB Price</div>
+        <div class="stat-value big">${formatPrice(data.matchedProduct.price)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Current Price</div>
+        <div class="stat-value big">${formatPrice(data.currentPrice)}</div>
+      </div>
+      <div class="stat-card" style="grid-column:1/-1">
+        <div class="stat-label">Difference</div>
+        <div class="stat-value ${diffClass}">${formatDiff(diff)}</div>
+        <div class="diff-pill ${diffClass}">${diff > 0 ? "↑" : diff < 0 ? "↓" : "="} ${diffLabel}</div>
+      </div>
+    `;
+
+    // Details
+    detailSection.innerHTML = `
+      <div class="detail-row">
+        <span class="detail-key">DB Product</span>
+        <span class="detail-val">${escapeHtml(data.matchedProduct.name)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Identity Key</span>
+        <span class="detail-val" style="font-family:var(--mono);font-size:10px">${escapeHtml(data.identityKey)}</span>
+      </div>
+    `;
+  } else {
+    // Not found
+    const conf = ((data.normalizedResult?.confidenceScore || 0) * 100).toFixed(0);
+
+    verdictBanner.className = "verdict-banner nomatch";
+    verdictIcon.className   = "verdict-icon nomatch";
+    verdictIcon.textContent = "?";
+    verdictTitle.className  = "verdict-title nomatch";
+    verdictTitle.textContent= "Not Found";
+    verdictSub.textContent  = `No match in database`;
+
+    statsGrid.innerHTML = `
+      <div class="stat-card" style="grid-column:1/-1">
+        <div class="stat-label">Confidence</div>
+        <div class="stat-value">${conf}%</div>
+      </div>
+    `;
+
+    detailSection.innerHTML = `
+      <div class="detail-row">
+        <span class="detail-key">Scanned Name</span>
+        <span class="detail-val">${escapeHtml(state.rawName)}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-key">Identity Key</span>
+        <span class="detail-val" style="font-family:var(--mono);font-size:10px">${escapeHtml(data.identityKey || "—")}</span>
+      </div>
+    `;
+  }
 }
 
-function showResultSection() {
-  scanSection.classList.add("hidden");
-  resultSection.classList.remove("hidden");
-}
-
-// ── Init: restore from storage ───────────────────────────────────────────────
+// ── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
   const stored = await chrome.storage.local.get(["selectedName", "selectedPrice", "selectedPriceRaw", "selectedCategory"]);
 
@@ -167,19 +178,17 @@ async function init() {
     nameRow.classList.add("done");
   }
   if (stored.selectedPrice != null) {
-    state.price = stored.selectedPrice;
+    state.price    = stored.selectedPrice;
     state.priceRaw = stored.selectedPriceRaw || null;
     priceDisplay.textContent = formatPrice(stored.selectedPrice);
     priceDisplay.classList.remove("empty");
     priceRow.classList.add("done");
   }
-
   if (stored.selectedCategory) {
     state.category = stored.selectedCategory;
     categorySelect.value = stored.selectedCategory;
   }
 
-  // Get current tab URL
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   state.sourceUrl = tab?.url || "";
 
@@ -188,8 +197,7 @@ async function init() {
 
 init();
 
-// ── Event listeners ──────────────────────────────────────────────────────────
-
+// ── Events ───────────────────────────────────────────────────────────────────
 categorySelect.addEventListener("change", () => {
   state.category = categorySelect.value;
   chrome.storage.local.set({ selectedCategory: state.category });
@@ -198,13 +206,11 @@ categorySelect.addEventListener("change", () => {
 btnPickName.addEventListener("click", async () => {
   setPickerUI("name");
   await send({ type: "START_PICKER", mode: "name" });
-//   window.close(); // close popup so user can interact with page
 });
 
 btnPickPrice.addEventListener("click", async () => {
   setPickerUI("price");
   await send({ type: "START_PICKER", mode: "price" });
-//   window.close();
 });
 
 btnCancelPick.addEventListener("click", async () => {
@@ -215,7 +221,7 @@ btnCancelPick.addEventListener("click", async () => {
 btnCompare.addEventListener("click", async () => {
   if (!state.rawName || state.price === null) return;
 
-  setDot("loading");
+  setStatus("loading", "Comparing…");
   compareLabel.textContent = "Comparing…";
   compareSpinner.classList.remove("hidden");
   btnCompare.disabled = true;
@@ -228,91 +234,55 @@ btnCompare.addEventListener("click", async () => {
     category: state.category,
   });
 
-  compareLabel.textContent = "Compare";
+  compareLabel.textContent = "Compare Price";
   compareSpinner.classList.add("hidden");
 
   if (!resp.ok) {
-    setDot("error");
-    resultBox.innerHTML = `<div class="result-title fail">⚠ API Error</div><div class="result-row"><span class="result-key">Error</span><span class="result-val">${escapeHtml(resp.error)}</span></div>`;
-    saveActions.classList.add("hidden");
-    showResultSection();
+    setStatus("error", "Error");
+    // Show error in result
+    verdictBanner.className = "verdict-banner nomatch";
+    verdictIcon.className   = "verdict-icon nomatch";
+    verdictIcon.textContent = "!";
+    verdictTitle.className  = "verdict-title nomatch";
+    verdictTitle.textContent= "API Error";
+    verdictSub.textContent  = resp.error || "Unknown error";
+    statsGrid.innerHTML     = "";
+    detailSection.innerHTML = "";
+    showResult();
     return;
   }
 
-  state.compareResult = resp.data;
-  setDot(resp.data.found ? "success" : "error");
-  saveStatus.classList.add("hidden");
-  saveStatus.className = "save-status hidden";
+  setStatus(resp.data.found ? "success" : "error", resp.data.found ? "Matched" : "Not Found");
   renderResult(resp.data);
-  showResultSection();
-});
-
-btnSave.addEventListener("click", async () => {
-  btnSave.disabled = true;
-  btnSave.textContent = "Saving…";
-
-  const resp = await send({
-    type: "SAVE",
-    name: state.rawName,
-    price: state.price,
-    sourceUrl: state.sourceUrl,
-    category: state.category,
-  });
-
-  btnSave.textContent = "Save to Database";
-  btnSave.disabled = false;
-  saveActions.classList.add("hidden");
-  saveStatus.classList.remove("hidden");
-
-  if (!resp.ok) {
-    saveStatus.className = "save-status error";
-    saveStatus.textContent = "⚠ Save failed: " + (resp.error || "Unknown error");
-    return;
-  }
-
-  if (resp.data?.duplicate) {
-    saveStatus.className = "save-status dup";
-    saveStatus.textContent = "ℹ Product already exists in database.";
-  } else if (resp.data?.success) {
-    saveStatus.className = "save-status success";
-    saveStatus.textContent = `✓ Saved! Product ID: ${resp.data.productId}`;
-    setDot("success");
-  }
-});
-
-btnSkip.addEventListener("click", () => {
-  saveActions.classList.add("hidden");
-  saveStatus.className = "save-status";
-  saveStatus.classList.add("hidden");
+  showResult();
 });
 
 btnReset.addEventListener("click", async () => {
-  // Clear storage
-  await chrome.storage.local.remove(["selectedName", "selectedPrice", "selectedPriceRaw", "selectedCategory"]);
+  await chrome.storage.local.remove(["selectedName", "selectedPrice", "selectedPriceRaw"]);
 
-  // Reset state
   state.rawName = null;
-  state.price = null;
-  state.compareResult = null;
+  state.price   = null;
 
   nameDisplay.textContent = "Not selected";
   nameDisplay.classList.add("empty");
   priceDisplay.textContent = "Not selected";
   priceDisplay.classList.add("empty");
-  nameRow.classList.remove("done", "active");
-  priceRow.classList.remove("done", "active");
-  saveActions.classList.add("hidden");
-  saveStatus.classList.add("hidden");
+  nameRow.classList.remove("done","active");
+  priceRow.classList.remove("done","active");
 
-  setDot("idle");
-  showScanSection();
+  setStatus("idle","Ready");
+  scanSection.classList.remove("hidden");
+  resultSection.classList.add("hidden");
   updateCompareBtn();
 });
 
-// ── Listen for messages from background (content script results) ─────────────
+function showResult() {
+  scanSection.classList.add("hidden");
+  resultSection.classList.remove("hidden");
+}
+
+// ── Background messages ──────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((msg) => {
-  // These fire when popup is open and user has already picked
-  // (edge case: popup re-opened after picking)
   if (msg.type === "NAME_SELECTED") {
     state.rawName = msg.rawName;
     nameDisplay.textContent = msg.rawName;
@@ -321,9 +291,8 @@ chrome.runtime.onMessage.addListener((msg) => {
     setPickerUI(null);
     updateCompareBtn();
   }
-
   if (msg.type === "PRICE_SELECTED") {
-    state.price = msg.price;
+    state.price    = msg.price;
     state.priceRaw = msg.rawText;
     priceDisplay.textContent = formatPrice(msg.price);
     priceDisplay.classList.remove("empty");
@@ -331,14 +300,12 @@ chrome.runtime.onMessage.addListener((msg) => {
     setPickerUI(null);
     updateCompareBtn();
   }
-
   if (msg.type === "PRICE_PARSE_ERROR") {
     setPickerUI(null);
-    setDot("error");
+    setStatus("error","Parse Error");
     priceDisplay.textContent = `Cannot parse: "${msg.rawText}"`;
     priceDisplay.classList.add("empty");
   }
-
   if (msg.type === "PICKER_CANCELLED") {
     setPickerUI(null);
   }
