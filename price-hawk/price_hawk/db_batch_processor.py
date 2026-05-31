@@ -102,10 +102,7 @@ class BatchDBProcessor:
                 INSERT INTO product (identity_key, name, description, image_url, brand, current_price)
                 VALUES (%s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE
-                    current_price = CASE 
-                        WHEN product.current_price IS NULL THEN VALUES(current_price)
-                        ELSE LEAST(product.current_price, VALUES(current_price))
-                    END,
+                    current_price = VALUES(current_price),
                     description = VALUES(description),
                     image_url = VALUES(image_url)
             """, (identity_key, name, description, image_url, brand, current_price))
