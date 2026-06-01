@@ -21,7 +21,7 @@ const triggersFetcher = () => checkTriggeredAlerts().then((res) => res.data);
 
 export default function AlertsPage() {
   return (
-    <AuthGuard featureName="Price Alerts">
+    <AuthGuard featureName="Cảnh báo giá">
       <AlertsContent />
     </AuthGuard>
   );
@@ -121,7 +121,7 @@ function AlertsContent() {
       );
 
       if (response.status === 201) {
-        setMessage("Đã tạo price alert mới.");
+        setMessage("Đã tạo cảnh báo mới.");
         setSelectedProduct(null);
         setTargetPrice("");
         setNote("");
@@ -131,9 +131,9 @@ function AlertsContent() {
       }
     } catch (error) {
       if (error.response?.status === 401) {
-        setMessage("⚠️ Bạn cần đăng nhập để tạo price alert.");
+        setMessage("⚠️ Bạn cần đăng nhập để tạo cảnh báo.");
       } else {
-        setMessage(error.response?.data?.error || "Không thể tạo alert. Vui lòng thử lại.");
+        setMessage(error.response?.data?.error || "Không thể tạo cảnh báo. Vui lòng thử lại.");
       }
       setTimeout(() => setMessage(""), 4000);
     }
@@ -147,9 +147,9 @@ function AlertsContent() {
       mutate("alerts-triggers");
     } catch (error) {
       if (error.response?.status === 401) {
-        setMessage("⚠️ Bạn cần đăng nhập để cập nhật alert.");
+        setMessage("⚠️ Bạn cần đăng nhập để cập nhật cảnh báo.");
       } else {
-        setMessage("Không thể cập nhật alert. Vui lòng thử lại.");
+        setMessage("Không thể cập nhật cảnh báo. Vui lòng thử lại.");
       }
       setTimeout(() => setMessage(""), 4000);
     }
@@ -158,15 +158,15 @@ function AlertsContent() {
   const removeAlert = async (id) => {
     try {
       await deleteAlert(id);
-      setMessage("Đã xóa alert.");
+      setMessage("Đã xóa cảnh báo.");
       setTimeout(() => setMessage(""), 3000);
       mutate("alerts");
       mutate("alerts-triggers");
     } catch (error) {
       if (error.response?.status === 401) {
-        setMessage("⚠️ Bạn cần đăng nhập để xóa alert.");
+        setMessage("⚠️ Bạn cần đăng nhập để xóa cảnh báo.");
       } else {
-        setMessage("Không thể xóa alert. Vui lòng thử lại.");
+        setMessage("Không thể xóa cảnh báo. Vui lòng thử lại.");
       }
       setTimeout(() => setMessage(""), 4000);
     }
@@ -203,7 +203,7 @@ function AlertsContent() {
                 <h2 className={cn(ui.heading, "text-2xl font-black")}>Giá hiện tại đã đạt mục tiêu!</h2>
               </div>
               <p className={cn(ui.mutedText, "text-sm")}>
-                {triggeredAlerts.length} sản phẩm trong danh sách price alert của bạn đã đạt giá mong muốn
+                {triggeredAlerts.length} sản phẩm trong danh sách cảnh báo của bạn đã đạt giá mong muốn
               </p>
             </div>
 
@@ -267,7 +267,7 @@ function AlertsContent() {
                 }}
                 className={cn(ui.primaryButton, "flex-1")}
               >
-                Cập nhật Alerts
+                Cập nhật Cảnh báo
               </button>
             </div>
           </div>
@@ -287,11 +287,11 @@ function AlertsContent() {
                   <Bell className="w-6 h-6 text-violet-600 dark:text-violet-400" />
                 </div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">
-                  Alert Center
+                  Trung tâm cảnh báo
                 </p>
               </div>
               <h1 className={cn(ui.heading, "text-3xl font-black sm:text-5xl tracking-tight")}>
-                Price Alerts
+                Cảnh báo giá
               </h1>
               <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
                 Tạo cảnh báo tự động khi giá sản phẩm giảm về mức bạn mong muốn. Không bao giờ bỏ lỡ deal tốt.
@@ -325,81 +325,84 @@ function AlertsContent() {
           </div>
         </header>
 
-        <section className={cn(ui.card, "grid gap-6 p-6 md:grid-cols-5 md:p-8")}>
-          <form onSubmit={submitAlert} className="space-y-4 md:col-span-3">
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Chọn sản phẩm</label>
-              <ProductSearch onSelectProduct={setSelectedProduct} placeholder="Tìm kiếm tên sản phẩm..." />
-              {selectedProduct && (
-                <div className="mt-2 flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 p-3 dark:border-violet-800 dark:bg-violet-900/20">
-                  {selectedProduct.image_url && (
-                    <img
-                      src={selectedProduct.image_url}
-                      alt={selectedProduct.name}
-                      className="h-8 w-8 rounded object-cover"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-200">{selectedProduct.name}</p>
-                    <p className="text-xs text-zinc-600 dark:text-zinc-400">{selectedProduct.brand || "N/A"}</p>
+        <form onSubmit={submitAlert} className={cn(ui.card, "p-6 md:p-8")}>
+          <div className="grid gap-6 md:grid-cols-5">
+            <div className="space-y-4 md:col-span-3">
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Chọn sản phẩm</label>
+                <ProductSearch onSelectProduct={setSelectedProduct} placeholder="Tìm kiếm tên sản phẩm..." />
+                {selectedProduct && (
+                  <div className="mt-2 flex items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 p-3 dark:border-violet-800 dark:bg-violet-900/20">
+                    {selectedProduct.image_url && (
+                      <img
+                        src={selectedProduct.image_url}
+                        alt={selectedProduct.name}
+                        className="h-8 w-8 rounded object-cover"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-200">{selectedProduct.name}</p>
+                      <p className="text-xs text-zinc-600 dark:text-zinc-400">{selectedProduct.brand || "N/A"}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProduct(null)}
+                      className="text-zinc-400 hover:text-zinc-600"
+                    >
+                      ✕
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProduct(null)}
-                    className="text-zinc-400 hover:text-zinc-600"
-                  >
-                    ✕
-                  </button>
-                </div>
-              )}
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Giá mong muốn (đ)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={targetPrice}
+                  onChange={(e) => setTargetPrice(formatPriceInput(e.target.value))}
+                  placeholder="Ví dụ: 1.000.000 đ"
+                  className={ui.input}
+                />
+                {targetPrice && parsePriceInput(targetPrice) > 0 ? (
+                  <p className="mt-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Giá mục tiêu: <span className="font-bold text-violet-600 dark:text-violet-400">{formatPrice(parsePriceInput(targetPrice))}</span>
+                  </p>
+                ) : null}
+              </div>
+
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Ghi chú (tuỳ chọn)</label>
+                <input
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Ví dụ: Mua làm quà tặng..."
+                  className={ui.input}
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Giá mong muốn (đ)</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={targetPrice}
-                onChange={(e) => setTargetPrice(formatPriceInput(e.target.value))}
-                placeholder="Ví dụ: 1.000.000 đ"
-                className={ui.input}
-              />
-              {targetPrice && parsePriceInput(targetPrice) > 0 ? (
-                <p className="mt-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                  Giá mục tiêu: <span className="font-bold text-violet-600 dark:text-violet-400">{formatPrice(parsePriceInput(targetPrice))}</span>
-                </p>
-              ) : null}
-            </div>
-
-            <div>
-              <label className="mb-1 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Ghi chú (tuỳ chọn)</label>
-              <input
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Ví dụ: Mua làm quà tặng..."
-                className={ui.input}
-              />
-            </div>
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <button type="submit" className={cn(ui.primaryButton, "w-full md:w-auto")}>
-                Tạo Alert
-              </button>
-              {message && <span className="text-sm font-medium text-rose-500 dark:text-rose-400">{message}</span>}
-            </div>
-          </form>
-
-          <aside className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5 dark:border-zinc-700 dark:bg-zinc-800/50 md:col-span-2">
-            <h2 className="text-base font-bold text-zinc-800 dark:text-zinc-200">Cách hoạt động</h2>
-            <ul className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-              <li>1. Tìm kiếm tên sản phẩm chọn từ kết quả.</li>
-              <li>2. Nhập giá mục tiêu và lưu alert.</li>
-              <li>3. Khi giá thấp hơn ngưỡng, alert sẽ được đánh dấu.</li>
-            </ul>
-          </aside>
-        </section>
+            <aside className="mt-6 flex flex-col justify-center rounded-2xl border border-zinc-200 bg-zinc-50 p-6 dark:border-zinc-700 dark:bg-zinc-800/50 md:col-span-2">
+              <h2 className="text-base font-bold text-zinc-800 dark:text-zinc-200">Cách sử dụng</h2>
+              <ul className="mt-3 space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                <li>1. Tìm kiếm tên sản phẩm chọn từ kết quả.</li>
+                <li>2. Nhập giá mục tiêu và lưu cảnh báo.</li>
+                <li>3. Khi giá thấp hơn ngưỡng, cảnh báo sẽ được đánh dấu.</li>
+              </ul>
+            </aside>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3 pt-6">
+            <button type="submit" className={cn(ui.primaryButton, "w-full md:w-auto")}>
+              Tạo Cảnh báo
+            </button>
+            {message && <span className="text-sm font-medium text-rose-500 dark:text-rose-400">{message}</span>}
+          </div>
+        </form>
 
         <section className={cn(ui.card, "p-6 md:p-8")}>
-          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Danh sách alerts</h2>
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Danh sách cảnh báo</h2>
           {loading ? (
             <div className="mt-4 space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -407,7 +410,7 @@ function AlertsContent() {
               ))}
             </div>
           ) : alerts.length === 0 ? (
-            <p className={cn(ui.mutedText, "mt-3")}>Chưa có alert nào. Hãy tạo alert đầu tiên của bạn.</p>
+            <p className={cn(ui.mutedText, "mt-3")}>Chưa có cảnh báo nào. Hãy tạo cảnh báo đầu tiên của bạn.</p>
           ) : (
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {alerts.map((item) => {

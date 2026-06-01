@@ -109,6 +109,11 @@ export default async function handler(req, res) {
             comparison = await db.query(comparisonFallbackSql, [id]);
         }
 
+        // Đảm bảo giá hiện tại của sản phẩm được cập nhật theo giá thấp nhất thực tế tại thời điểm xem
+        if (comparison && comparison.length > 0) {
+            product[0].current_price = comparison[0].price;
+        }
+
         const lastCrawledAt = lastCrawledRows?.[0]?.lastCrawledAt ?? null;
         const allTimeMax = allTimeMaxRows?.[0]?.allTimeMax
             ? Number(allTimeMaxRows[0].allTimeMax)

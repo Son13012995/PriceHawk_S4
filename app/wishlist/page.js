@@ -12,7 +12,7 @@ import { formatPrice } from "@/app/utils/format";
 
 export default function WishlistPage() {
   return (
-    <AuthGuard featureName="Wishlist">
+    <AuthGuard featureName="Giỏ hàng">
       <WishlistContent />
     </AuthGuard>
   );
@@ -28,15 +28,15 @@ function WishlistContent() {
     try {
       const response = await addToWishlist(product.id);
       if (response.status === 201 || response.status === 200) {
-        setMessage("✓ Đã thêm sản phẩm vào wishlist.");
+        setMessage("✓ Đã thêm sản phẩm vào giỏ hàng.");
         setTimeout(() => setMessage(""), 3000);
         mutate();
       }
     } catch (error) {
       if (error.response?.status === 401) {
-        setMessage("⚠️ Bạn cần đăng nhập để sử dụng wishlist.");
+        setMessage("⚠️ Bạn cần đăng nhập để sử dụng giỏ hàng.");
       } else if (error.response?.status === 409) {
-        setMessage("Sản phẩm này đã có trong wishlist.");
+        setMessage("Sản phẩm này đã có trong giỏ hàng.");
       } else {
         setMessage("Không thể thêm sản phẩm. Vui lòng thử lại.");
       }
@@ -47,7 +47,7 @@ function WishlistContent() {
   const removeItem = async (productId) => {
     try {
       await removeFromWishlist(productId);
-      setMessage("Đã xóa khỏi wishlist.");
+      setMessage("Đã xóa khỏi giỏ hàng.");
       setTimeout(() => setMessage(""), 3000);
       mutate();
     } catch (error) {
@@ -84,10 +84,10 @@ function WishlistContent() {
                 </p>
               </div>
               <h1 className={cn(ui.heading, "text-3xl font-black sm:text-5xl tracking-tight")}>
-                Wishlist
+                Giỏ hàng
               </h1>
               <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
-                Danh sách những sản phẩm bạn đang theo dõi. Cập nhật và lưu lại để mua sắm thông minh hơn.
+                Danh sách những sản phẩm bạn đang lưu trong giỏ hàng. Cập nhật và lưu lại để mua sắm thông minh hơn.
               </p>
             </div>
             
@@ -127,7 +127,7 @@ function WishlistContent() {
           </div>
           <div className="hidden md:block w-px h-16 bg-zinc-200 dark:bg-zinc-800 mx-4"></div>
           <p className="flex-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Bạn có thể tìm kiếm sản phẩm đang có trên hệ thống để thêm nhanh vào danh sách theo dõi.
+            Bạn có thể tìm kiếm sản phẩm đang có trên hệ thống để thêm nhanh vào giỏ hàng.
           </p>
         </section>
 
@@ -172,7 +172,7 @@ function WishlistContent() {
               <div className="w-16 h-16 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
                 <ShoppingBasket className="w-8 h-8 text-zinc-400 dark:text-zinc-500" />
               </div>
-              <p className="text-xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">Wishlist đang trống</p>
+              <p className="text-xl font-bold text-zinc-800 dark:text-zinc-200 mb-2">Giỏ hàng đang trống</p>
               <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto">
                 Hãy tìm kiếm và thêm các sản phẩm bạn quan tâm vào đây để dễ dàng theo dõi biến động giá nhé.
               </p>

@@ -35,14 +35,14 @@ export default function LastCrawledBox({ lastCrawledAt, loading = false }) {
 
   if (loading) {
     return (
-      <div className="px-6 py-4 border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-xl h-[116px] animate-pulse" />
+      <div className="px-4 py-3 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-lg h-[84px] animate-pulse" />
     );
   }
 
   const formattedTime = formatCrawledTime(lastCrawledAt);
 
   return (
-    <div className="px-6 py-4 border-2 border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-xl hover:border-violet-500 dark:hover:border-violet-500 transition-all shadow-sm">
+    <div className="px-4 py-3 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 rounded-lg hover:border-violet-500 dark:hover:border-violet-500 transition-all shadow-sm">
       {/* Icon + Label */}
       <div className="flex items-center gap-2 mb-1">
         <svg

@@ -68,12 +68,12 @@ export default function ProductItem({ params }) {
       const response = await addToWishlist(product.id);
       if (response.status === 201 || response.status === 200) {
         setIsInWishlist(true);
-        setWishlistMessage("✓ Đã thêm vào wishlist.");
+        setWishlistMessage("✓ Đã thêm vào giỏ hàng.");
         setTimeout(() => setWishlistMessage(""), 3000);
         mutate("wishlist-nav");
       }
     } catch {
-      setWishlistMessage("Lỗi khi thêm vào wishlist.");
+      setWishlistMessage("Lỗi khi thêm vào giỏ hàng.");
       setTimeout(() => setWishlistMessage(""), 3000);
     }
   };
@@ -83,12 +83,12 @@ export default function ProductItem({ params }) {
     try {
       await removeFromWishlist(product.id);
       setIsInWishlist(false);
-      setWishlistMessage("Đã xóa khỏi wishlist.");
+      setWishlistMessage("Đã xóa khỏi giỏ hàng.");
       setTimeout(() => setWishlistMessage(""), 3000);
       setShowRemoveConfirm(false);
       mutate("wishlist-nav");
     } catch {
-      setWishlistMessage("Lỗi khi xóa khỏi wishlist.");
+      setWishlistMessage("Lỗi khi xóa khỏi giỏ hàng.");
       setTimeout(() => setWishlistMessage(""), 3000);
     }
   };
@@ -118,14 +118,14 @@ export default function ProductItem({ params }) {
         alertNote.trim() || null
       );
       if (response.status === 201) {
-        setWishlistMessage(`✓ Đã tạo alert: ${formatPrice(target)}`);
+        setWishlistMessage(`✓ Đã tạo cảnh báo: ${formatPrice(target)}`);
         setTimeout(() => setWishlistMessage(""), 3000);
         setShowAlertForm(false);
         setAlertTarget("");
         setAlertNote("");
       }
     } catch {
-      setAlertError("Không thể tạo alert.");
+      setAlertError("Không thể tạo cảnh báo.");
     }
   };
 
@@ -185,7 +185,7 @@ export default function ProductItem({ params }) {
 
               {/* Left: Image */}
               <div className="w-full">
-                <div className="sticky top-24 aspect-square bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-2xl flex items-center justify-center p-8 overflow-hidden group">
+                <div className="sticky top-24 aspect-square lg:aspect-auto lg:h-full bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-2xl flex items-center justify-center p-8 overflow-hidden group">
                   <Image
                     src={product?.image_url}
                     alt={product?.name}
@@ -272,7 +272,7 @@ export default function ProductItem({ params }) {
                   <button
                     onClick={() => setShowAlertForm(true)}
                     disabled={!isAuth}
-                    className={`flex-1 min-w-[110px] px-4 py-3 border font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm ${
+                    className={`flex-1 min-w-[90px] px-3 py-2 border font-semibold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm ${
                       !isAuth
                         ? "bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 border-zinc-200 dark:border-zinc-800 cursor-not-allowed"
                         : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-violet-500 hover:text-violet-600 dark:hover:text-violet-400"
@@ -285,12 +285,12 @@ export default function ProductItem({ params }) {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                       </svg>
                     )}
-                    <span className="whitespace-nowrap">{!isAuth ? "Đăng nhập để theo dõi" : "Theo dõi"}</span>
+                    <span className="whitespace-nowrap">{!isAuth ? "Đăng nhập để tạo cảnh báo" : "Cảnh báo giá"}</span>
                   </button>
                   <button
                     onClick={handleWishlistClick}
                     disabled={!isAuth}
-                    className={`flex-1 min-w-[110px] px-4 py-3 font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border ${
+                    className={`flex-1 min-w-[90px] px-3 py-2 font-semibold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border ${
                       !isAuth
                         ? "bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 border-zinc-200 dark:border-zinc-800 cursor-not-allowed"
                         : isInWishlist
@@ -307,7 +307,7 @@ export default function ProductItem({ params }) {
                         strokeWidth={isInWishlist ? 1 : 2} 
                       />
                     )}
-                    <span className="whitespace-nowrap">{!isAuth ? "Đăng nhập để lưu" : isInWishlist ? "Đã lưu" : "Wishlist"}</span>
+                    <span className="whitespace-nowrap">{!isAuth ? "Đăng nhập để thêm" : isInWishlist ? "Đã có trong giỏ" : "Giỏ hàng"}</span>
                   </button>
                 </div>
 
@@ -452,7 +452,7 @@ export default function ProductItem({ params }) {
                     disabled={!alertTarget || parsePriceInput(alertTarget) >= product.current_price}
                     className="flex-[2] py-3 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 shadow-lg shadow-violet-200 dark:shadow-violet-900/30 transition-all"
                   >
-                    Tạo Alert
+                    Tạo Cảnh báo
                   </button>
                 </div>
               </form>
@@ -465,8 +465,8 @@ export default function ProductItem({ params }) {
       {showRemoveConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/70 dark:bg-zinc-950/80 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl max-w-sm w-full p-6">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Bỏ lưu sản phẩm?</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-5">Bạn có chắc chắn muốn bỏ lưu sản phẩm này?</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Xóa khỏi giỏ hàng?</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-5">Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?</p>
             <div className="flex gap-3">
               <button onClick={() => setShowRemoveConfirm(false)} className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Không</button>
               <button onClick={removeFromWishlistFn} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-colors">Xóa</button>

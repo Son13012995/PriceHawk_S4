@@ -48,19 +48,13 @@ export default function PageTabs({ className = "", badgeCounts = {} }) {
                 active ? "text-white" : "text-zinc-400 dark:text-zinc-500 group-hover:text-violet-500"
               )} />
               {badgeCounts[tab.href] > 0 && (
-                <span className="absolute -top-2 -right-2 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-extrabold text-white ring-2 ring-white dark:ring-[#0b0712] shadow-sm leading-none">
+                <span className="absolute -top-2 -right-2 flex h-3.5 min-w-[14px] items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-extrabold text-white shadow-sm leading-none">
                   {badgeCounts[tab.href] > 99 ? '99+' : badgeCounts[tab.href]}
                   {tab.href === "/alerts" && <span className="absolute inset-0 rounded-full bg-rose-400 animate-ping opacity-75 -z-10" />}
                 </span>
               )}
             </span>
             <span>{tab.label}</span>
-
-            {/* Subtle active indicator for desktop if we want something extra, but the solid background is already good. 
-                Let's add a tiny dot or underline for a "premium" feel. */}
-            {active && (
-              <span className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-violet-400 blur-[1px]" />
-            )}
           </Link>
         );
       })}
