@@ -421,17 +421,22 @@ export default function ProductItem({ params }) {
                     type="text"
                     inputMode="numeric"
                     value={alertTarget}
-                    onChange={(e) => setAlertTarget(formatPriceInput(e.target.value))}
+                    onChange={(e) => setAlertTarget(e.target.value.replace(/\\D/g, ""))}
                     placeholder={`Thấp hơn ${formatPrice(product.current_price)}`}
                     className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none font-bold transition-all"
                     autoFocus
                   />
                   {alertTarget && parsePriceInput(alertTarget) > 0 && (
-                    <p className={`mt-2 text-xs font-bold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-400" : "text-rose-400"}`}>
-                      {parsePriceInput(alertTarget) < product.current_price
-                        ? `✓ Tiết kiệm được ${formatPrice(product.current_price - parsePriceInput(alertTarget))}`
-                        : `! Phải thấp hơn ${formatPrice(product.current_price)}`}
-                    </p>
+                    <div className="mt-3 p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
+                      <p className={`text-sm font-bold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        Mức giá: {formatPrice(parsePriceInput(alertTarget))}
+                      </p>
+                      <p className={`mt-1 text-xs font-semibold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-500/80 dark:text-emerald-400/80" : "text-rose-500/80 dark:text-rose-400/80"}`}>
+                        {parsePriceInput(alertTarget) < product.current_price
+                          ? `✓ Tiết kiệm được ${formatPrice(product.current_price - parsePriceInput(alertTarget))}`
+                          : `! Phải thấp hơn ${formatPrice(product.current_price)}`}
+                      </p>
+                    </div>
                   )}
                   {alertError && <p className="mt-2 text-xs text-rose-400 font-semibold">{alertError}</p>}
                 </div>

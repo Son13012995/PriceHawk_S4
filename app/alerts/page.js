@@ -361,7 +361,7 @@ function AlertsContent() {
                   type="text"
                   inputMode="numeric"
                   value={targetPrice}
-                  onChange={(e) => setTargetPrice(formatPriceInput(e.target.value))}
+                  onChange={(e) => setTargetPrice(e.target.value.replace(/\\D/g, ""))}
                   placeholder="Ví dụ: 1.000.000 đ"
                   className={ui.input}
                 />
