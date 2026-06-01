@@ -135,6 +135,19 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         break;
       }
 
+      // Popup → background: fetch comparison list for a matched product
+      case "FETCH_COMPARISONS": {
+        try {
+          const res = await fetch(`${API_BASE.replace("/extension", "")}/compare?id=${encodeURIComponent(msg.productId)}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          sendResponse({ ok: true, comparison: data.comparison || [] });
+        } catch (err) {
+          sendResponse({ ok: false, error: err.message, comparison: [] });
+        }
+        break;
+      }
+
       default:
         sendResponse({ ok: false, error: "Unknown message type" });
     }

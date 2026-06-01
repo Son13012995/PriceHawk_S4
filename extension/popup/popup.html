@@ -60,14 +60,37 @@
         </button>
       </div>
 
-      <!-- Category -->
-      <div class="cat-card">
-        <div class="cat-label">Category</div>
-        <select id="category-select" class="category-select">
-          <option value="dien-thoai">Phone</option>
-          <option value="tablet">Tablet</option>
-          <option value="laptop">Laptop</option>
-        </select>
+      <!-- Currency + Category row -->
+      <div class="meta-row">
+        <!-- Currency selector -->
+        <div class="meta-card" id="currency-card">
+          <div class="cat-label">Currency</div>
+          <div class="currency-select-wrap">
+            <select id="currency-select" class="category-select">
+              <option value="VND">₫ VND</option>
+              <option value="USD">$ USD</option>
+              <option value="EUR">€ EUR</option>
+              <option value="JPY">¥ JPY</option>
+              <option value="KRW">₩ KRW</option>
+              <option value="CNY">¥ CNY</option>
+              <option value="GBP">£ GBP</option>
+              <option value="SGD">S$ SGD</option>
+              <option value="THB">฿ THB</option>
+              <option value="MYR">RM MYR</option>
+            </select>
+            <span id="rate-badge" class="rate-badge hidden"></span>
+          </div>
+        </div>
+
+        <!-- Category selector -->
+        <div class="meta-card">
+          <div class="cat-label">Category</div>
+          <select id="category-select" class="category-select">
+            <option value="dien-thoai">Phone</option>
+            <option value="tablet">Tablet</option>
+            <option value="laptop">Laptop</option>
+          </select>
+        </div>
       </div>
 
       <!-- Picker hint -->
@@ -103,6 +126,17 @@
 
       <!-- Details -->
       <div id="detail-section" class="detail-section"></div>
+
+      <!-- Comparison list -->
+      <div id="comparison-section" class="comparison-section hidden">
+        <div class="comparison-header">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M2 8h8M2 12h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Price Comparisons</span>
+        </div>
+        <div id="comparison-list" class="comparison-list"></div>
+      </div>
 
       <!-- Reset -->
       <div class="result-actions">
