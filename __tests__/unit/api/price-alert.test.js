@@ -127,7 +127,7 @@ describe("POST /api/price-alert", () => {
     getServerSession.mockResolvedValue(mockLoggedInSession);
     db.query
       .mockResolvedValueOnce([{ current_price: 10000000 }]) // SELECT product price
-      .mockResolvedValueOnce({ affectedRows: 1 });           // INSERT alert
+      .mockResolvedValueOnce({ insertId: 88, affectedRows: 1 }); // INSERT alert
 
     const { req, res } = mockReqRes("POST", {}, {
       productId: 1,
@@ -137,6 +137,7 @@ describe("POST /api/price-alert", () => {
     await handler(req, res);
 
     expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ message: "Price alert created successfully" });
     expect(db.query).toHaveBeenCalledTimes(2);
   });
 
@@ -240,6 +241,17 @@ describe("PUT /api/price-alert", () => {
     await handler(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
   });
+
+  test("trả về 200 khi update alert (ngay cả khi affectedRows = 0 do API không check)", async () => {
+    getServerSession.mockResolvedValue(mockLoggedInSession);
+    db.query.mockResolvedValue({ affectedRows: 0 });
+
+    const { req, res } = mockReqRes("PUT", {}, { alertId: 99, status: "inactive" });
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ message: "Alert status updated" });
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════════
@@ -265,6 +277,17 @@ describe("DELETE /api/price-alert", () => {
       expect.stringContaining("DELETE FROM"),
       expect.arrayContaining([1])
     );
+  });
+
+  test("trả về 200 khi xóa alert (ngay cả khi affectedRows = 0 do API không check)", async () => {
+    getServerSession.mockResolvedValue(mockLoggedInSession);
+    db.query.mockResolvedValue({ affectedRows: 0 });
+
+    const { req, res } = mockReqRes("DELETE", {}, { alertId: 99 });
+    await handler(req, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.json).toHaveBeenCalledWith({ message: "Price alert deleted" });
   });
 });
 
