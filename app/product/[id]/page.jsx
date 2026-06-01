@@ -12,10 +12,12 @@ import {
 } from "@/lib/apiClient";
 import { useRouter } from "next/navigation";
 import MinPriceBox from "@/components/MinPriceBox";
+import LastCrawledBox from "@/components/LastCrawledBox";
 import PriceHistoryChart from "@/components/PriceHistoryChart";
 import { formatPrice, formatPriceInput, formatPriceUpdateTime, parsePriceInput } from "@/app/utils/format";
-import { ShoppingBasket } from "lucide-react";
+import { ShoppingBasket, Lock } from "lucide-react";
 import { mutate } from "swr";
+import { useSession } from "next-auth/react";
 
 const DetailSkeleton = () => (
   <div className="animate-pulse w-full max-w-6xl mx-auto space-y-8">
@@ -41,6 +43,9 @@ const DetailSkeleton = () => (
 );
 
 export default function ProductItem({ params }) {
+  const { status } = useSession();
+  const isAuth = status === "authenticated";
+  
   const router = useRouter();
   const [product, setProduct] = useState(null);
   const [comparison, setComparison] = useState([]);
@@ -54,6 +59,8 @@ export default function ProductItem({ params }) {
   const [alertError, setAlertError] = useState("");
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [lastCrawledAt, setLastCrawledAt] = useState(null);
+  const [allTimeMax, setAllTimeMax] = useState(null);
 
   const addToWishlistFn = async () => {
     if (!product?.id) return;
@@ -61,12 +68,12 @@ export default function ProductItem({ params }) {
       const response = await addToWishlist(product.id);
       if (response.status === 201 || response.status === 200) {
         setIsInWishlist(true);
-        setWishlistMessage("✓ Đã thêm vào wishlist.");
+        setWishlistMessage("✓ Đã thêm vào giỏ hàng.");
         setTimeout(() => setWishlistMessage(""), 3000);
         mutate("wishlist-nav");
       }
     } catch {
-      setWishlistMessage("Lỗi khi thêm vào wishlist.");
+      setWishlistMessage("Lỗi khi thêm vào giỏ hàng.");
       setTimeout(() => setWishlistMessage(""), 3000);
     }
   };
@@ -76,12 +83,12 @@ export default function ProductItem({ params }) {
     try {
       await removeFromWishlist(product.id);
       setIsInWishlist(false);
-      setWishlistMessage("Đã xóa khỏi wishlist.");
+      setWishlistMessage("Đã xóa khỏi giỏ hàng.");
       setTimeout(() => setWishlistMessage(""), 3000);
       setShowRemoveConfirm(false);
       mutate("wishlist-nav");
     } catch {
-      setWishlistMessage("Lỗi khi xóa khỏi wishlist.");
+      setWishlistMessage("Lỗi khi xóa khỏi giỏ hàng.");
       setTimeout(() => setWishlistMessage(""), 3000);
     }
   };
@@ -111,14 +118,14 @@ export default function ProductItem({ params }) {
         alertNote.trim() || null
       );
       if (response.status === 201) {
-        setWishlistMessage(`✓ Đã tạo alert: ${formatPrice(target)}`);
+        setWishlistMessage(`✓ Đã tạo cảnh báo: ${formatPrice(target)}`);
         setTimeout(() => setWishlistMessage(""), 3000);
         setShowAlertForm(false);
         setAlertTarget("");
         setAlertNote("");
       }
     } catch {
-      setAlertError("Không thể tạo alert.");
+      setAlertError("Không thể tạo cảnh báo.");
     }
   };
 
@@ -132,6 +139,8 @@ export default function ProductItem({ params }) {
         ]);
         setProduct(compareRes.data?.product[0]);
         setComparison(compareRes.data?.comparison);
+        setLastCrawledAt(compareRes.data?.lastCrawledAt ?? null);
+        setAllTimeMax(compareRes.data?.allTimeMax ?? null);
         const wlData = wlRes.data?.data || [];
         setIsInWishlist(wlData.some((item) => item.product_id === Number(params.id)));
       } catch {
@@ -172,11 +181,11 @@ export default function ProductItem({ params }) {
           <div className="space-y-8">
 
             {/* ── TOP SECTION: Image + Product Info ── */}
-            <div className="flex flex-col lg:flex-row gap-10 lg:gap-14">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_5fr] gap-6">
 
               {/* Left: Image */}
-              <div className="w-full lg:w-5/12 shrink-0">
-                <div className="sticky top-24 aspect-square bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-2xl flex items-center justify-center p-8 overflow-hidden group">
+              <div className="w-full">
+                <div className="sticky top-24 aspect-square lg:aspect-auto lg:h-full bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 shadow-xl dark:shadow-2xl flex items-center justify-center p-8 overflow-hidden group">
                   <Image
                     src={product?.image_url}
                     alt={product?.name}
@@ -188,7 +197,7 @@ export default function ProductItem({ params }) {
               </div>
 
               {/* Right: Info */}
-              <div className="w-full lg:w-7/12 flex flex-col pt-2">
+              <div className="w-full flex flex-col pt-2">
                 <button
                   onClick={() => router.back()}
                   className="self-start mb-6 flex items-center gap-2 text-zinc-500 dark:text-zinc-500 hover:text-violet-600 dark:hover:text-violet-400 font-medium transition-colors group text-sm"
@@ -215,15 +224,32 @@ export default function ProductItem({ params }) {
                   {product?.name}
                 </h1>
 
-                {/* Current Lowest Price + Week Change Badge */}
+                {/* Current Lowest Price + Badges */}
                 <div className="mb-8">
                   <p className="text-xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest mb-2">
                     Giá thấp nhất hiện tại
                   </p>
-                  <div className="flex items-center flex-wrap gap-3">
+                  <div className="flex items-center flex-wrap gap-2">
                     <span className="text-4xl font-black text-violet-600 dark:text-violet-400 tracking-tight">
                       {formatPrice(product?.current_price)}
                     </span>
+
+                    {/* Badge: % giảm so với giá cao nhất từ trước tới nay */}
+                    {(() => {
+                      const cur = product?.current_price;
+                      if (!allTimeMax || !cur || allTimeMax <= cur) return null;
+                      const dropPct = Math.round(((allTimeMax - cur) / allTimeMax) * 1000) / 10;
+                      return (
+                        <span className="flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/40 text-emerald-700 dark:text-emerald-400">
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                          </svg>
+                          <span>{dropPct}% với giá đỉnh</span>
+                        </span>
+                      );
+                    })()}
+
+                    {/* Badge: % thay đổi so với tuần trước */}
                     {weekChangePercent !== null && (
                       <span
                         className={`flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border ${badge.bg} ${badge.text}`}
@@ -241,27 +267,47 @@ export default function ProductItem({ params }) {
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row flex-wrap gap-3 pb-8 border-b border-zinc-200 dark:border-zinc-800">
                   <div className="flex-[2] min-w-[180px]">
-                    <MinPriceBox productId={params.id} />
+                    <LastCrawledBox lastCrawledAt={lastCrawledAt} loading={loading} />
                   </div>
                   <button
                     onClick={() => setShowAlertForm(true)}
-                    className="flex-1 min-w-[110px] px-4 py-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 font-semibold text-sm rounded-xl hover:border-violet-500 hover:text-violet-600 dark:hover:text-violet-400 transition-all flex items-center justify-center gap-2 shadow-sm"
+                    disabled={!isAuth}
+                    className={`flex-1 min-w-[90px] px-3 py-2 border font-semibold text-sm rounded-lg transition-all flex items-center justify-center gap-2 shadow-sm ${
+                      !isAuth
+                        ? "bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 border-zinc-200 dark:border-zinc-800 cursor-not-allowed"
+                        : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-200 hover:border-violet-500 hover:text-violet-600 dark:hover:text-violet-400"
+                    }`}
                   >
-                    <svg className="w-4 h-4 text-orange-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    <span className="whitespace-nowrap">Theo dõi</span>
+                    {!isAuth ? (
+                      <Lock className="w-4 h-4 shrink-0 text-zinc-400" />
+                    ) : (
+                      <svg className="w-4 h-4 text-orange-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                      </svg>
+                    )}
+                    <span className="whitespace-nowrap">{!isAuth ? "Đăng nhập để tạo cảnh báo" : "Cảnh báo giá"}</span>
                   </button>
                   <button
                     onClick={handleWishlistClick}
-                    className={`flex-1 min-w-[110px] px-4 py-3 font-semibold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border ${
-                      isInWishlist
+                    disabled={!isAuth}
+                    className={`flex-1 min-w-[90px] px-3 py-2 font-semibold text-sm rounded-lg transition-all flex items-center justify-center gap-2 border ${
+                      !isAuth
+                        ? "bg-zinc-100 dark:bg-zinc-800/50 text-zinc-400 border-zinc-200 dark:border-zinc-800 cursor-not-allowed"
+                        : isInWishlist
                         ? "bg-rose-900/20 text-rose-400 border-rose-800/50 hover:bg-rose-900/30"
                         : "bg-violet-600 text-white border-transparent hover:bg-violet-700 shadow-lg shadow-violet-900/30"
                     }`}
                   >
-                    <ShoppingBasket className={`w-4 h-4 shrink-0 ${isInWishlist ? "text-rose-400" : "text-red-300"}`} fill={isInWishlist ? "currentColor" : "none"} strokeWidth={isInWishlist ? 1 : 2} />
-                    <span className="whitespace-nowrap">{isInWishlist ? "Đã lưu" : "Wishlist"}</span>
+                    {!isAuth ? (
+                      <Lock className="w-4 h-4 shrink-0 text-zinc-400" />
+                    ) : (
+                      <ShoppingBasket 
+                        className={`w-4 h-4 shrink-0 ${isInWishlist ? "text-rose-400" : "text-red-300"}`} 
+                        fill={isInWishlist ? "currentColor" : "none"} 
+                        strokeWidth={isInWishlist ? 1 : 2} 
+                      />
+                    )}
+                    <span className="whitespace-nowrap">{!isAuth ? "Đăng nhập để thêm" : isInWishlist ? "Đã có trong giỏ" : "Giỏ hàng"}</span>
                   </button>
                 </div>
 
@@ -274,7 +320,7 @@ export default function ProductItem({ params }) {
             </div>
 
             {/* ── BOTTOM SECTION: Price Comparison + Chart (2 columns) ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+            <div className="grid grid-cols-1 lg:grid-cols-[3fr_5fr] gap-6 pt-2">
 
               {/* LEFT: Price Comparison */}
               <div className="bg-white dark:bg-zinc-900/60 border border-zinc-200 dark:border-zinc-800/60 rounded-2xl p-6 shadow-sm dark:shadow-none">
@@ -375,17 +421,22 @@ export default function ProductItem({ params }) {
                     type="text"
                     inputMode="numeric"
                     value={alertTarget}
-                    onChange={(e) => setAlertTarget(formatPriceInput(e.target.value))}
+                    onChange={(e) => setAlertTarget(e.target.value.replace(/\\D/g, ""))}
                     placeholder={`Thấp hơn ${formatPrice(product.current_price)}`}
                     className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none font-bold transition-all"
                     autoFocus
                   />
                   {alertTarget && parsePriceInput(alertTarget) > 0 && (
-                    <p className={`mt-2 text-xs font-bold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-400" : "text-rose-400"}`}>
-                      {parsePriceInput(alertTarget) < product.current_price
-                        ? `✓ Tiết kiệm được ${formatPrice(product.current_price - parsePriceInput(alertTarget))}`
-                        : `! Phải thấp hơn ${formatPrice(product.current_price)}`}
-                    </p>
+                    <div className="mt-3 p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
+                      <p className={`text-sm font-bold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        Mức giá: {formatPrice(parsePriceInput(alertTarget))}
+                      </p>
+                      <p className={`mt-1 text-xs font-semibold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-500/80 dark:text-emerald-400/80" : "text-rose-500/80 dark:text-rose-400/80"}`}>
+                        {parsePriceInput(alertTarget) < product.current_price
+                          ? `✓ Tiết kiệm được ${formatPrice(product.current_price - parsePriceInput(alertTarget))}`
+                          : `! Phải thấp hơn ${formatPrice(product.current_price)}`}
+                      </p>
+                    </div>
                   )}
                   {alertError && <p className="mt-2 text-xs text-rose-400 font-semibold">{alertError}</p>}
                 </div>
@@ -406,7 +457,7 @@ export default function ProductItem({ params }) {
                     disabled={!alertTarget || parsePriceInput(alertTarget) >= product.current_price}
                     className="flex-[2] py-3 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 shadow-lg shadow-violet-200 dark:shadow-violet-900/30 transition-all"
                   >
-                    Tạo Alert
+                    Tạo Cảnh báo
                   </button>
                 </div>
               </form>
@@ -419,8 +470,8 @@ export default function ProductItem({ params }) {
       {showRemoveConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-zinc-900/70 dark:bg-zinc-950/80 backdrop-blur-sm">
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl max-w-sm w-full p-6">
-            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Bỏ lưu sản phẩm?</h3>
-            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-5">Bạn có chắc chắn muốn bỏ lưu sản phẩm này?</p>
+            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Xóa khỏi giỏ hàng?</h3>
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-5">Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?</p>
             <div className="flex gap-3">
               <button onClick={() => setShowRemoveConfirm(false)} className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Không</button>
               <button onClick={removeFromWishlistFn} className="flex-1 py-3 bg-rose-600 text-white font-bold rounded-xl hover:bg-rose-700 transition-colors">Xóa</button>

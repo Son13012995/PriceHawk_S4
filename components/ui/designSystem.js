@@ -2,9 +2,9 @@
 // Cập nhật: 07/05/2026
 
 export const pageTabs = [
-  { label: "Products", href: "/product" },
-  { label: "Price Alerts", href: "/alerts" },
-  { label: "Wishlist", href: "/wishlist" },
+  { label: "Sản phẩm", href: "/product" },
+  { label: "Cảnh báo giá", href: "/alerts" },
+  { label: "Giỏ hàng", href: "/wishlist" },
 ];
 
 export function cn(...classes) {

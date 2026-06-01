@@ -86,9 +86,7 @@ export default function AppSearchBar({
   return (
     <form onSubmit={handleSubmit} className="relative w-full max-w-sm lg:max-w-md">
       <div className="group relative flex items-center">
-        <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-zinc-400 group-focus-within:text-violet-500 transition-colors">
-          <Search className="h-4 w-4" />
-        </span>
+        
         <input
           ref={inputRef}
           type="search"
@@ -97,7 +95,7 @@ export default function AppSearchBar({
           onFocus={() => searchTerm.trim() && setIsOpen(true)}
           placeholder={placeholder}
           className={cn(
-            "w-full rounded-xl border border-zinc-200 bg-zinc-50/50 pl-9 pr-12 text-zinc-900 placeholder:text-zinc-400 transition-all duration-300 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-50 dark:placeholder:text-zinc-500",
+            "w-full rounded-xl border border-zinc-200 bg-zinc-50/50 pl-4 pr-12 text-zinc-900 placeholder:text-zinc-400 transition-all duration-300 dark:border-white/10 dark:bg-zinc-900/50 dark:text-zinc-50 dark:placeholder:text-zinc-500",
             compact ? "py-2 text-sm" : "py-2.5 text-base",
             "focus:border-violet-500/50 focus:bg-white focus:ring-4 focus:ring-violet-500/10 dark:focus:border-violet-500/50 dark:focus:bg-zinc-900",
             "hover:border-zinc-300 dark:hover:border-white/20",

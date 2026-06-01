@@ -93,54 +93,41 @@ function ProductBrowserContent({ searchTerm = "" }) {
         </div>
         
         <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
-                <Search className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+          <div 
+            className="flex-1 w-full relative z-20 transition-all duration-300 ease-in-out" 
+            style={{ paddingBottom: isSearchDropdownOpen ? '350px' : '0px' }}
+          >
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center">
+                    <Search className="w-6 h-6 text-violet-600 dark:text-violet-400" />
+                  </div>
+                </div>
+                
+                <div className="flex-1 min-w-[280px] max-w-xl">
+                  <AppSearchBar 
+                    placeholder="Tìm kiếm sản phẩm bạn muốn so sánh giá..." 
+                    initialValue={isSearchMode ? decodeURIComponent(searchTerm) : ""} 
+                    onOpenChange={setIsSearchDropdownOpen}
+                  />
+                </div>
               </div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-violet-600 dark:text-violet-400">
-                Sản phẩm
-              </p>
-            </div>
-            <h1 className={cn(ui.heading, "text-3xl font-black sm:text-5xl tracking-tight")}>
-              {isSearchMode ? (
-                <>
+
+              {isSearchMode && (
+                <h1 className={cn(ui.heading, "text-3xl font-black sm:text-4xl tracking-tight mt-2")}>
                   Kết quả cho
                   <span className="text-violet-600 dark:text-violet-500"> "{decodeURIComponent(searchTerm)}"</span>
-                </>
-              ) : (
-                "Khám phá sản phẩm"
+                </h1>
               )}
-            </h1>
-            <p className={cn(ui.mutedText, "mt-4 max-w-xl text-base")}>
-              Tìm kiếm và so sánh hàng ngàn sản phẩm từ các nhà bán lẻ uy tín. Tìm giá tốt nhất trong chớp mắt.
-            </p>
-            
-            {/* Statistics */}
-            <div className="flex gap-4 mt-8">
-              <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 min-w-[120px] shadow-sm">
-                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 mb-2">
-                  <Package className="w-4 h-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">Tổng cộng</span>
-                </div>
-                <p className="text-2xl font-black text-zinc-900 dark:text-white">
-                  {loading ? "-" : totalItems}
-                </p>
-              </div>
             </div>
           </div>
           
-          {/* Right side: Search */}
-          <div 
-            className="flex flex-col md:items-end w-full md:w-[380px] lg:w-[420px] mt-6 md:mt-0 relative z-20 transition-all duration-300 ease-in-out"
-            style={{ paddingBottom: isSearchDropdownOpen ? '350px' : '0px' }}
-          >
-            <div className="w-full">
-              <AppSearchBar 
-                placeholder="Tìm kiếm sản phẩm bạn muốn so sánh giá..." 
-                initialValue={isSearchMode ? decodeURIComponent(searchTerm) : ""} 
-                onOpenChange={setIsSearchDropdownOpen}
-              />
+          {/* Right side: Statistics */}
+          <div className="flex flex-col md:items-end mt-4 md:mt-0 relative z-10">
+            <div className="bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800 rounded-xl px-5 py-3 flex items-center gap-4 shadow-sm">
+              <Package className="w-5 h-5 text-zinc-500" />
+              <span className="text-2xl font-black text-zinc-900 dark:text-white">{loading ? "-" : totalItems}</span>
             </div>
           </div>
         </div>

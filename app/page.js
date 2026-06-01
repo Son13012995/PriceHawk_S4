@@ -13,7 +13,7 @@ export default function Home() {
                 
                 <h1 className="text-4xl sm:text-5xl lg:text-[4rem] font-extrabold text-zinc-900 dark:text-white tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
                     Săn giá thông minh với <br className="hidden sm:block" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-violet-400 dark:from-violet-500 dark:to-violet-300">
+                    <span className="text-violet-600 dark:text-violet-500">
                         PriceHawk Intelligence
                     </span>
                 </h1>
@@ -41,7 +41,7 @@ export default function Home() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Price Tracking</h3>
+                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Theo dõi giá</h3>
                             <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                 Biểu đồ biến động giá chi tiết trong 7 ngày, giúp bạn nhận diện đâu là đợt giảm giá ảo.
                             </p>
@@ -54,7 +54,7 @@ export default function Home() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Instant Alerts</h3>
+                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Cảnh báo tức thời</h3>
                             <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
                                 Nhận thông báo ngay lập tức khi sản phẩm chạm mức giá bạn mong đợi.
                             </p>
@@ -67,9 +67,9 @@ export default function Home() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
                             </div>
-                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">Multi-store Comparison</h3>
+                            <h3 className="text-lg font-bold text-zinc-900 dark:text-white mb-3">So sánh đa nền tảng</h3>
                             <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                                So sánh giá tự động giữa FPT Shop, Thế Giới Di Động, CellphoneS và các hệ thống bán lẻ hàng đầu.
+                                So sánh giá tự động với các hệ thống bán lẻ hàng đầu.
                             </p>
                         </div>
                     </div>
@@ -81,8 +81,8 @@ export default function Home() {
                 <div className="container mx-auto max-w-6xl">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest block mb-1">Live Updates</span>
-                            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Trending Deals</h2>
+                            <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 uppercase tracking-widest block mb-1">Cập nhật trực tiếp</span>
+                            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white">Sản phẩm nổi bật</h2>
                         </div>
                         <div className="flex items-center gap-2">
                             <button className="w-10 h-10 rounded-full border border-zinc-200 dark:border-zinc-800 flex items-center justify-center text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
@@ -114,11 +114,7 @@ export default function Home() {
                         <div className="bg-[#ffd400] text-black px-3 py-1.5 font-bold text-xl rounded-lg flex items-center leading-none cursor-default shadow-sm">
                             thegioididong<span className="font-medium text-sm ml-0.5 mt-1">.com</span>
                         </div>
-                        
-                        <div className="text-2xl font-black tracking-tight cursor-default">
-                            <span className="text-[#e00000]">Cellphone</span>
-                            <span className="text-black dark:text-white">S</span>
-                        </div>
+
                         
                         <div className="text-[#00995c] font-black uppercase text-xl tracking-tight cursor-default">
                             Hoàng Hà Mobile
