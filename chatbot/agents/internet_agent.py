@@ -53,8 +53,11 @@ class InternetAgent:
         # Step 3: Crawl4AI
         content = await self._crawl(best_url)
         if not content:
-            print("[InternetAgent] Crawl returned empty content")
-            return self._not_found(keyword)
+            print("[InternetAgent] Crawl returned empty content, using search results as fallback")
+            # Fallback: dùng search results (title + URL) thay vì return not_found
+            content = self._format_search_results(search_results)
+            if not content:
+                return self._not_found(keyword)
 
         # Step 4: Gemini summarize
         summary = await self._summarize(keyword, content)
@@ -91,8 +94,12 @@ class InternetAgent:
                     
                     if results:
                         print(f"[InternetAgent] SearxNG search success, found {len(results)} URLs")
-                        # Trả về format [{"href": url}]
-                        return [{"href": r.get("url", "")} for r in results[:5]]
+                        # Trả về format [{"href": url, "title": ..., "content": ...}]
+                        return [{
+                            "href": r.get("url", ""),
+                            "title": r.get("title", ""),
+                            "content": r.get("content", ""),
+                        } for r in results[:5]]
                     else:
                         print(f"[InternetAgent] SearxNG returned empty results (Attempt {attempt+1}/3)")
             except Exception as e:
@@ -114,8 +121,20 @@ class InternetAgent:
                     return url
         return results[0].get("href", "")
 
+    def _format_search_results(self, results: list[dict]) -> str | None:
+        """Format search results thành text khi crawl fail."""
+        if not results:
+            return None
+        lines = []
+        for r in results[:5]:
+            url = r.get("href", "")
+            title = r.get("title", url)
+            snippet = r.get("content", "")
+            lines.append(f"- {title}: {snippet[:200]} (Nguồn: {url})")
+        return "\n".join(lines) if lines else None
+
     async def _crawl(self, url: str) -> str | None:
-        """Crawl URL bằng Crawl4AI, trả về markdown."""
+        """Crawl URL bằng Crawl4AI, trả về markdown. Timeout 20s."""
         try:
             config = CrawlerRunConfig(
                 word_count_threshold=50,
@@ -123,9 +142,16 @@ class InternetAgent:
                 remove_overlay_elements=True,
             )
             crawler = await self._get_crawler()
-            result = await crawler.arun(url=url, config=config)
+            result = await asyncio.wait_for(
+                crawler.arun(url=url, config=config),
+                timeout=20.0,
+            )
             if result and result.success and result.markdown:
                 return result.markdown[:5000]
+            return None
+        except asyncio.TimeoutError:
+            print(f"[InternetAgent] Crawl timeout (>20s) for: {url}")
+            self._crawler = None
             return None
         except Exception as e:
             print(f"[InternetAgent] Crawl error: {e}")

@@ -77,7 +77,19 @@ def check_similarity(query: str, target: str) -> float:
     sim = difflib.SequenceMatcher(None, q_norm, t_norm).ratio()
     overlap = len(q_words.intersection(t_words)) / len(q_words)
     
-    return (sim * 0.4) + (overlap * 0.6)
+    score = (sim * 0.4) + (overlap * 0.6)
+
+    # Penalty nếu query có model number (chứa chữ số) nhưng DB không khớp
+    # VD: "S23" không có trong "S24 Ultra" → penalty nặng
+    q_numeric_tokens = {w for w in q_words if any(c.isdigit() for c in w)}
+    if q_numeric_tokens:
+        missing_numbers = q_numeric_tokens - t_words
+        if missing_numbers:
+            # Có token số trong query không tìm thấy trong DB → penalize mạnh
+            penalty = len(missing_numbers) / len(q_numeric_tokens)
+            score *= (1.0 - 0.7 * penalty)  # Giảm tới 70% nếu miss hết số
+
+    return score
 
 def search_products(keyword: str, category: str | None = None, limit: int = 8) -> tuple[list[dict], str]:
     """
