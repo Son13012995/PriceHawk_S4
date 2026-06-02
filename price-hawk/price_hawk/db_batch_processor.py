@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
 from .product_matcher import ProductMatcher
+from .meili_client import index_products_sync, ensure_index_sync
 
 load_dotenv()
 
@@ -18,7 +19,9 @@ class BatchDBProcessor:
         self.conn: Optional[pymysql.Connection] = None
         self.cursor: Optional[pymysql.cursors.Cursor] = None
         self.matcher = ProductMatcher(fuzzy_threshold=95)  # STRICT matching like import_to_db
+        self._meili_buffer: List[Dict] = []  # Buffer for MeiliSearch indexing
         self._init_connection()
+        ensure_index_sync()  # Ensure MeiliSearch index exists
     
     def _init_connection(self):
         """Initialize DB connection"""
@@ -59,6 +62,11 @@ class BatchDBProcessor:
             
             if self.auto_commit:
                 self.conn.commit()
+            
+            # Flush MeiliSearch buffer (non-blocking, best-effort)
+            if self._meili_buffer:
+                index_products_sync(self._meili_buffer)
+                self._meili_buffer = []
             
             count = len(self.buffer)
             self.buffer = []
@@ -121,6 +129,15 @@ class BatchDBProcessor:
             # Insert comparison records from all sources in group
             for item in group:
                 self._insert_comparison(product_id, item)
+            
+            # Buffer for MeiliSearch indexing
+            self._meili_buffer.append({
+                "id": product_id,
+                "name": name,
+                "brand": brand,
+                "identity_key": identity_key,
+                "current_price": current_price,
+            })
         
         except Exception as e:
             print(f"⚠️ Skipped product {rep.get('name')}: {e}")
