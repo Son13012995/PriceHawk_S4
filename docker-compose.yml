@@ -72,8 +72,11 @@ services:
       - ./price-hawk/.env.product
     environment:
       - TZ=Asia/Ho_Chi_Minh
+      - MEILI_URL=http://meilisearch:7700
+      - MEILI_MASTER_KEY=pricehawk-meili-master-key-2026
     depends_on:
       - mysql
+      - meilisearch
     restart: unless-stopped
     networks:
       - mynetwork
@@ -91,6 +94,8 @@ services:
       mysql:
         condition: service_healthy
       searxng:
+        condition: service_started
+      meilisearch:
         condition: service_started
     restart: unless-stopped
     deploy:
@@ -129,8 +134,30 @@ services:
     networks:
       - mynetwork
 
+  meilisearch:
+    image: getmeili/meilisearch:v1.13
+    container_name: meilisearch
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_MASTER_KEY=pricehawk-meili-master-key-2026
+      - MEILI_ENV=development
+    volumes:
+      - meili_data:/meili_data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.20'
+          memory: 256M
+        reservations:
+          memory: 64M
+    networks:
+      - mynetwork
+
 volumes:
   mysql_data:
+  meili_data:
 
 networks:
   mynetwork:
