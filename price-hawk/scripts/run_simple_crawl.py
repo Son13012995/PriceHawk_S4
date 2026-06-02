@@ -19,7 +19,8 @@ DATA_DIR = ROOT_DIR / "data"
 
 SPIDER_BY_SHOP = {
     "tgdd": "tgdd_catalog",
-    "fpt": "fpt_catalog"
+    "fpt": "fpt_catalog",
+    "hoangha": "hoangha_catalog",
 }
 
 CATEGORIES = ["dien-thoai", "laptop", "tablet"]
@@ -48,6 +49,8 @@ def run_spider(shop: str, category: str) -> tuple:
             cwd=ROOT_DIR,
             capture_output=True,
             text=True,
+            encoding='utf-8',
+            errors='replace',
             timeout=300  # 5 min timeout per spider
         )
         elapsed = time.time() - start
@@ -80,6 +83,7 @@ def run_spider(shop: str, category: str) -> tuple:
 def main():
     print("🚀 Simple Crawler - Crawl All, No Skip Logic")
     print(f"Crawling: {len(SHOPS)} shops × {len(CATEGORIES)} categories = {len(SHOPS) * len(CATEGORIES)} spiders")
+    print(f"Shops: {', '.join(SHOPS)}")
     print()
     
     # Ensure data dir exists
@@ -91,13 +95,13 @@ def main():
         for category in CATEGORIES:
             tasks.append((shop, category))
     
-    print(f"Starting {len(tasks)} crawl tasks with 3 workers...\n")
+    print(f"Starting {len(tasks)} crawl tasks with 4 workers...\n")
     
     successful = 0
     failed = 0
     start_time = time.time()
     
-    with ThreadPoolExecutor(max_workers=3, thread_name_prefix="Crawler") as executor:
+    with ThreadPoolExecutor(max_workers=4, thread_name_prefix="Crawler") as executor:
         futures = {
             executor.submit(run_spider, shop, category): (shop, category)
             for shop, category in tasks

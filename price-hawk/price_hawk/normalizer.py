@@ -1,5 +1,6 @@
 import re
 import unicodedata
+import html
 
 
 BRAND_ALIASES = {
@@ -56,6 +57,43 @@ BRAND_ALIASES = {
     "chuwi": "chuwi",
     "masstel": "masstel",
     "xiaomi pad": "xiaomi",
+    "motorola": "motorola",
+    "moto": "motorola",
+    "tcl": "tcl",
+    "hera": "hera",
+    "xphone": "hera",
+    "htc": "htc",
+    "sony": "sony",
+    "reno": "oppo",
+    "find": "oppo",
+    "oscal": "oscal",
+    "zte": "zte",
+    "redmi": "xiaomi",
+    "poco": "xiaomi",
+    "mi ": "xiaomi",
+    "galaxy": "samsung",
+    "tab ": "samsung",
+    "ipad": "apple",
+    "macbook": "apple",
+    "iphone": "apple",
+    "thinkpad": "lenovo",
+    "ideapad": "lenovo",
+    "vivobook": "asus",
+    "zenbook": "asus",
+    "inspiron": "dell",
+    "latitude": "dell",
+    "xps": "dell",
+    "pavilion": "hp",
+    "victus": "hp",
+    "omen": "hp",
+    "aspire": "acer",
+    "swift": "acer",
+    "nitro": "acer",
+    "predator": "acer",
+    "matebook": "huawei",
+    "surface": "microsoft",
+    "lg gram": "lg",
+    "gram": "lg",
 }
 
 COLOR_ALIASES = {
@@ -95,6 +133,8 @@ NOISE_PHRASES = {
     "khuyen mai",
     "bao hanh",
     "qua tang",
+    "vn/a",
+    "vna",
 }
 
 
@@ -291,6 +331,7 @@ def normalize_tablet_identity(name, brand=None):
 def to_ascii_lower(text):
     if not text:
         return ""
+    text = html.unescape(text)
     text = text.replace("Đ", "D").replace("đ", "d")
     normalized = unicodedata.normalize("NFKD", text)
     no_diacritic = "".join(ch for ch in normalized if not unicodedata.combining(ch))
@@ -311,7 +352,8 @@ def normalize_brand(brand_text):
     if not brand_text:
         return None
     for alias, norm in BRAND_ALIASES.items():
-        if re.search(rf"\b{re.escape(alias)}\b", brand_text):
+        # Match alias at word boundary OR followed by digits (e.g., "reno14", "galaxy23")
+        if re.search(rf"(?:^|[\s\-]){re.escape(alias)}\d*(?:[\s\-]|$)", brand_text):
             return norm
     return None
 
@@ -336,6 +378,13 @@ def extract_memory(text):
     if pair_match:
         ram = f"{int(pair_match.group(1))}g"
         rom = format_capacity(pair_match.group(2), "g")
+
+    # Match "12GB/512GB" or "8GB+256GB" patterns
+    if not pair_match:
+        pair_match2 = re.search(r"\b(\d{1,2})\s*(?:gb|g)\s*[/+]\s*(\d{2,4})\s*(?:gb|g)\b", text, re.IGNORECASE)
+        if pair_match2:
+            ram = f"{int(pair_match2.group(1))}g"
+            rom = format_capacity(pair_match2.group(2), "g")
 
     ram_match = re.search(r"\bram\s*(\d{1,2})\s*(g|gb)\b", text)
     if ram_match:
@@ -394,9 +443,11 @@ def remove_tablet_noise(text):
 
 def remove_memory_tokens(text):
     text = re.sub(r"\b\d{1,2}\s*/\s*\d{2,4}\b", " ", text)
+    text = re.sub(r"\b\d{1,2}\s*(?:gb|g)\s*[/+]\s*\d{2,4}\s*(?:gb|g)\b", " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\bram\s*\d{1,2}\s*(g|gb)\b", " ", text)
     # Remove storage capacities but keep bare 4G/5G network markers in model names.
-    text = re.sub(r"\b\d{1,4}\s*(tb|t|gb)\b", " ", text)
+    # Only match "tb" (not "t") to avoid removing model names like "Xiaomi 15T"
+    text = re.sub(r"\b\d{1,4}\s*(tb|gb)\b", " ", text)
     return normalize_spaces(text)
 
 

@@ -18,17 +18,17 @@ class HoangHaCatalogSpider(scrapy.Spider):
         "dien-thoai": {
             "listing_base_url": "https://hoanghamobile.com/dien-thoai-di-dong",
             "max_listing_pages": 15,
-            "product_prefixes": None,
+            "product_prefixes": ["/dien-thoai/"],
         },
         "laptop": {
             "listing_base_url": "https://hoanghamobile.com/laptop",
             "max_listing_pages": 20,
-            "product_prefixes": ["/laptop/", "/lap-top/"],
+            "product_prefixes": ["/laptop/"],
         },
         "tablet": {
             "listing_base_url": "https://hoanghamobile.com/tablet",
             "max_listing_pages": 20,
-            "product_prefixes": ["/tablet/", "/may-tinh-bang/"],
+            "product_prefixes": ["/tablet/"],
         },
     }
 
@@ -57,7 +57,7 @@ class HoangHaCatalogSpider(scrapy.Spider):
         self.expected_total_hint = None
         self.crawled_item_count = 0
 
-    def start_requests(self):
+    async def start(self):
         for page in range(1, self.max_listing_pages + 1):
             url = self.listing_base_url if page == 1 else f"{self.listing_base_url}?p={page}"
             yield scrapy.Request(url, callback=self.parse)
@@ -71,10 +71,22 @@ class HoangHaCatalogSpider(scrapy.Spider):
         if hint:
             self.expected_total_hint = max(self.expected_total_hint or 0, hint)
 
-        links = response.css(
-            ".product-item a::attr(href), "
-            "a[href*='-p']::attr(href)"
-        ).getall()
+        # Lấy tất cả link khớp với prefix danh mục — HoangHa dùng /dien-thoai/, /laptop/, /tablet/
+        # CSS attr selector [href*=] không dùng được vì utm params làm rối, dùng getall() + filter
+        prefixes = self.category_config.get("product_prefixes") or []
+        all_hrefs = response.css("a::attr(href)").getall()
+        links = [
+            h for h in all_hrefs
+            if any(f"hoanghamobile.com{p}" in h or h.startswith(p) for p in prefixes)
+        ]
+        # Fallback: selectors cụ nếu không tìm được link nào
+        if not links:
+            links = response.css(
+                ".product-item a::attr(href), "
+                ".product-card a::attr(href), "
+                ".item-product a::attr(href), "
+                "li.product a::attr(href)"
+            ).getall()
         for href in links:
             url = self._canonical_url(urljoin(response.url, href))
             if url in self.seen_product_urls:
@@ -100,12 +112,12 @@ class HoangHaCatalogSpider(scrapy.Spider):
             return False
         if "/phan-loai-san-pham/" in lowered_path:
             return False
+        if "/hang-san-xuat/" in lowered_path:
+            return False
         if lowered_path.endswith("/van-phong-sinh-vien"):
             return False
 
-        if parsed.query and "filters=" in parsed.query.lower():
-            return False
-
+        # Chỉ cho qua URL có đúng prefix danh mục
         prefixes = self.category_config.get("product_prefixes")
         if prefixes and not any(lowered_path.startswith(prefix) for prefix in prefixes):
             return False
@@ -157,8 +169,13 @@ class HoangHaCatalogSpider(scrapy.Spider):
             offers.get("price"),
             response.css("meta[property='product:price:amount']::attr(content)").get(),
             response.css("meta[itemprop='price']::attr(content)").get(),
+            # HoangHa Mobile price selectors (thử theo thứ tự chính xác → fallback)
             response.css(".product-price .price::text").get(),
-            response.css(".price::text").get(),
+            response.css("[class*='price-current']::text").get(),
+            response.css("[class*='price-sale']::text").get(),
+            response.css("[class*='current-price']::text").get(),
+            response.css(".box-price span.price::text").get(),
+            response.css(".price-box .price::text").get(),
         ])
 
         old_price = first_non_empty([

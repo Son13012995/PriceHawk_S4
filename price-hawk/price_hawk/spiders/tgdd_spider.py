@@ -73,7 +73,7 @@ class TgddCatalogSpider(scrapy.Spider):
         self.expected_total_hint = None
         self.crawled_item_count = 0
 
-    def start_requests(self):
+    async def start(self):
         for url in self.start_urls:
             yield scrapy.Request(url, callback=self.parse)
 
