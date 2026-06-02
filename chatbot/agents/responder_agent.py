@@ -48,11 +48,11 @@ def _format_price(price) -> str:
         return str(price) if price else "Liên hệ"
 
 
-def _format_product_data(products: list[dict]) -> str:
+def _format_product_data(products: list[dict], limit: int = 5) -> str:
     if not products:
         return "Không có dữ liệu."
     lines = []
-    for i, product in enumerate(products[:3], 1):
+    for i, product in enumerate(products[:limit], 1):
         lines.append(f"\n[Sản phẩm {i}] {product['name']}")
         if product.get("brand"):
             lines.append(f"  Thương hiệu: {product['brand']}")
@@ -71,17 +71,33 @@ class ResponderAgent:
     async def reply_from_db(self, db_result: dict, user_message: str, intent: str) -> dict:
         """Tạo câu trả lời khi có dữ liệu từ DB."""
         products = db_result.get("products", [])
-        product_data_text = _format_product_data(products)
+        # Compare mode: cần nhiều sản phẩm hơn để không cắt mất sản phẩm thứ 2
+        data_limit = 6 if intent == "compare" else 3
+        product_data_text = _format_product_data(products, limit=data_limit)
+
+        # Kiểm tra có internet supplement (compare mode: 1 sản phẩm từ DB, 1 từ Internet)
+        internet_supplement = db_result.get("internet_supplement")
+        internet_text = ""
+        source_tag = "database"
+        if internet_supplement and internet_supplement.get("found"):
+            internet_text = (
+                f"\n\nThông tin từ internet về sản phẩm còn lại (nguồn: {internet_supplement.get('source_url', '')}):\n"
+                f"{internet_supplement.get('summary', '')}"
+            )
+            source_tag = "internet"
 
         if intent == "compare":
             instruction = (
                 "Hãy trình bày thông tin SO SÁNH chi tiết cho các sản phẩm tìm được dưới dạng DANH SÁCH (TUYỆT ĐỐI KHÔNG DÙNG BẢNG). "
-                "Mỗi sản phẩm hãy in đậm tên, sau đó gạch đầu dòng các tiêu chí cơ bản (Giá, RAM, Camera, Pin, Chipset). VÌ DỮ LIỆU HỆ THỐNG CHỈ CÓ GIÁ, HÃY TỰ DÙNG KIẾN THỨC SẴN CÓ CỦA BẠN ĐỂ ĐIỀN THÔNG SỐ KỸ THUẬT, nhưng MỨC GIÁ thì bắt buộc phải lấy từ dữ liệu hệ thống (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url)). "
+                "Mỗi sản phẩm hãy in đậm tên, sau đó gạch đầu dòng các tiêu chí cơ bản (Giá, RAM, Camera, Pin, Chipset). "
+                "MỨC GIÁ thì bắt buộc phải lấy từ dữ liệu hệ thống (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url)). "
+                "VÌ DỮ LIỆU HỆ THỐNG CHỈ CÓ GIÁ, HÃY TỰ DÙNG KIẾN THỨC SẴN CÓ CỦA BẠN ĐỂ ĐIỀN THÔNG SỐ KỸ THUẬT (RAM, Camera, Pin, Chipset). TUYỆT ĐỐI KHÔNG ghi 'Không có thông tin trong hệ thống' — hãy tự điền thông số bạn biết. "
+                "Nếu có thông tin từ internet, hãy ưu tiên sử dụng thông tin đó. "
                 "Sau khi liệt kê, thêm 2-3 dòng nhận xét ngắn gọn (VD: ưu/nhược điểm của từng máy, máy nào phù hợp với ai)."
             )
         else:
             instruction = (
-                "1. Tóm tắt sản phẩm tìm được\n"
+                "1. Tóm tắt sản phẩm tìm được, BẮT BUỘC bổ sung thông số kỹ thuật (RAM, Camera, Pin, Chipset) từ kiến thức của bạn. TUYỆT ĐỐI KHÔNG ghi 'Không có thông tin trong hệ thống'.\n"
                 "2. Bảng giá từ các cửa hàng (rẻ đến đắt), BẮT BUỘC chèn kèm link mua hàng (định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url) - TUYỆT ĐỐI KHÔNG CÓ DẤU CÁCH giữa ] và (). Ví dụ: [FPT Shop](https://...)\n"
                 "3. Gợi ý cửa hàng rẻ nhất và chèn lại link của sản phẩm rẻ nhất đó.\n"
                 "Nếu nhiều sản phẩm tương tự, hiển thị tối đa 3 cái phù hợp nhất."
@@ -99,7 +115,7 @@ class ResponderAgent:
         prompt = (
             f"Bạn là trợ lý so sánh giá của PriceHawk — website so sánh giá điện thoại, laptop, tablet tại Việt Nam.\n\n"
             f"Người dùng hỏi: \"{user_message}\"\n\n"
-            f"Thông tin giá từ hệ thống:\n{product_data_text}{partial_notice}\n\n"
+            f"Thông tin giá từ hệ thống:\n{product_data_text}{partial_notice}{internet_text}\n\n"
             f"Hãy viết câu trả lời tiếng Việt thân thiện, bao gồm:\n"
             f"{instruction}"
         )
@@ -128,7 +144,7 @@ class ResponderAgent:
 
         return {
             "reply": reply_text,
-            "source": "database",
+            "source": source_tag,
             "products": products,
             "search_keyword": db_result.get("search_keyword"),
         }
@@ -141,12 +157,29 @@ class ResponderAgent:
         source_url = internet_result.get("source_url", "")
         summary = internet_result.get("summary", "")
 
+        # Detect compare intent from user message (simple heuristic)
+        is_compare = any(kw in user_message.lower() for kw in ["so sánh", "vs", "với", "hay", "tốt hơn", "khác nhau"])
+        if is_compare:
+            format_instruction = (
+                "Hãy trình bày thông tin SO SÁNH dưới dạng DANH SÁCH (TUYỆT ĐỐI KHÔNG dùng bảng). "
+                "Mỗi sản phẩm: in đậm tên, gạch đầu dòng các tiêu chí (Giá, RAM, Camera, Pin, Chipset). "
+                "Nếu thông tin từ internet không đủ, hãy dùng kiến thức của bạn để điền thêm. "
+                "TUYỆT ĐỐI KHÔNG ghi 'Không có thông tin'. "
+                "Cuối cùng thêm 2-3 dòng nhận xét: máy nào phù hợp với ai. "
+                f"Ghi nguồn ở cuối: [Nguồn tham khảo]({source_url})"
+            )
+        else:
+            format_instruction = (
+                "Hãy trình bày dưới dạng DANH SÁCH: in đậm tên sản phẩm, gạch đầu dòng thông số (Giá, RAM, Camera, Pin, Chipset). "
+                "Nếu thiếu thông tin, dùng kiến thức của bạn điền thêm. TUYỆT ĐỐI KHÔNG ghi 'Không có thông tin'. "
+                f"Ghi nguồn ở cuối: [Nguồn tham khảo]({source_url})"
+            )
+
         prompt = (
             f"Bạn là trợ lý so sánh giá của PriceHawk.\n\n"
             f"Người dùng hỏi: \"{user_message}\"\n\n"
             f"Thông tin tìm được từ internet (nguồn: {source_url}):\n{summary}\n\n"
-            f"Hãy viết câu trả lời tiếng Việt thân thiện dựa trên thông tin trên. "
-            f"Ghi rõ nguồn thông tin ở cuối câu trả lời, BẮT BUỘC định dạng nguồn bằng chuẩn Markdown: [Nguồn tham khảo]({source_url}) - TUYỆT ĐỐI KHÔNG CÓ DẤU CÁCH giữa ] và ()."
+            f"{format_instruction}"
         )
 
         models_to_try = [MODEL_PRIMARY, MODEL_FALLBACK] if client else []

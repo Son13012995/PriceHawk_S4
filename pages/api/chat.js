@@ -23,8 +23,8 @@ export default async function handler(req, res) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: message.trim(), history }),
-      // Timeout 30s (Internet fallback có thể chậm hơn)
-      signal: AbortSignal.timeout(30000),
+      // Timeout 180s — Internet fallback (SearxNG + Crawl4AI + LLM) có thể mất 60-120s
+      signal: AbortSignal.timeout(180000),
     });
 
     if (!response.ok) {
