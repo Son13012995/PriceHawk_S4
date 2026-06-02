@@ -2,6 +2,8 @@
 db_agent.py — Agent 2: Tìm kiếm sản phẩm trong MySQL database.
 
 Hỗ trợ tất cả categories: điện thoại, laptop, tablet.
+Flow: MeiliSearch (fast, fuzzy) → MySQL (fetch full data with prices).
+Fallback: MySQL LIKE search nếu MeiliSearch unavailable.
 """
 
 import sys
@@ -9,6 +11,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 import db as database
+import meili_client
 
 
 # Map từ các từ khóa của user sang category hints
@@ -47,6 +50,7 @@ class DBAgent:
     async def run(self, product_name: str | None, category: str | None = None) -> dict:
         """
         Tìm sản phẩm trong DB.
+        Flow: MeiliSearch → MySQL fetch prices. Fallback: MySQL LIKE.
 
         Returns:
             {
@@ -66,7 +70,24 @@ class DBAgent:
         detected_category = detect_category_from_query(product_name, category)
         print(f"[DBAgent] Searching: '{product_name}' | category hint: {detected_category}")
 
-        # Tìm trong DB
+        # ── Step 1: Try MeiliSearch (fast, fuzzy) ──
+        meili_hits = await meili_client.search_products(product_name, limit=10)
+        if meili_hits:
+            product_ids = [h["id"] for h in meili_hits]
+            rows = database.fetch_products_by_ids(product_ids)
+            if rows:
+                grouped = database.group_by_product(rows)
+                print(f"[DBAgent] MeiliSearch → {len(grouped)} products, {len(rows)} price entries")
+                return {
+                    "found": True,
+                    "products": grouped,
+                    "search_keyword": product_name,
+                    "match_type": "exact",  # MeiliSearch results are relevant
+                    "db_available": True,
+                }
+
+        # ── Step 2: Fallback MySQL LIKE search ──
+        print(f"[DBAgent] MeiliSearch miss → fallback MySQL LIKE")
         rows, match_type = database.search_products(product_name, category=detected_category, limit=10)
 
         if not rows:
