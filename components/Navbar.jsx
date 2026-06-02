@@ -85,7 +85,7 @@ export default function Navbar() {
                             <div className="hidden md:block h-6 w-[1px] bg-zinc-200 dark:bg-white/10 mx-2" />
                             <div className="hidden md:block flex-shrink-0">
                                 <a 
-                                    href="/pricehawk-extension.zip" 
+                                    href="/extension.zip" 
                                     download="PriceHawk_Extension.zip"
                                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:hover:bg-violet-900/50 dark:text-violet-400 text-sm font-bold transition-colors"
                                 >
