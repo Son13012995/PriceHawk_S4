@@ -229,6 +229,41 @@ def group_by_product(rows: list[dict]) -> list[dict]:
     return list(grouped.values())
 
 
+def fetch_products_by_ids(product_ids: list[int]) -> list[dict]:
+    """
+    Fetch products + comparison prices từ MySQL theo product IDs.
+    Dùng cho MeiliSearch → MySQL flow.
+    """
+    if not product_ids:
+        return []
+
+    placeholders = ",".join(["%s"] * len(product_ids))
+    try:
+        conn = get_connection()
+        with conn:
+            with conn.cursor() as cursor:
+                sql = f"""
+                    SELECT
+                        p.id,
+                        p.name,
+                        p.image_url,
+                        p.brand,
+                        c.name AS retailer,
+                        c.price,
+                        c.url AS retailer_url
+                    FROM product p
+                    JOIN comparison c ON p.id = c.product_id
+                    WHERE p.id IN ({placeholders})
+                    ORDER BY c.price ASC
+                """
+                cursor.execute(sql, product_ids)
+                rows = cursor.fetchall()
+                return rows if rows else []
+    except Exception as e:
+        print(f"[DB] fetch_products_by_ids error: {e}")
+        return []
+
+
 def is_db_available() -> bool:
     """Kiểm tra xem DB có đang chạy không."""
     try:

@@ -1,11 +1,14 @@
 import db from "./database";
 
+const MEILI_URL = process.env.MEILI_URL || "http://localhost:7700";
+const MEILI_KEY = process.env.MEILI_MASTER_KEY || "pricehawk-meili-master-key-2026";
+
 /**
  * @swagger
  * /api/pagination:
  *   get:
  *     summary: Search products with pagination
- *     description: Search for products by name
+ *     description: Search for products by name (MeiliSearch first, MySQL fallback)
  *     parameters:
  *       - in: query
  *         name: q
@@ -35,6 +38,13 @@ export default async function handler(req, res) {
   const offset = (pageNumber - 1) * limit;
 
   try {
+    // ── Step 1: Try MeiliSearch ──
+    const meiliResults = await searchMeili(q, limit, offset);
+    if (meiliResults) {
+      return res.status(200).json(meiliResults);
+    }
+
+    // ── Step 2: Fallback MySQL LIKE ──
     const countQuery = "SELECT COUNT(*) AS count FROM product WHERE name LIKE ?";
     const searchQuery = "SELECT * FROM product WHERE name LIKE ? LIMIT ? OFFSET ?";
 
@@ -47,9 +57,50 @@ export default async function handler(req, res) {
       pageSize: limit,
       totalPages: Math.ceil(totalResults[0].count / limit),
       data: searchResults,
+      searchEngine: "mysql",
     });
   } catch (error) {
     console.error("Database error:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+async function searchMeili(keyword, limit, offset) {
+  try {
+    const resp = await fetch(`${MEILI_URL}/indexes/products/search`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${MEILI_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        q: keyword,
+        limit: limit + offset,
+        attributesToRetrieve: ["id", "name", "brand", "identity_key", "current_price"],
+      }),
+      signal: AbortSignal.timeout(3000),
+    });
+
+    if (!resp.ok) return null;
+
+    const data = await resp.json();
+    const hits = data.hits || [];
+    const totalCount = data.estimatedTotalHits || hits.length;
+    const pagedHits = hits.slice(offset, offset + limit);
+
+    if (pagedHits.length === 0) return null;
+
+    return {
+      totalCount,
+      page: Math.floor(offset / limit) + 1,
+      pageSize: limit,
+      totalPages: Math.ceil(totalCount / limit),
+      data: pagedHits,
+      searchEngine: "meilisearch",
+      queryTimeMs: data.processingTimeMs,
+    };
+  } catch (e) {
+    console.log("[MeiliSearch] Unavailable, fallback to MySQL:", e.message);
+    return null;
   }
 }

@@ -77,22 +77,37 @@ class ResponderAgent:
 
         # Kiểm tra có internet supplement (compare mode: 1 sản phẩm từ DB, 1 từ Internet)
         internet_supplement = db_result.get("internet_supplement")
+        internet_result = db_result.get("internet_result")
         internet_text = ""
         source_tag = "database"
-        if internet_supplement and internet_supplement.get("found"):
-            internet_text = (
-                f"\n\nThông tin từ internet về sản phẩm còn lại (nguồn: {internet_supplement.get('source_url', '')}):\n"
-                f"{internet_supplement.get('summary', '')}"
+        internet_urls = []
+
+        if internet_result and internet_result.get("found"):
+            internet_text += (
+                f"\n\nThông tin từ internet cho '{internet_result.get('keyword', '')}':\n"
+                f"- Nguồn: {internet_result.get('source_url', '')}\n"
+                f"- Nội dung: {internet_result.get('summary', '')}"
             )
+            internet_urls.append(internet_result.get('source_url', ''))
+            source_tag = "internet"
+
+        if internet_supplement and internet_supplement.get("found"):
+            internet_text += (
+                f"\n\nThông tin từ internet cho '{internet_supplement.get('keyword', '')}':\n"
+                f"- Nguồn: {internet_supplement.get('source_url', '')}\n"
+                f"- Nội dung: {internet_supplement.get('summary', '')}"
+            )
+            internet_urls.append(internet_supplement.get('source_url', ''))
             source_tag = "internet"
 
         if intent == "compare":
             instruction = (
                 "Hãy trình bày thông tin SO SÁNH chi tiết cho các sản phẩm tìm được dưới dạng DANH SÁCH (TUYỆT ĐỐI KHÔNG DÙNG BẢNG). "
                 "Mỗi sản phẩm hãy in đậm tên, sau đó gạch đầu dòng các tiêu chí cơ bản (Giá, RAM, Camera, Pin, Chipset). "
-                "MỨC GIÁ thì bắt buộc phải lấy từ dữ liệu hệ thống (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url)). "
+                "Nếu có dữ liệu giá từ hệ thống, BẮT BUỘC lấy giá từ đó (kèm link mua hàng, định dạng CHUẨN MARKDOWN: [Tên cửa hàng](url)). "
+                "Nếu không có dữ liệu hệ thống, dùng thông tin từ internet. "
                 "VÌ DỮ LIỆU HỆ THỐNG CHỈ CÓ GIÁ, HÃY TỰ DÙNG KIẾN THỨC SẴN CÓ CỦA BẠN ĐỂ ĐIỀN THÔNG SỐ KỸ THUẬT (RAM, Camera, Pin, Chipset). TUYỆT ĐỐI KHÔNG ghi 'Không có thông tin trong hệ thống' — hãy tự điền thông số bạn biết. "
-                "Nếu có thông tin từ internet, hãy ưu tiên sử dụng thông tin đó. "
+                "CHỈ ghi link mua hàng/tham khảo (bất kỳ shop nào, không giới hạn FPT Shop, Thế Giới Di Động, Hoàng Hà Mobile). TUYỆT ĐỐI KHÔNG ghi link nguồn tham khảo cho từng thông số kỹ thuật (RAM, Camera, Pin, Chipset). "
                 "Sau khi liệt kê, thêm 2-3 dòng nhận xét ngắn gọn (VD: ưu/nhược điểm của từng máy, máy nào phù hợp với ai)."
             )
         else:
