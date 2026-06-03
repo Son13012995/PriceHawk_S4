@@ -55,6 +55,25 @@ else
     exit 1
 fi
 
+# Auto-backfill MeiliSearch if empty (run once on first deploy)
+MEILI_URL="${MEILI_URL:-http://meilisearch:7700}"
+MEILI_INDEX_STATUS=$("$PY_BIN" -c "
+import httpx, os
+url = os.getenv('MEILI_URL', '$MEILI_URL')
+key = os.getenv('MEILI_MASTER_KEY', 'pricehawk-meili-master-key-2026')
+try:
+    r = httpx.get(f'{url}/indexes/products/stats', headers={'Authorization': f'Bearer {key}'}, timeout=5.0)
+    data = r.json()
+    print(data.get('numberOfDocuments', 0))
+except:
+    print(0)
+" 2>/dev/null)
+
+if [ "$MEILI_INDEX_STATUS" = "0" ]; then
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] MeiliSearch empty → running backfill..." | tee -a "$LOG_FILE"
+    "$PY_BIN" scripts/index_existing.py >> "$LOG_FILE" 2>&1
+fi
+
 # Run crawler
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running: $PY_BIN crawl_all.py" >> "$LOG_FILE"
 
