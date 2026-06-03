@@ -85,35 +85,33 @@ class ChatbotPipeline:
                 self.db_agent.run(product_name_2, category),
             )
 
+            # Check if either product needs Internet
+            need_internet_1 = not db_result.get("found") or db_result.get("match_type") == "partial"
+            need_internet_2 = not db_result_2.get("found") or db_result_2.get("match_type") == "partial"
+
+            if need_internet_1 or need_internet_2:
+                async def _maybe_search(need, keyword):
+                    if need:
+                        return await self.internet_agent.run(keyword)
+                    return {"found": False}
+
+                print(f"[Pipeline] Partial/missing product → trying Internet...")
+                internet_result, internet_result_2 = await asyncio.gather(
+                    _maybe_search(need_internet_1, db_keyword),
+                    _maybe_search(need_internet_2, product_name_2),
+                )
+
+                if internet_result.get("found"):
+                    db_result["internet_result"] = internet_result
+                if internet_result_2.get("found"):
+                    db_result["internet_supplement"] = internet_result_2
+
+            # Merge products from both DB results
             if db_result_2.get("found"):
-                # DB có sản phẩm 2 → gộp vào
                 db_result["found"] = True
                 db_result["products"] = db_result.get("products", []) + db_result_2.get("products", [])
-                db_result["search_keyword"] = f"{db_keyword} & {product_name_2}"
-            else:
-                # Sản phẩm 2 không có DB → thử Internet, chạy song song với sản phẩm 1 nếu cần
-                need_internet_1 = not db_result.get("found") or db_result.get("match_type") == "partial"
-                if need_internet_1:
-                    print(f"[Pipeline] Both products need internet → searching in parallel...")
-                    internet_result, internet_result_2 = await asyncio.gather(
-                        self.internet_agent.run(db_keyword),
-                        self.internet_agent.run(product_name_2),
-                    )
-                    # Gộp kết quả internet vào db_result để xử lý bên dưới
-                    if internet_result.get("found"):
-                        db_result["internet_result"] = internet_result
-                    if internet_result_2.get("found"):
-                        db_result["internet_supplement"] = internet_result_2
-                    db_result["search_keyword"] = f"{db_keyword} & {product_name_2}"
-                    # Skip internet fallback bên dưới vì đã chạy rồi
-                    db_result["internet_already_done"] = True
-                else:
-                    print(f"[Pipeline] Product 2 '{product_name_2}' not in DB → trying Internet...")
-                    internet_result_2 = await self.internet_agent.run(product_name_2)
-                    if internet_result_2.get("found"):
-                        print(f"[Pipeline] Internet found info for '{product_name_2}'")
-                        db_result["internet_supplement"] = internet_result_2
-                    db_result["search_keyword"] = f"{db_keyword} & {product_name_2}"
+            db_result["search_keyword"] = f"{db_keyword} & {product_name_2}"
+            db_result["internet_already_done"] = True
         else:
             # Non-compare: query bình thường 1 sản phẩm
             print(f"[Pipeline] Step 2: DB search for '{db_keyword}'...")
@@ -135,11 +133,30 @@ class ChatbotPipeline:
 
         # Nếu đã chạy internet trong compare block thì skip
         if db_result.get("internet_already_done"):
-            if db_result.get("internet_result", {}).get("found"):
+            has_internet_1 = db_result.get("internet_result", {}).get("found")
+            has_internet_2 = db_result.get("internet_supplement", {}).get("found")
+            has_db = db_result.get("found") and db_result.get("products")
+
+            if has_internet_1 and has_internet_2:
+                # Cả 2 sản phẩm đều có Internet results → dùng reply_from_db với cả 2 nguồn
+                print(f"[Pipeline] Both products from Internet → hybrid reply with both sources")
+                db_result["found"] = True
+                result = await self.responder.reply_from_db(db_result, user_message, intent)
+                return self._finalize(result, intent, db_result.get("search_keyword", db_keyword), start_time)
+            elif (has_internet_1 or has_internet_2) and has_db:
+                # Mix: 1 sản phẩm DB + 1 sản phẩm Internet → dùng reply_from_db
+                print(f"[Pipeline] DB + Internet mix → hybrid reply")
+                result = await self.responder.reply_from_db(db_result, user_message, intent)
+                return self._finalize(result, intent, db_result.get("search_keyword", db_keyword), start_time)
+            elif has_internet_1:
                 print(f"[Pipeline] Using parallel internet result for product 1")
                 result = await self.responder.reply_from_internet(db_result["internet_result"], user_message)
                 return self._finalize(result, intent, db_result.get("search_keyword", db_keyword), start_time)
-            elif db_result.get("found") and db_result.get("match_type") == "exact":
+            elif has_internet_2:
+                print(f"[Pipeline] Using parallel internet result for product 2")
+                result = await self.responder.reply_from_internet(db_result["internet_supplement"], user_message)
+                return self._finalize(result, intent, db_result.get("search_keyword", db_keyword), start_time)
+            elif has_db:
                 result = await self.responder.reply_from_db(db_result, user_message, intent)
                 return self._finalize(result, intent, db_result.get("search_keyword", db_keyword), start_time)
 

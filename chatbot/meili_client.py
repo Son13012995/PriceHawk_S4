@@ -17,7 +17,7 @@ HEADERS = {
 
 async def search_products(keyword: str, limit: int = 10) -> list[dict]:
     """
-    Search products in MeiliSearch. Returns list of hits or empty list on failure.
+    Search products in MeiliSearch. Returns list of hits with _rankingScore.
     """
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -27,6 +27,7 @@ async def search_products(keyword: str, limit: int = 10) -> list[dict]:
                 json={
                     "q": keyword,
                     "limit": limit,
+                    "showRankingScore": True,
                     "attributesToRetrieve": ["id", "name", "brand", "identity_key", "current_price"],
                 },
             )
@@ -36,6 +37,8 @@ async def search_products(keyword: str, limit: int = 10) -> list[dict]:
             data = resp.json()
             hits = data.get("hits", [])
             print(f"[MeiliSearch] '{keyword}' → {len(hits)} hits ({data.get('processingTimeMs', '?')}ms)")
+            if hits:
+                print(f"[MeiliSearch] Top hit: '{hits[0].get('name', '')}' (score: {hits[0].get('_rankingScore', '?'):.3f})")
             return hits
 
     except Exception as e:

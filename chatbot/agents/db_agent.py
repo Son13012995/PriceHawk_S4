@@ -73,18 +73,37 @@ class DBAgent:
         # ── Step 1: Try MeiliSearch (fast, fuzzy) ──
         meili_hits = await meili_client.search_products(product_name, limit=10)
         if meili_hits:
-            product_ids = [h["id"] for h in meili_hits]
-            rows = database.fetch_products_by_ids(product_ids)
-            if rows:
-                grouped = database.group_by_product(rows)
-                print(f"[DBAgent] MeiliSearch → {len(grouped)} products, {len(rows)} price entries")
-                return {
-                    "found": True,
-                    "products": grouped,
-                    "search_keyword": product_name,
-                    "match_type": "exact",  # MeiliSearch results are relevant
-                    "db_available": True,
-                }
+            # Check ranking score — nếu top hit < 0.7 thì là fuzzy match, không phải exact
+            top_score = meili_hits[0].get("_rankingScore", 0)
+            if top_score < 0.95:
+                print(f"[DBAgent] MeiliSearch low relevance (score={top_score:.3f}) → treating as partial")
+                # Still use results but mark as partial
+                product_ids = [h["id"] for h in meili_hits]
+                rows = database.fetch_products_by_ids(product_ids)
+                if rows:
+                    grouped = database.group_by_product(rows)
+                    print(f"[DBAgent] MeiliSearch partial → {len(grouped)} products")
+                    return {
+                        "found": True,
+                        "products": grouped,
+                        "search_keyword": product_name,
+                        "match_type": "partial",
+                        "db_available": True,
+                    }
+            else:
+                # High relevance → exact match
+                product_ids = [h["id"] for h in meili_hits]
+                rows = database.fetch_products_by_ids(product_ids)
+                if rows:
+                    grouped = database.group_by_product(rows)
+                    print(f"[DBAgent] MeiliSearch exact → {len(grouped)} products, {len(rows)} price entries")
+                    return {
+                        "found": True,
+                        "products": grouped,
+                        "search_keyword": product_name,
+                        "match_type": "exact",
+                        "db_available": True,
+                    }
 
         # ── Step 2: Fallback MySQL LIKE search ──
         print(f"[DBAgent] MeiliSearch miss → fallback MySQL LIKE")
