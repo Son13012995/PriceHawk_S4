@@ -1,5 +1,6 @@
 import pymysql
 import os
+import html as html_mod
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from dotenv import load_dotenv
@@ -86,7 +87,7 @@ class BatchDBProcessor:
         rep = group[0]
         
         try:
-            name = rep.get("name")
+            name = html_mod.unescape(rep.get("name", ""))
             brand = rep.get("brand_norm", "").lower().replace(" ", "_")
             model = rep.get("model_key", "").lower().replace(" ", "_")
             variant = rep.get("variant_key", "").lower().replace(" ", "_")
