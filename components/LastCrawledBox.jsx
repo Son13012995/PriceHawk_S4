@@ -68,9 +68,6 @@ export default function LastCrawledBox({ lastCrawledAt, loading = false }) {
           <p className="text-base font-bold text-zinc-900 dark:text-zinc-50 mt-1 leading-tight">
             {formattedTime}
           </p>
-          <p className="text-[11px] text-zinc-400 dark:text-zinc-500 mt-1.5 leading-tight">
-            Giá được cào tự động mỗi 5 phút
-          </p>
         </>
       ) : (
         <p className="text-sm font-semibold text-zinc-400 dark:text-zinc-500 mt-2">

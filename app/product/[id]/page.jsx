@@ -101,7 +101,7 @@ export default function ProductItem({ params }) {
   const handlePriceAlertSubmit = async (e) => {
     e.preventDefault();
     setAlertError("");
-    const currentPrice = product?.current_price || 0;
+    const currentPrice = product?.current_price || product?.min_price || 0;
     const target = parsePriceInput(alertTarget);
     if (!alertTarget.trim() || target <= 0) {
       setAlertError("Vui lòng nhập mức giá hợp lệ.");
@@ -231,12 +231,12 @@ export default function ProductItem({ params }) {
                   </p>
                   <div className="flex items-center flex-wrap gap-2">
                     <span className="text-4xl font-black text-violet-600 dark:text-violet-400 tracking-tight">
-                      {formatPrice(product?.current_price)}
+                      {formatPrice(product?.current_price || product?.min_price)}
                     </span>
 
                     {/* Badge: % giảm so với giá cao nhất từ trước tới nay */}
                     {(() => {
-                      const cur = product?.current_price;
+                      const cur = product?.current_price || product?.min_price;
                       if (!allTimeMax || !cur || allTimeMax <= cur) return null;
                       const dropPct = Math.round(((allTimeMax - cur) / allTimeMax) * 1000) / 10;
                       return (
@@ -411,7 +411,7 @@ export default function ProductItem({ params }) {
                 <img src={product.image_url} alt="" className="w-10 h-10 object-contain rounded-lg bg-zinc-800 p-1" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-zinc-800 dark:text-zinc-200 truncate text-sm">{product.name}</p>
-                  <p className="text-violet-600 dark:text-violet-400 font-bold text-sm">{formatPrice(product.current_price)}</p>
+                  <p className="text-violet-600 dark:text-violet-400 font-bold text-sm">{formatPrice(product?.current_price || product?.min_price)}</p>
                 </div>
               </div>
               <form onSubmit={handlePriceAlertSubmit} className="space-y-5">
@@ -422,19 +422,19 @@ export default function ProductItem({ params }) {
                     inputMode="numeric"
                     value={alertTarget}
                     onChange={(e) => setAlertTarget(e.target.value.replace(/\\D/g, ""))}
-                    placeholder={`Thấp hơn ${formatPrice(product.current_price)}`}
+                    placeholder={`Thấp hơn ${formatPrice(product?.current_price || product?.min_price)}`}
                     className="w-full px-4 py-3 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white focus:ring-2 focus:ring-violet-500 focus:border-violet-500 outline-none font-bold transition-all"
                     autoFocus
                   />
                   {alertTarget && parsePriceInput(alertTarget) > 0 && (
                     <div className="mt-3 p-3 rounded-xl bg-zinc-100 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700/50">
-                      <p className={`text-sm font-bold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                      <p className={`text-sm font-bold ${parsePriceInput(alertTarget) < (product?.current_price || product?.min_price) ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                         Mức giá: {formatPrice(parsePriceInput(alertTarget))}
                       </p>
-                      <p className={`mt-1 text-xs font-semibold ${parsePriceInput(alertTarget) < product.current_price ? "text-emerald-500/80 dark:text-emerald-400/80" : "text-rose-500/80 dark:text-rose-400/80"}`}>
-                        {parsePriceInput(alertTarget) < product.current_price
-                          ? `✓ Tiết kiệm được ${formatPrice(product.current_price - parsePriceInput(alertTarget))}`
-                          : `! Phải thấp hơn ${formatPrice(product.current_price)}`}
+                      <p className={`mt-1 text-xs font-semibold ${parsePriceInput(alertTarget) < (product?.current_price || product?.min_price) ? "text-emerald-500/80 dark:text-emerald-400/80" : "text-rose-500/80 dark:text-rose-400/80"}`}>
+                        {parsePriceInput(alertTarget) < (product?.current_price || product?.min_price)
+                          ? `✓ Tiết kiệm được ${formatPrice((product?.current_price || product?.min_price) - parsePriceInput(alertTarget))}`
+                          : `! Phải thấp hơn ${formatPrice(product?.current_price || product?.min_price)}`}
                       </p>
                     </div>
                   )}
@@ -454,7 +454,7 @@ export default function ProductItem({ params }) {
                   <button type="button" onClick={() => setShowAlertForm(false)} className="flex-1 py-3 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 font-bold hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors">Hủy</button>
                   <button
                     type="submit"
-                    disabled={!alertTarget || parsePriceInput(alertTarget) >= product.current_price}
+                    disabled={!alertTarget || parsePriceInput(alertTarget) >= (product?.current_price || product?.min_price)}
                     className="flex-[2] py-3 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-700 disabled:bg-zinc-200 dark:disabled:bg-zinc-800 disabled:text-zinc-400 dark:disabled:text-zinc-500 shadow-lg shadow-violet-200 dark:shadow-violet-900/30 transition-all"
                   >
                     Tạo Cảnh báo
