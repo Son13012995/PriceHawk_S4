@@ -29,18 +29,8 @@ export default async function handler(req, res) {
         // Thông tin sản phẩm + giá thấp nhất hiện tại
         const productSql = `
             SELECT p.*,
-                   COALESCE(
-                     (SELECT MIN(ph.price)
-                      FROM price_history ph
-                      WHERE ph.product_id = p.id
-                        AND ph.recorded_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)),
-                     (SELECT MIN(c.price) FROM comparison c WHERE c.product_id = p.id)
-                   ) AS min_price,
-                   (SELECT COUNT(DISTINCT COALESCE(ph.retailer, c.name))
-                    FROM comparison c
-                    LEFT JOIN price_history ph
-                      ON ph.comparison_id = c.id
-                    WHERE c.product_id = p.id) AS retailer_count
+                   (SELECT MIN(price) FROM comparison c WHERE c.product_id = p.id) AS min_price,
+                   (SELECT COUNT(*) FROM comparison c WHERE c.product_id = p.id) AS retailer_count
             FROM product p
             WHERE p.id = ?
         `;
@@ -109,10 +99,7 @@ export default async function handler(req, res) {
             comparison = await db.query(comparisonFallbackSql, [id]);
         }
 
-        // Đảm bảo giá hiện tại của sản phẩm được cập nhật theo giá thấp nhất thực tế tại thời điểm xem
-        if (comparison && comparison.length > 0) {
-            product[0].current_price = comparison[0].price;
-        }
+        // Không ghi đè current_price nữa, lấy nguyên bản từ DB như product card
 
         const lastCrawledAt = lastCrawledRows?.[0]?.lastCrawledAt ?? null;
         const allTimeMax = allTimeMaxRows?.[0]?.allTimeMax

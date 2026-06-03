@@ -106,7 +106,7 @@ const styles = {
   // Messages area
   messages: {
     flex: 1,
-    overflowY: "auto",
+    overflowY: "scroll",
     padding: "16px",
     display: "flex",
     flexDirection: "column",
@@ -120,8 +120,13 @@ const styles = {
     alignItems: "flex-end",
     gap: "8px",
   }),
+  msgWrapper: (isUser) => ({
+    display: "flex",
+    flexDirection: "column",
+    alignItems: isUser ? "flex-end" : "flex-start",
+    maxWidth: isUser ? "80%" : "calc(100% - 36px)",
+  }),
   bubble: (isUser) => ({
-    maxWidth: isUser ? "80%" : "98%",
     minWidth: isUser ? undefined : "60%",
     padding: "10px 14px",
     borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
@@ -159,14 +164,14 @@ const styles = {
       source === "database"
         ? "#e8f5e9"
         : source === "internet"
-        ? "#fff3e0"
-        : "#f3e5f5",
+          ? "#fff3e0"
+          : "#f3e5f5",
     color:
       source === "database"
         ? "#2e7d32"
         : source === "internet"
-        ? "#e65100"
-        : "#7b1fa2",
+          ? "#e65100"
+          : "#7b1fa2",
   }),
   sourceLabel: {
     database: "📦 Dữ liệu hệ thống",
@@ -442,7 +447,7 @@ export default function ChatWidget() {
               return (
                 <div key={msg.id} style={styles.msgRow(isUser)}>
                   {!isUser && <div style={styles.botAvatar}><Origami size={16} color="#fff" /></div>}
-                  <div>
+                  <div style={styles.msgWrapper(isUser)}>
                     <div style={styles.bubble(isUser)}>
                       {isUser ? (
                         <div style={{ whiteSpace: "pre-wrap" }}>{msg.content}</div>
