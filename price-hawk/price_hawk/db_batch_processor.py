@@ -101,20 +101,15 @@ class BatchDBProcessor:
             
             identity_key = f"{brand}_{model}_{variant}"
             
-            # Get min price from group
-            prices = [p.get("price") for p in group if p.get("price") is not None]
-            current_price = min(prices) if prices else None
-            
-            # Insert or update product by identity_key (UNIQUE)
-            # Always keep the minimum price across all shops
+            # Insert or update product — current_price sẽ được tính lại sau
+            # từ MIN(comparison.price) nên không set ở đây
             self.cursor.execute("""
                 INSERT INTO product (identity_key, name, description, image_url, brand, current_price)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, NULL)
                 ON DUPLICATE KEY UPDATE
-                    current_price = VALUES(current_price),
                     description = VALUES(description),
                     image_url = VALUES(image_url)
-            """, (identity_key, name, description, image_url, brand, current_price))
+            """, (identity_key, name, description, image_url, brand))
             
             # Get product_id by identity_key
             self.cursor.execute("""
@@ -127,9 +122,29 @@ class BatchDBProcessor:
                 print(f"⚠️ Failed to get product_id for: {name}")
                 return
             
-            # Insert comparison records from all sources in group
+            # Upsert tất cả comparisons trước
             for item in group:
                 self._insert_comparison(product_id, item)
+            
+            # Sau đó tính lại current_price từ toàn bộ comparisons trong DB
+            # (bao gồm cả các lần crawl trước từ pool khác)
+            self.cursor.execute("""
+                UPDATE product
+                SET current_price = (
+                    SELECT MIN(price)
+                    FROM comparison
+                    WHERE product_id = %s
+                      AND price IS NOT NULL
+                )
+                WHERE id = %s
+            """, (product_id, product_id))
+            
+            # Đọc lại current_price thực tế để sync vào MeiliSearch
+            self.cursor.execute("""
+                SELECT current_price FROM product WHERE id = %s
+            """, (product_id,))
+            price_row = self.cursor.fetchone()
+            current_price = price_row[0] if price_row else None
             
             # Buffer for MeiliSearch indexing
             self._meili_buffer.append({
